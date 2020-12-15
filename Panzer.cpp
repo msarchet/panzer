@@ -4,8 +4,7 @@
 #include <iostream>
 #include "constants.h"
 #include <chrono>
-#include <assert.h>
-#include <fstream>;
+#include <fstream>
 #include <string>
 
 
@@ -35,7 +34,7 @@ int main(int argc, char *argv[])
 	fen_to_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", b);
 	b->side_to_move = WHITE;
 	hash_start_board(b);
-	int depth = 6;
+	int depth = 4;
 	std::string filename = "perft-depth" + std::to_string(depth) + ".log";
 	outfile.open(filename, std::ios_base::app);
 
@@ -74,7 +73,7 @@ int main(int argc, char *argv[])
 	b->zorbist = 0;
 	hash_start_board(b);
 	//outfile << "RE: Hash" << b->zorbist << "\n";
-	hashed_boards[b->zorbist] = starting_hash;
+	hashed_boards[b->zorbist] = &starting_hash;
 	//outfile << "Summing" << "\n";
 	int total = sum_perft_nodes(b, depth);
 
@@ -87,8 +86,8 @@ int main(int argc, char *argv[])
 	int move_count = 0;
 	for (const auto& pair : hashed_boards)
 	{
-		hashed_board board = pair.second;
-		move_count += board.move_count;
+		const hashed_board* board = pair.second;
+		move_count += board->move_count;
 	}
 	std::cin.get();
 }
@@ -98,12 +97,12 @@ int sum_perft_nodes(board* b, int depth)
 
 	auto it = hashed_boards.find(b->zorbist);
 	//outfile << "found hashboard with hash" << b->zorbist;
-	hashed_board hashed = it->second;
+	const hashed_board* hashed = it->second;
 
-	for (int i = 0; i < hashed.move_count; i++) 
+	for (int i = 0; i < hashed->move_count; i++) 
 	{
 		//outfile << "hash before make move: " << b->ply << " " << b->zorbist;
-		make_move(hashed.moves[i], b);
+		make_move(hashed->moves[i], b);
 		//outfile << square_names[hashed.moves[i].from] << square_names[hashed.moves[i].to] << b->ply << " " << b->zorbist;
 		if (depth == 1)
 		{
@@ -113,7 +112,7 @@ int sum_perft_nodes(board* b, int depth)
 		{
 			sum += sum_perft_nodes(b, depth - 1);
 		}
-		unmake_move(hashed.moves[i], b);
+		unmake_move(hashed->moves[i], b);
 		//outfile << "hash after unmake move: " << b->ply << " " << b->zorbist;
 	}
 
@@ -140,13 +139,13 @@ int perft(int depth, board* b, move* moves)
 
 	if (hashed_boards.count(b->zorbist))
 	{
-		hashed_board board_from_hash = hashed_boards[b->zorbist];
+		const hashed_board* board_from_hash = hashed_boards[b->zorbist];
 		// we will hash boards and not hash moves for them because they are 
 		// at the last ply
-		if (board_from_hash.move_count != 0 or board_from_hash.isCheckmate)
+		if (board_from_hash->move_count != 0 or board_from_hash->isCheckmate)
 		{
-			moves = board_from_hash.moves;
-			return board_from_hash.move_count;
+			moves = board_from_hash->moves;
+			return board_from_hash->move_count;
 		}
 	}
 
@@ -165,7 +164,7 @@ int perft(int depth, board* b, move* moves)
 			moves[legal_move_count] = raw_moves[i];
 			//outfile << "hash after make move";
 			//outfile << square_names[moves[legal_move_count].from] << square_names[moves[legal_move_count].to] << b->ply << " " << b->zorbist;
-			legal_move_count++;
+			legal_move_count++; 
 
 			// if were still going down the tree
 			if (depth != 1) 
@@ -173,12 +172,12 @@ int perft(int depth, board* b, move* moves)
 				move* deep_moves = new move[256]{};
 				// store the board state from the current move
 				// TODO: move to constructor
-				hashed_board hashed;
-				hashed.hash = b->zorbist;
-				hashed.move_count = perft(depth - 1, b, deep_moves);
-				hashed.moves = deep_moves;
+				hashed_board* hashed = new hashed_board;
+				hashed->hash = b->zorbist;
+				hashed->move_count = perft(depth - 1, b, deep_moves);
+				hashed->moves = deep_moves;
 				// add to boards
-				hashed_boards[hashed.hash] = hashed;
+				hashed_boards[hashed->hash] = hashed;
 			}
 		}
 

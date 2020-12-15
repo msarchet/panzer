@@ -344,7 +344,7 @@ struct hashed_board
 
 //std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>>>  zorbist_hash_lookup;
 hash zorbist_hash_lookup[128][65][3] = { 0 };
-std::unordered_map<hash, hashed_board> hashed_boards;
+std::unordered_map<hash, const hashed_board*> hashed_boards;
 hash color_hash;
 
 void fill_hash_lookup()
