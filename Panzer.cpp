@@ -4,6 +4,9 @@
 #include <iostream>
 #include "constants.h"
 #include <chrono>
+#include <assert.h>
+#include <fstream>;
+#include <string>
 
 
 void fen_to_board(const std::string& fen, board* board);
@@ -11,12 +14,14 @@ void make_move(const move& move, board* board);
 void unmake_move(const move& move, board* board);
 bool isAttacked(const square& square, board* board);
 move build_move(square from_square, square to_square, piece from, piece captured, char flags, board* b);
-int generate_moves(move moves[], board* board);
+int generate_moves(move * moves, board * board);
 void print_move(move m);
-int perft(int depth, board* b, move moves[256]);
+int perft(int depth, board* b, move* moves);
 int sum_perft_nodes(board* b, int depth);
 
 void hash_start_board(board* b);
+
+std::ofstream outfile;
 
 int main(int argc, char *argv[])
 {
@@ -30,54 +35,86 @@ int main(int argc, char *argv[])
 	fen_to_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", b);
 	b->side_to_move = WHITE;
 	hash_start_board(b);
-	int depth = 4;
+	int depth = 6;
+	std::string filename = "perft-depth" + std::to_string(depth) + ".log";
+	outfile.open(filename, std::ios_base::app);
+
 	if (argc > 1) 
 	{
 		depth = argv[1][0] - '0';
 	}
 
-	std::cout << "Peft depth " << depth << "\n";
-	std::cout << "Starting Hash" << b->zorbist << "\n";
+	outfile << "Peft depth " << depth << "\n";
+	//outfile << "Starting Hash" << b->zorbist << "\n";
+
+	move m1 = build_move(E2, E4, PAWN, NONE, NO_FLAGS, b);
+	move m2 = build_move(D7, D5, PAWN, NONE, NO_FLAGS, b);
+	move m3 = build_move(E4, D5, PAWN, PAWN, CAPTURE, b);
+	make_move(m1, b);
+	//outfile << "make_move 1 " << b->zorbist << "\n";
+
+	make_move(m2, b);
+	//outfile << "make_move 2 " << b->zorbist << "\n";
+	make_move(m3, b);
+	//outfile << "make_move 3 " << b->zorbist << "\n";
+	unmake_move(m3, b);
+	//outfile << "unmake_move 3 (2) " << b->zorbist << "\n";
+	unmake_move(m2, b);
+	//outfile << "unmake_move 2 (1)" << b->zorbist << "\n";
+	unmake_move(m1, b);
+	//outfile << "unmake_move 1 (0) " << b->zorbist << "\n";
 	hashed_board starting_hash;
 	move moves[256];
 	start = std::chrono::high_resolution_clock::now();
-
 	int nodes = perft(depth, b, moves);
 	end = std::chrono::high_resolution_clock::now();
-	for (int i = 0; i < nodes; i++) 
-	{
-		starting_hash.moves[i] = moves[i];
-	}
+	starting_hash.moves = moves;
 	starting_hash.move_count = nodes;
-	std::cout << "Ending Hash" << b->zorbist << "\n";
+	//outfile << "Ending Hash" << b->zorbist << "\n";
+	b->zorbist = 0;
+	hash_start_board(b);
+	//outfile << "RE: Hash" << b->zorbist << "\n";
 	hashed_boards[b->zorbist] = starting_hash;
-	int total_moves = sum_perft_nodes(b, depth);
+	//outfile << "Summing" << "\n";
+	int total = sum_perft_nodes(b, depth);
 
-    std::chrono::duration<double> elapsed_seconds = end - start; 
-	std::cout << "Time:" << elapsed_seconds.count();
-	std::cout << "\n";
-	std::cout << "Perft" << depth << " " << total_moves;
-	std::cout << "Moves PS: " <<total_moves / elapsed_seconds.count();
+	std::chrono::duration<double> elapsed_seconds = end - start; 
+	outfile << "Time:" << elapsed_seconds.count();
+	outfile << "\n";
+	outfile << "Perft" << depth << " " << total;
+	outfile << "Moves PS: " << total / elapsed_seconds.count();
+
+	int move_count = 0;
+	for (const auto& pair : hashed_boards)
+	{
+		hashed_board board = pair.second;
+		move_count += board.move_count;
+	}
 	std::cin.get();
 }
 int sum_perft_nodes(board* b, int depth)
 {
 	int sum = 0;
 
-	hashed_board hashed = hashed_boards[b->zorbist];
+	auto it = hashed_boards.find(b->zorbist);
+	//outfile << "found hashboard with hash" << b->zorbist;
+	hashed_board hashed = it->second;
 
 	for (int i = 0; i < hashed.move_count; i++) 
 	{
-		if (depth == 1) 
+		//outfile << "hash before make move: " << b->ply << " " << b->zorbist;
+		make_move(hashed.moves[i], b);
+		//outfile << square_names[hashed.moves[i].from] << square_names[hashed.moves[i].to] << b->ply << " " << b->zorbist;
+		if (depth == 1)
 		{
 			sum++;
 		}
 		else
 		{
-			make_move(hashed.moves[i], b);
 			sum += sum_perft_nodes(b, depth - 1);
-			unmake_move(hashed.moves[i], b);
 		}
+		unmake_move(hashed.moves[i], b);
+		//outfile << "hash after unmake move: " << b->ply << " " << b->zorbist;
 	}
 
 	return sum;
@@ -96,7 +133,7 @@ void hash_start_board(board* b)
 	}
 }
 
-int perft(int depth, board* b, move*  moves[256]) 
+int perft(int depth, board* b, move* moves) 
 {
 	int king_index = b->side_to_move == WHITE ? b->white_king : b->black_king;
 	int move_count;
@@ -108,47 +145,45 @@ int perft(int depth, board* b, move*  moves[256])
 		// at the last ply
 		if (board_from_hash.move_count != 0 or board_from_hash.isCheckmate)
 		{
-			// moves = board_from_hash.moves;
-			for (int i = 0; i < board_from_hash.move_count; i++)
-			{
-				moves[i] = board_from_hash.moves[i];
-			}
+			moves = board_from_hash.moves;
 			return board_from_hash.move_count;
 		}
 	}
 
-	move raw_moves[256];
+	move* raw_moves = new move[256]{ };
 	move_count = generate_moves(raw_moves, b);
 	int legal_move_count = 0;
 	
 	for (int i = 0; i < move_count; i++)
 	{
 		make_move(raw_moves[i], b);
-		hashed_board hashed_board;
-		hashed_board.hash = b->zorbist;
-
 
 		if (!isAttacked(square(king_index), b))
 		{
+			// insert move into moves
+			// if this is a recursive lookup that moves is deep_moves
 			moves[legal_move_count] = raw_moves[i];
+			//outfile << "hash after make move";
+			//outfile << square_names[moves[legal_move_count].from] << square_names[moves[legal_move_count].to] << b->ply << " " << b->zorbist;
+			legal_move_count++;
+
+			// if were still going down the tree
 			if (depth != 1) 
 			{
-
-				move deep_moves[256];
-				hashed_board.move_count = perft(depth - 1, b, deep_moves);
-
-				
-				for (int j = 0; j < hashed_board.move_count; j++) 
-				{
-					hashed_board.moves[j] = deep_moves[j];
-				}
+				move* deep_moves = new move[256]{};
+				// store the board state from the current move
+				// TODO: move to constructor
+				hashed_board hashed;
+				hashed.hash = b->zorbist;
+				hashed.move_count = perft(depth - 1, b, deep_moves);
+				hashed.moves = deep_moves;
+				// add to boards
+				hashed_boards[hashed.hash] = hashed;
 			}
-
-			legal_move_count++;
 		}
 
-		hashed_boards[b->zorbist] = hashed_board;
 		unmake_move(raw_moves[i], b);
+		//outfile << "hash after unmake move" << b->zorbist;
 	}
 	return legal_move_count;
 }
@@ -160,6 +195,7 @@ void print_move(move m)
 
 void make_move(const move& m, board* board) 
 {
+	board->ply++;
 	if (m.capture != NONE) 
 	{
 		if (board->colors[m.to] == WHITE) 
@@ -183,7 +219,7 @@ void make_move(const move& m, board* board)
 	board->colors[m.from] = NO_COLOR;
 
 	// clear to piece
-	if (m.capture)
+	if (CAPTURE & m.flags)
 	{
 		board->zorbist ^= zorbist_hash_lookup[m.to][board->pieces[m.to]][board->colors[m.to]];
 	}
@@ -233,11 +269,12 @@ void make_move(const move& m, board* board)
 
 void unmake_move(const move& m, board* board) 
 {
+	board->ply--;
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
 	// remove to piece
 	board->zorbist ^= zorbist_hash_lookup[m.to][board->pieces[m.to]][board->colors[m.to]];
 	board->pieces[m.to] = m.capture;
-	if (m.capture) 
+	if (CAPTURE & m.flags) 
 	{
 		board->colors[m.to] = board->side_to_move == WHITE ? BLACK : WHITE;
 		// add back captured piece
@@ -368,7 +405,7 @@ bool isAttacked(const square& square, board* board)
 }
 
 
-int generate_moves(move moves[], board* board)
+int generate_moves(move * moves, board* board)
 {
 	int move_count = 0;
 	char castle_moves = board->castle_moves;
@@ -437,7 +474,7 @@ int generate_moves(move moves[], board* board)
 		same_side_pieces = board->black_pieces;
 	}
 
-	for (int square_index : same_side_pieces)
+	for (square square_index: same_side_pieces)
 	{
 		piece current_piece = board->pieces[square_index];
 		int current_target = square_index;
