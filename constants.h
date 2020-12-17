@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include <random>
 #include <cmath>
+#include <memory>
 
-#define IS_SQ(x)  ( (x) & 0x88 ) ? (0) : (1)
+#define IS_SQ(x) (x) & 0x88 ? 0 : 1
 
 constexpr auto STARTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -17,7 +18,6 @@ typedef unsigned __int8 color;
 typedef unsigned __int8 move_flags;
 typedef unsigned __int64 hash;
 typedef unsigned __int8 castle_flags;
-
 
 const square A1 = 0;
 const square B1 = 1;
@@ -111,7 +111,6 @@ const move_flags CASTLE = 2;
 const move_flags EP = 4;
 const move_flags PROMOTION = 8;
 const move_flags CAPTURE = 16;
-
 struct move
 {
 	char id = 0;
@@ -125,15 +124,35 @@ struct move
 	int ply = 0;
 	int score = 0;
 	square ep = EMPTY;
+	move(square from,
+		square to,
+		piece from_piece,
+		piece to_piece,
+		piece capture,
+		char flags,
+		square ep,
+		int ply) :
+			from(from),
+			to(to),
+			piece_from(from_piece),
+			piece_to(to_piece),
+			capture(capture),
+			flags(flags),
+			ep(ep),
+			ply(ply)
+	{
+		castle =flags & CASTLE;
+	}
+			
 };
 
 
 struct board
 {
-	std::array<piece, 128> *pieces = new std::array<piece, 128>{NONE};
-	std::array<color, 128> *colors = new std::array<color, 128>{NO_COLOR};
-	std::set<int> *white_pieces = new std::set<int>();
-	std::set<int> *black_pieces = new std::set<int>();
+	std::shared_ptr<std::array<piece, 128>> pieces = std::make_shared<std::array<piece, 128>>();
+	std::shared_ptr<std::array<color, 128>> colors = std::make_shared<std::array<color, 128>>();
+	std::shared_ptr<std::set<piece>> white_pieces = std::make_shared<std::set<piece>>();
+	std::shared_ptr<std::set<piece>> black_pieces = std::make_shared<std::set<piece>>();
 	color side_to_move = WHITE;
 	char castle_moves = (1 | 2 | 4 | 8); // 1K 2 Q 4 k 4 q
 	square ep_square = EMPTY;
@@ -323,7 +342,7 @@ const std::string color_names[]
 struct hashed_board
 {
 	hash hash = 0;
-	std::vector<const move*> *moves = new std::vector<const move*>(30);
+	std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
 	int move_count = 0;
 	int score = 0;
 	bool isCheckmate = false;

@@ -15,12 +15,12 @@
 void fen_to_board(const std::string& fen, board* board);
 std::string board_to_fen(board* b);
 bool isAttacked(const square& square, board* board);
-const move* build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, board* b);
+std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, board* b);
 
-void make_move(const move* move, board* board);
-void unmake_move(const move* move, board* board);
-void generate_moves(std::vector<const move*>* moves, board * board);
-void perft(int depth, board* b, std::vector<const move*>* moves);
+void make_move(std::shared_ptr<const move>, board* board);
+void unmake_move(std::shared_ptr<const move>, board* board);
+void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves, board * board);
+void perft(int depth, board* b, std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves);
 unsigned long perft_raw(int depth, board* b);
 
 void print_move(move m);
@@ -29,7 +29,7 @@ void print_line_with_depth(std::string line, int depth);
 void hash_start_board(board* b);
 std::ofstream outfile;
 Panzer::zorbist_lookup* zorbist = new Panzer::zorbist_lookup();
-std::unordered_map<hash, const hashed_board*>* hashed_boards = new std::unordered_map<hash, const hashed_board*>(1000000);
+std::unordered_map<hash, std::shared_ptr<hashed_board>>* hashed_boards = new std::unordered_map<hash, std::shared_ptr<hashed_board>>();
 const std::string piece_name(piece p)
 {
 	switch (p) 
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
 	temp << std::put_time(&bt, "%F %T");
 	std::string filename = "perft-depth" + std::to_string(depth) + ".log";
 	board* b = new board;
-	std::vector<const move*> *moves = new std::vector<const move*>();
+	auto moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
 	hashed_board* starting_hashboard = new hashed_board();
   
 	std::cout << "Running\n";
@@ -78,10 +78,10 @@ int main(int argc, char *argv[])
 	outfile << "Starting Hash" << starting_hash << "\n";
 
 	start = std::chrono::high_resolution_clock::now();
-	perft(depth, b, moves);
+	unsigned long total = perft_raw(depth, b);
+	//perft(depth, b, moves);
 	end = std::chrono::high_resolution_clock::now();
 	starting_hashboard->moves = moves;
-	unsigned long total = perft_raw(depth, b);
 	//outfile << "Ending Hash" << b->zorbist << "\n";
 	//b->zorbist = 0;
 	//hash_start_board(b);
@@ -106,7 +106,6 @@ int main(int argc, char *argv[])
 size_t sum_perft_nodes(board* b, int depth)
 {
 	size_t sum = 0;
-
 	auto it = hashed_boards->find(b->zorbist);
 	//print_line_with_depth(std::string("found hashboard with hash ") + std::to_string(b->zorbist), 5 - depth);
 	if (it == hashed_boards->end())
@@ -115,7 +114,7 @@ size_t sum_perft_nodes(board* b, int depth)
 		outfile.flush();
 		assert(false);
 	}
-	const hashed_board* hashed = it->second;
+	auto hashed(it->second);
 
 	if (depth == 1)
 	{
@@ -124,7 +123,7 @@ size_t sum_perft_nodes(board* b, int depth)
 
 	for (auto mi = hashed->moves->begin(); mi != hashed->moves->end(); mi++)
 	{
-		const move* move = *mi ;
+		auto move = *mi ;
 		hash before = b->zorbist;
 		//print_line_with_depth(std::string("hash before make move: ") + std::to_string(b->ply) + std::string(" ") + std::to_string(b->zorbist), 5 - depth);
 		make_move(move, b);
@@ -170,12 +169,12 @@ void hash_start_board(board* b)
 unsigned long perft_raw(int depth, board* b)
 {
 	unsigned long sum = 0;
-	std::vector<const move*> *moves = new std::vector<const move*>();
+	auto moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
 	generate_moves(moves, b);
 	
 	for (auto it = moves->begin(); it != moves->end(); it++)
 	{
-		const move* m = *it;
+		auto m = *it;
 		make_move(m, b);
 		if (!isAttacked(b->side_to_move == WHITE ? b->white_king : b->black_king, b))
 		{
@@ -189,13 +188,11 @@ unsigned long perft_raw(int depth, board* b)
 			}
 		}
 		unmake_move(m, b);
-		delete m;
 	}
-	delete moves;
 	return sum;
 }
 
-void perft(int depth, board* b, std::vector<const move*>* moves) 
+void perft(int depth, board* b, std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves) 
 {
 	int king_index = b->side_to_move == WHITE ? b->white_king : b->black_king;
 
@@ -212,12 +209,12 @@ void perft(int depth, board* b, std::vector<const move*>* moves)
 	//	}
 	//}
 
-	std::vector<const move*> *raw_moves = new std::vector<const move*>();
+	auto raw_moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
 	generate_moves(raw_moves, b);
 	
 	for (auto it = raw_moves->begin(); it != raw_moves->end(); it++)
 	{
-		const move* raw_move = *it;
+		auto raw_move(*it);
 		make_move(raw_move, b);
 
 		if (!isAttacked(king_index, b))
@@ -229,7 +226,7 @@ void perft(int depth, board* b, std::vector<const move*>* moves)
 			// if were still going down the tree
 			if (depth != 1) 
 			{
-				std::vector<const move*> *deep_moves = new std::vector<const move*>();
+				auto deep_moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
 				// store the board state from the current move
 				// TODO: move to constructor
 				perft(depth - 1, b, deep_moves);
@@ -237,14 +234,13 @@ void perft(int depth, board* b, std::vector<const move*>* moves)
 				//print_line_with_depth(board_to_fen(b), 0);
 				if (hashed_boards->count(b->zorbist) == 0)
 				{
-					hashed_board* hashed = new hashed_board();
+					auto hashed = std::make_shared<hashed_board>();
 					hashed->hash = b->zorbist;
 					hashed->moves = deep_moves;
 					hashed_boards->insert({ hashed->hash, hashed });
 				}
 				else
 				{
-					delete deep_moves;
 					//print_line_with_depth("HASH COLLISION for board (hash on prior line): ", 0);
 					//print_line_with_depth(board_to_fen(b), 0);
 					//print_line_with_depth("Move Was \n", 0);
@@ -256,8 +252,6 @@ void perft(int depth, board* b, std::vector<const move*>* moves)
 		unmake_move(raw_move, b);
 		//outfile << "hash after unmake move" << b->zorbist << "\n";
 	}
-
-	delete raw_moves;
 }
 
 void print_move(move m) 
@@ -267,7 +261,7 @@ void print_move(move m)
 #endif
 }
 
-void make_move(const move* m, board* board) 
+void make_move(std::shared_ptr<const move> m, board* board) 
 {
 	board->ply++;
 	if (board->side_to_move == WHITE)
@@ -344,7 +338,7 @@ void make_move(const move* m, board* board)
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
 }
 
-void unmake_move(const move* m, board* board) 
+void unmake_move(std::shared_ptr<const move> m, board* board) 
 {
 	board->ply--;
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
@@ -482,7 +476,7 @@ bool isAttacked(const square& square, board* board)
 }
 
 
-void generate_moves(std::vector<const move*> *moves, board* board)
+void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves, board* board)
 {
 	char castle_moves = board->castle_moves;
 	color same_side = board->side_to_move;
@@ -536,7 +530,7 @@ void generate_moves(std::vector<const move*> *moves, board* board)
 		}
 	}
 
-	std::set<int>* same_side_pieces;
+	std::shared_ptr<std::set<piece>> same_side_pieces;
 	if (board->side_to_move == WHITE)
 	{
 		same_side_pieces = board->white_pieces;
@@ -609,7 +603,7 @@ void generate_moves(std::vector<const move*> *moves, board* board)
 					{
 						for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 						{
-							const move* m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, NONE, board);
+							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, NONE, board);
 							moves->push_back(m);
 						}
 					}
@@ -628,7 +622,7 @@ void generate_moves(std::vector<const move*> *moves, board* board)
 						{
 							for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 							{
-								const move* m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, board);
+								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, board);
 								moves->push_back(m);
 							}
 						}
@@ -658,7 +652,7 @@ void generate_moves(std::vector<const move*> *moves, board* board)
 					{
 						for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 						{
-							const move* m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, promote, board);
+							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, promote, board);
 							moves->push_back(m);
 						}
 					}
@@ -677,7 +671,7 @@ void generate_moves(std::vector<const move*> *moves, board* board)
 						{
 							for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 							{
-								const move* m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, board);
+								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, board);
 								moves->push_back(m);
 							}
 						}
@@ -725,18 +719,17 @@ void generate_moves(std::vector<const move*> *moves, board* board)
 	}
 }
 
-const move* build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, board* b) 
+std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, board* b) 
 {
-	move* m = new move();
-	m->from = from_square;
-	m->to = to_square;
-	m->capture = captured;
-	m->piece_from = from;
-	m->piece_to = to_piece != NONE ? to_piece : from;
-	m->flags = flags;
-	m->ply = b->ply;
-	m->castle = b->castle_moves != 0;
-	m->ep = b->ep_square;
+	std::shared_ptr<const move> m = std::make_shared<move>(
+		from_square,
+		to_square,
+		from,
+		to_piece != NONE ? to_piece : from,
+		captured,
+		flags,
+		b->ep_square,
+		b->ply);
 	return m;
 }
 

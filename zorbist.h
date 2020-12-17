@@ -18,7 +18,8 @@ namespace Panzer
 			}
 
 		private:
-			std::array<std::array<std::array<hash, 3>*, 65>*, 128>* zorbist_hash_lookup = new std::array<std::array<std::array<hash, 3>*, 65>*, 128> { 0 };
+			std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>*>*>* zorbist_hash_lookup = new std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>*>*>();
+
 			auto RandomlySeededMersenneTwister () {
 				// Magic number 624: The number of unsigned ints the MT uses as state
 				std::vector<unsigned int> random_data(624);
@@ -36,15 +37,17 @@ namespace Panzer
 
 				for (square s = 0; s < 128; s++)
 				{
-					zorbist_hash_lookup->at(s) = new std::array<std::array<hash, 3>*, 65> { 0 };
+					auto piece_hash = new std::unordered_map<piece, std::unordered_map<color, hash>*>();
+					zorbist_hash_lookup->insert({ s, piece_hash});
 					if (IS_SQ(s)) 
 					{
 						for (piece p : { PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, NONE})
 						{
-							zorbist_hash_lookup->at(s)->at(p) = new std::array<hash, 3> { 0 };
+							auto c_h = new std::unordered_map<color, hash>();
+							piece_hash->insert({ p, c_h });
 							for (color c : { WHITE, BLACK, NO_COLOR})
 							{
-								zorbist_hash_lookup->at(s)->at(p)->at(c) = dist(engine);
+								c_h->insert({ c ,dist(engine) });
 							}
 						}
 					}
