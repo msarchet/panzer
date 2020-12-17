@@ -1,6 +1,7 @@
 #pragma once
 #include <set>
 #include <map>
+#include <array>
 #include <unordered_map>
 #include <stdlib.h>
 #include <random>
@@ -129,10 +130,10 @@ struct move
 
 struct board
 {
-	piece pieces[128] = { 0 };
-	color colors[128] = { 0 };
-	std::set<int> white_pieces;
-	std::set<int> black_pieces;
+	std::array<piece, 128> *pieces = new std::array<piece, 128>{NONE};
+	std::array<color, 128> *colors = new std::array<color, 128>{NO_COLOR};
+	std::set<int> *white_pieces = new std::set<int>();
+	std::set<int> *black_pieces = new std::set<int>();
 	color side_to_move = WHITE;
 	char castle_moves = (1 | 2 | 4 | 8); // 1K 2 Q 4 k 4 q
 	square ep_square = EMPTY;
@@ -312,20 +313,6 @@ const std::string square_names[]
 	"EMPTY"
 };
 
-std::string piece_name(piece p)
-{
-	switch (p) 
-	{
-		case NONE: return "";
-		case PAWN: return "P";
-		case ROOK: return "R";
-		case BISHOP: return "B";
-		case KNIGHT: return "N";
-		case QUEEN: return "Q ";
-		case KING: return "K";
-	}
-};
-
 const std::string color_names[]
 {
 	"WHITE",
@@ -336,38 +323,10 @@ const std::string color_names[]
 struct hashed_board
 {
 	hash hash = 0;
-	move * moves;
+	std::vector<const move*> *moves = new std::vector<const move*>(30);
 	int move_count = 0;
 	int score = 0;
 	bool isCheckmate = false;
 };
 
 //std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>>>  zorbist_hash_lookup;
-hash zorbist_hash_lookup[128][65][3] = { 0 };
-std::unordered_map<hash, const hashed_board*> hashed_boards;
-hash color_hash;
-
-void fill_hash_lookup()
-{
-	std::random_device rd;
-	std::mt19937_64 e2(rd());
-	std::uniform_int_distribution<unsigned long long> dist(1, -1LL);
-
-	for (square s = 0; s < 128; s++)
-	{
-		if (IS_SQ(s)) 
-		{
-			for (piece p : { PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, NONE})
-			{
-				for (color c : { WHITE, BLACK, NO_COLOR})
-				{
-					zorbist_hash_lookup[s][p][c] = dist(e2);
-				}
-			}
-		}
-	}
-
-	color_hash = dist(e2);
-}
-#pragma endregion LOOKUPS
-
