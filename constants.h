@@ -7,6 +7,7 @@
 #include <random>
 #include <cmath>
 #include <memory>
+#include <unordered_set>
 
 #define IS_SQ(x) (x) & 0x88 ? 0 : 1
 
@@ -151,8 +152,8 @@ struct board
 {
 	std::shared_ptr<std::array<piece, 128>> pieces = std::make_shared<std::array<piece, 128>>();
 	std::shared_ptr<std::array<color, 128>> colors = std::make_shared<std::array<color, 128>>();
-	std::shared_ptr<std::set<piece>> white_pieces = std::make_shared<std::set<piece>>();
-	std::shared_ptr<std::set<piece>> black_pieces = std::make_shared<std::set<piece>>();
+	std::shared_ptr<std::unordered_set<piece>> white_pieces = std::make_shared<std::unordered_set<piece>>();
+	std::shared_ptr<std::unordered_set<piece>> black_pieces = std::make_shared<std::unordered_set<piece>>();
 	color side_to_move = WHITE;
 	char castle_moves = (1 | 2 | 4 | 8); // 1K 2 Q 4 k 4 q
 	square ep_square = EMPTY;

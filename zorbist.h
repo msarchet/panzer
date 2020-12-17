@@ -12,13 +12,10 @@ namespace Panzer
 				Fill_Hash_Lookup();
 			};
 
-			hash Get_Hash_Value(square s, piece p, color c) 
-			{
-				return zorbist_hash_lookup->at(s)->at(p)->at(c);
-			}
+			hash Get_Hash_Value(square s, piece p, color c) { return zorbist_hash_lookup[s][p][c]; }
 
 		private:
-			std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>*>*>* zorbist_hash_lookup = new std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>*>*>();
+			hash zorbist_hash_lookup[128][65][3] = { 0 };
 
 			auto RandomlySeededMersenneTwister () {
 				// Magic number 624: The number of unsigned ints the MT uses as state
@@ -37,17 +34,13 @@ namespace Panzer
 
 				for (square s = 0; s < 128; s++)
 				{
-					auto piece_hash = new std::unordered_map<piece, std::unordered_map<color, hash>*>();
-					zorbist_hash_lookup->insert({ s, piece_hash});
 					if (IS_SQ(s)) 
 					{
 						for (piece p : { PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, NONE})
 						{
-							auto c_h = new std::unordered_map<color, hash>();
-							piece_hash->insert({ p, c_h });
 							for (color c : { WHITE, BLACK, NO_COLOR})
 							{
-								c_h->insert({ c ,dist(engine) });
+								zorbist_hash_lookup[s][p][c] = dist(engine);
 							}
 						}
 					}
@@ -57,4 +50,4 @@ namespace Panzer
 		}
 	};
 }
-
+ 

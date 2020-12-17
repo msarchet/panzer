@@ -15,7 +15,7 @@
 void fen_to_board(const std::string& fen, board* board);
 std::string board_to_fen(board* b);
 bool isAttacked(const square& square, board* board);
-std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, board* b);
+std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, square ep, board* b);
 
 void make_move(std::shared_ptr<const move>, board* board);
 void unmake_move(std::shared_ptr<const move>, board* board);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 {
 	// Using time point and system_clock 
     std::chrono::time_point<std::chrono::steady_clock> start, end; 
-	int depth = 6;
+	int depth = 4;
 	if (argc > 1) 
 	{
 		depth = argv[1][0] - '0';
@@ -270,7 +270,14 @@ void make_move(std::shared_ptr<const move> m, board* board)
 		board->white_pieces->insert(m->to);
 		if (m->capture)
 		{
-			board->black_pieces->erase(m->to);
+			if (m->flags & EP)
+			{
+				board->black_pieces->erase(board->ep_square);
+			}
+			else
+			{
+				board->black_pieces->erase(m->to);
+			}
 		}
 	}
 	else
@@ -292,7 +299,15 @@ void make_move(std::shared_ptr<const move> m, board* board)
 	// clear to piece
 	if (CAPTURE & m->flags)
 	{
-		board->zorbist ^= zorbist->Get_Hash_Value((m->to), board->pieces->at(m->to), board->colors->at(m->to));
+		if (m->flags & EP) 
+		{
+			board->zorbist ^= zorbist->Get_Hash_Value(board->ep_square, PAWN, board->colors->at(board->ep_square));
+
+		}
+		else
+		{
+			board->zorbist ^= zorbist->Get_Hash_Value((m->to), board->pieces->at(m->to), board->colors->at(m->to));
+		}
 	}
 
 	// add moved piece
@@ -344,15 +359,28 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
 	// remove to piece
 	board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
-	board->pieces->at(m->to) = m->capture;
 	if (CAPTURE & m->flags) 
 	{
-		board->colors->at(m->to) = board->side_to_move == WHITE ? BLACK : WHITE;
-		// add back captured piece
-		board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
+		color captured_color = board->side_to_move == WHITE ? BLACK : WHITE;
+		if (EP & m->flags) 
+		{
+			square ep = captured_color == WHITE ? m->to - 16 : m->to + 16;
+			board->pieces->at(ep) = m->capture;
+			board->colors->at(ep) = captured_color;
+			// add back captured piece
+			board->zorbist ^= zorbist->Get_Hash_Value(ep, board->pieces->at(ep), board->colors->at(ep));
+		}
+		else
+		{
+			board->pieces->at(m->to) = m->capture;
+			board->colors->at(m->to) = board->side_to_move == WHITE ? BLACK : WHITE;
+			// add back captured piece
+			board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
+		}
 	}
 	else
 	{
+		board->pieces->at(m->to) = NONE;
 		board->colors->at(m->to) = NO_COLOR;
 	}
 
@@ -490,7 +518,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 			{
 				if (!isAttacked(C1, board) and !isAttacked(D1, board))
 				{
-					moves->push_back(build_move(E1, C1, KING, NONE, CASTLE, NONE, board));
+					moves->push_back(build_move(E1, C1, KING, NONE, CASTLE, NONE, NONE, board));
 				}
 			}
 		}
@@ -500,7 +528,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 			{
 				if (!isAttacked(F1, board) and !isAttacked(G1, board))
 				{
-					moves->push_back(build_move(E1, G1, KING, NONE, CASTLE, NONE, board));
+					moves->push_back(build_move(E1, G1, KING, NONE, CASTLE, NONE, NONE, board));
 				}
 			}
 		}
@@ -514,7 +542,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 			{
 				if (!isAttacked(C8, board) and !isAttacked(D8, board))
 				{
-					moves->push_back(build_move(E8, C8, KING, NONE, CASTLE, NONE, board));
+					moves->push_back(build_move(E8, C8, KING, NONE, CASTLE, NONE, NONE, board));
 				}
 			}
 		}
@@ -524,13 +552,13 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 			{
 				if (!isAttacked(F8, board) and !isAttacked(G8, board))
 				{
-					moves->push_back(build_move(E8, G8, KING, NONE, CASTLE, NONE, board));
+					moves->push_back(build_move(E8, G8, KING, NONE, CASTLE, NONE, NONE, board));
 				}
 			}
 		}
 	}
 
-	std::shared_ptr<std::set<piece>> same_side_pieces;
+	std::shared_ptr<std::unordered_set<piece>> same_side_pieces;
 	if (board->side_to_move == WHITE)
 	{
 		same_side_pieces = board->white_pieces;
@@ -592,7 +620,15 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 					current_target = square_index + NN;
 					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE) 
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, current_target, board));
+					}
+				}
+
+				if (square_index / 16 == 4)
+				{
+					if (square_index - 1 == board->ep_square || square_index + 1 == board->ep_square)
+					{
+						moves->push_back(build_move(square_index, board->ep_square + 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
 				}
 
@@ -603,13 +639,13 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 					{
 						for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 						{
-							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, NONE, board);
+							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, NONE, NONE, board);
 							moves->push_back(m);
 						}
 					}
 					else 
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, NONE, board));
 					}
 				}
 
@@ -622,13 +658,13 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 						{
 							for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 							{
-								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, board);
+								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, NONE, board);
 								moves->push_back(m);
 							}
 						}
 						else 
 						{
-							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, board));
+							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
 						}
 					}
 				}
@@ -642,9 +678,18 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 					current_target = square_index + SS;
 					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE) 
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, current_target, board));
 					}
 				}
+
+				if (square_index / 16 == 3)
+				{
+					if (square_index - 1 == board->ep_square || square_index + 1 == board->ep_square)
+					{
+						moves->push_back(build_move(square_index, board->ep_square - 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
+					}
+				}
+
 				current_target = square_index + S;
 				if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE) 
 				{
@@ -652,13 +697,13 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 					{
 						for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 						{
-							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, promote, board);
+							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, promote, NONE, board);
 							moves->push_back(m);
 						}
 					}
 					else 
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE,NONE, board));
 					}
 				}
 
@@ -671,13 +716,13 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 						{
 							for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 							{
-								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, board);
+								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, NONE, board);
 								moves->push_back(m);
 							}
 						}
 						else 
 						{
-							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, board));
+							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
 						}
 					}
 				}
@@ -698,11 +743,11 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 
 					if (board->pieces->at(current_target) == NONE) 
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), current_piece, NONE, NO_FLAGS, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), current_piece, NONE, NO_FLAGS, NONE, NONE, board));
 					}
 					else
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), current_piece, board->pieces->at(current_target), CAPTURE, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), current_piece, board->pieces->at(current_target), CAPTURE, NONE, NONE, board));
 						break;
 					}
 
@@ -719,7 +764,14 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 	}
 }
 
-std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, board* b) 
+std::shared_ptr<const move> build_move(square from_square,
+	square to_square,
+	piece from,
+	piece captured,
+	char flags,
+	piece to_piece,
+	square ep,
+	board* b) 
 {
 	std::shared_ptr<const move> m = std::make_shared<move>(
 		from_square,
@@ -728,7 +780,7 @@ std::shared_ptr<const move> build_move(square from_square, square to_square, pie
 		to_piece != NONE ? to_piece : from,
 		captured,
 		flags,
-		b->ep_square,
+		ep,
 		b->ply);
 	return m;
 }
