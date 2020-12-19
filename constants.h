@@ -197,7 +197,7 @@ const int knight_moves[8]
 const int rays [] =
 {
 	NW,
-	W,
+	N,
 	NE,
 	E,
 	SE,

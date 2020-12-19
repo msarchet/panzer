@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <assert.h>
 #include <iomanip> // put_time
@@ -66,23 +67,37 @@ int main(int argc, char *argv[])
 	hashed_board* starting_hashboard = new hashed_board();
   
 	std::cout << "Running\n";
-	fen_to_board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", b);
-	std::string board_as_fen = board_to_fen(b);
-	b->side_to_move = WHITE;
+	auto b1c3d7d5c3d5 = "r1bqkbnr/pppppppp/8/8/3n4/8/PPP1PPPP/RNBQKBNR";
+	fen_to_board(STARTFEN, b);
+	b->side_to_move = BLACK;
 	hash_start_board(b);
 	hash starting_hash = b->zorbist;
 
+//	auto b1c3 = build_move(B1, C3, KNIGHT, NONE, NO_FLAGS, NONE, NONE, b);
+	//make_move(b1c3, b);
+	//auto g1f3 = build_move(G1, F3, KNIGHT, NONE, NO_FLAGS, NONE, NONE, b);
+	//auto e7e5 = build_move(E7, E5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//make_move(g1f3, b);
+	//make_move(e7e5, b);
+	generate_moves(moves, b);
+	for (auto it =  moves->begin(); it != moves->end(); it++)
+	{
+		auto move = *it;
+		std::cout << square_names[move->from] << square_names[move->to] << "\n";
+	}
+	std::cout << moves->size() << "\n";
 	outfile.open(filename, std::ios_base::app);
 
 	outfile << "Peft depth " << depth << "\n";
 	outfile << "Starting Hash" << starting_hash << "\n";
+
 
 	start = std::chrono::high_resolution_clock::now();
 	unsigned long total = perft_raw(depth, b);
 	//perft(depth, b, moves);
 	end = std::chrono::high_resolution_clock::now();
 	starting_hashboard->moves = moves;
-	//outfile << "Ending Hash" << b->zorbist << "\n";
+	outfile << "Ending Hash" << b->zorbist << "\n";
 	//b->zorbist = 0;
 	//hash_start_board(b);
 	//outfile << "RE: Hash (reset board hash)" << b->zorbist << "\n";
@@ -110,7 +125,6 @@ size_t sum_perft_nodes(board* b, int depth)
 	//print_line_with_depth(std::string("found hashboard with hash ") + std::to_string(b->zorbist), 5 - depth);
 	if (it == hashed_boards->end())
 	{
-		//print_line_with_depth(std::string("Failed to find prior hash"), 0);
 		outfile.flush();
 		assert(false);
 	}
@@ -124,19 +138,9 @@ size_t sum_perft_nodes(board* b, int depth)
 	for (auto mi = hashed->moves->begin(); mi != hashed->moves->end(); mi++)
 	{
 		auto move = *mi ;
-		hash before = b->zorbist;
-		//print_line_with_depth(std::string("hash before make move: ") + std::to_string(b->ply) + std::string(" ") + std::to_string(b->zorbist), 5 - depth);
 		make_move(move, b);
 		sum += sum_perft_nodes(b, depth - 1);
 		unmake_move(move, b);
-		hash after = b->zorbist;
-		//print_line_with_depth(std::string("hash after unmake move: ") + std::to_string(b->ply) + std::string(" ") + std::to_string(b->zorbist), 5-depth);
-		if (after != before) 
-		{
-			//print_line_with_depth(square_names[move->from] + square_names[move->to] + std::to_string(b->ply) + std::string(" ") + std::to_string(b->zorbist), 6 - depth);
-			//print_line_with_depth("The Hash Changed", 0);
-			assert(false);
-		}
 	}
 
 	return sum;
@@ -166,6 +170,19 @@ void hash_start_board(board* b)
 	}
 }
 
+std::string print_move_chain(std::shared_ptr<std::vector<std::string>> moves)
+{
+	std::stringstream stream;
+	for (auto it = moves->begin(); it != moves->end(); it++)
+	{
+		stream << *it << "->";
+	}
+
+	stream << "\n";
+	return stream.str();
+}
+
+std::shared_ptr<std::vector<std::string>>  move_chain = std::make_shared<std::vector<std::string>>();
 unsigned long perft_raw(int depth, board* b)
 {
 	unsigned long sum = 0;
@@ -176,25 +193,37 @@ unsigned long perft_raw(int depth, board* b)
 	{
 		auto m = *it;
 		make_move(m, b);
-		if (!isAttacked(b->side_to_move == WHITE ? b->white_king : b->black_king, b))
+
+		//move_chain->push_back(square_names[m->from] + square_names[m->to]);
+		if (!isAttacked(b->side_to_move == WHITE ? b->black_king : b->white_king, b))
 		{
+			//outfile << print_move_chain(move_chain);
 			if (depth != 1)
 			{
-				sum += perft_raw(depth - 1, b);
+				unsigned long node = perft_raw(depth - 1, b);
+				//outfile << print_move_chain(move_chain);
+				//outfile << "DEPTH" << depth <<" SUM " << node;
+				//outfile << "\n";
+
+				sum += node;
 			}
 			else
 			{
 				sum++;
 			}
 		}
+		else 
+		{
+			//outfile << "illegal move"<< square_names[m->from] << square_names[m->to] << " --" << depth << "\n";
+		}
 		unmake_move(m, b);
+		//move_chain->erase(move_chain->end() - 1);
 	}
 	return sum;
 }
 
 void perft(int depth, board* b, std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves) 
 {
-	int king_index = b->side_to_move == WHITE ? b->white_king : b->black_king;
 
 	//auto it = hashed_boards->find(b->zorbist);
 	//if (it != hashed_boards->end())
@@ -216,6 +245,7 @@ void perft(int depth, board* b, std::shared_ptr<std::vector<std::shared_ptr<cons
 	{
 		auto raw_move(*it);
 		make_move(raw_move, b);
+		int king_index = b->side_to_move != WHITE ? b->white_king : b->black_king;
 
 		if (!isAttacked(king_index, b))
 		{
@@ -268,7 +298,7 @@ void make_move(std::shared_ptr<const move> m, board* board)
 	{
 		board->white_pieces->erase(m->from);
 		board->white_pieces->insert(m->to);
-		if (m->capture)
+		if (m->flags & CAPTURE)
 		{
 			if (m->flags & EP)
 			{
@@ -279,14 +309,29 @@ void make_move(std::shared_ptr<const move> m, board* board)
 				board->black_pieces->erase(m->to);
 			}
 		}
+		if (m->piece_from == KING) 
+		{
+			board->white_king = m->to;
+		}
 	}
 	else
 	{
 		board->black_pieces->erase(m->from);
 		board->black_pieces->insert(m->to);
-		if (m->capture)
+		if (m->flags & CAPTURE)
 		{
-			board->white_pieces->erase(m->to);
+			if (m->flags & EP)
+			{
+				board->white_pieces->erase(board->ep_square);
+			}
+			else
+			{
+				board->white_pieces->erase(m->to);
+			}
+		}
+		if (m->piece_from == KING) 
+		{
+			board->black_king = m->to;
 		}
 	}
 
@@ -301,7 +346,11 @@ void make_move(std::shared_ptr<const move> m, board* board)
 	{
 		if (m->flags & EP) 
 		{
+			// remove hash of EP piece
 			board->zorbist ^= zorbist->Get_Hash_Value(board->ep_square, PAWN, board->colors->at(board->ep_square));
+			// clear ep_square
+			board->pieces->at(board->ep_square) = NONE;
+			board->colors->at(board->ep_square) = NONE;
 
 		}
 		else
@@ -349,6 +398,49 @@ void make_move(std::shared_ptr<const move> m, board* board)
 		}
 	}
 
+	if (m->flags & CASTLE)
+	{
+		switch (m->to)
+		{
+			case C1:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(A1, ROOK, WHITE);
+				board->pieces->at(A1) = NONE;
+				board->colors->at(A1) =	NO_COLOR;
+				board->pieces->at(D1) = ROOK;
+				board->colors->at(D1) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(D1, ROOK, WHITE);
+				break;
+			case G1:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(H1, ROOK, WHITE);
+				board->pieces->at(H1) = NONE;
+				board->colors->at(H1) =	NO_COLOR;
+				board->pieces->at(F1) = ROOK;
+				board->colors->at(F1) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(F1, ROOK, WHITE);
+				break;
+			case C8:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(A8, ROOK, WHITE);
+				board->pieces->at(A8) = NONE;
+				board->colors->at(A8) =	NO_COLOR;
+				board->pieces->at(D8) = ROOK;
+				board->colors->at(D8) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(D8, ROOK, WHITE);
+				break;
+			case G8:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(H8, ROOK, WHITE);
+				board->pieces->at(H8) = NONE;
+				board->colors->at(H8) =	NO_COLOR;
+				board->pieces->at(F8) = ROOK;
+				board->colors->at(F8) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(F8, ROOK, WHITE);
+				break;
+		}
+	}
+
 	board->ep_square = m->ep;
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
 }
@@ -359,16 +451,18 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
 	// remove to piece
 	board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
+	square ep = EMPTY;
 	if (CAPTURE & m->flags) 
 	{
 		color captured_color = board->side_to_move == WHITE ? BLACK : WHITE;
 		if (EP & m->flags) 
 		{
-			square ep = captured_color == WHITE ? m->to - 16 : m->to + 16;
+			ep = captured_color == WHITE ? m->to - 16 : m->to + 16;
 			board->pieces->at(ep) = m->capture;
 			board->colors->at(ep) = captured_color;
 			// add back captured piece
 			board->zorbist ^= zorbist->Get_Hash_Value(ep, board->pieces->at(ep), board->colors->at(ep));
+			board->ep_square = ep;
 		}
 		else
 		{
@@ -383,6 +477,7 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 		board->pieces->at(m->to) = NONE;
 		board->colors->at(m->to) = NO_COLOR;
 	}
+	board->ep_square = ep;
 
 	// add back from piece
 	board->pieces->at(m->from) = m->piece_from;
@@ -394,35 +489,99 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 	{
 		board->white_pieces->insert(m->from);
 		board->white_pieces->erase(m->to);
-		if (m->capture)
+		if (m->flags & CAPTURE)
 		{
-			board->black_pieces->insert(m->to);
+			if (m->flags & EP)
+			{
+				board->black_pieces->insert(board->ep_square);
+			}
+			else
+			{
+				board->black_pieces->insert(m->to);
+			}
+		}
+		if (m->piece_from == KING) 
+		{
+			board->white_king = m->from;
 		}
 	}
 	else
 	{
 		board->black_pieces->insert(m->from);
 		board->black_pieces->erase(m->to);
-		if (m->capture)
+		if (m->flags & CAPTURE)
 		{
-			board->white_pieces->insert(m->to);
+			if (m->flags & EP)
+			{
+				board->white_pieces->insert(board->ep_square);
+			}
+			else
+			{
+				board->white_pieces->insert(m->to);
+			}
+		}
+		if (m->piece_from == KING)
+		{
+			board->black_king = m->from;
 		}
 	}
 	// adjust castling flags
 	// do things here if move is castle
-	if (m->castle) 
+	if (m->flags & CASTLE) 
 	{
 		// check m->to square to revert a castle
+		switch (m->to)
+		{
+			case C1:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(D1, ROOK, WHITE);
+				board->pieces->at(D1) = NONE;
+				board->colors->at(D1) =	NO_COLOR;
+				board->pieces->at(A1) = ROOK;
+				board->colors->at(A1) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(A1, ROOK, WHITE);
+				board->castle_moves ^= WHITEK;
+				break;
+			case G1:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(F1, ROOK, WHITE);
+				board->pieces->at(F1) = NONE;
+				board->colors->at(F1) =	NO_COLOR;
+				board->pieces->at(H1) = ROOK;
+				board->colors->at(H1) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(H1, ROOK, WHITE);
+				board->castle_moves ^= WHITEQ;
+				break;
+			case C8:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(D8, ROOK, WHITE);
+				board->pieces->at(D8) = NONE;
+				board->colors->at(D8) =	NO_COLOR;
+				board->pieces->at(A8) = ROOK;
+				board->colors->at(A8) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(A8, ROOK, WHITE);
+				board->castle_moves ^= BLACKK;
+				break;
+			case G8:
+				// move rook
+				board->zorbist ^= zorbist->Get_Hash_Value(F8, ROOK, WHITE);
+				board->pieces->at(F8) = NONE;
+				board->colors->at(F8) =	NO_COLOR;
+				board->pieces->at(H8) = ROOK;
+				board->colors->at(H8) = WHITE;
+				board->zorbist ^= zorbist->Get_Hash_Value(H8, ROOK, WHITE);
+				board->castle_moves ^= BLACKQ;
+				break;
+		}
 	}
 
 	//update_hash(m, board);
-	board->ep_square = m->ep;
 }
 
 bool isAttacked(const square& square, board* board) 
 {
 	color moving_color = board->colors->at(square);
-	color attack_color = moving_color;
+	color attack_color = NO_COLOR;
 
 	if (moving_color == WHITE) 
 	{
@@ -481,22 +640,24 @@ bool isAttacked(const square& square, board* board)
 
 				if (ray == NW || ray == NE || ray == SE || ray == SW)
 				{
-					if (target_piece == (BISHOP | QUEEN))
+					if (target_piece & (BISHOP | QUEEN))
 					{
 						return true;
 					}
 				}
 				else 
 				{
-					if (target_piece == (QUEEN | ROOK))
+					if (target_piece & (QUEEN | ROOK))
 					{
 						return true;
 					}
 				}
+				break;
 			}
 
 			// move along the ray
 			target += ray;
+			in_pawn_range = false;
 		}
 	}
 
@@ -618,7 +779,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				if (square_index / 16 == 1) 
 				{
 					current_target = square_index + NN;
-					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE) 
+					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE && board->pieces->at(current_target + S) == NONE) 
 					{
 						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, current_target, board));
 					}
@@ -643,10 +804,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 							moves->push_back(m);
 						}
 					}
-					else 
-					{
-						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, NONE, board));
-					}
+					moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, NONE, board));
 				}
 
 				int pawn_captures[] = { square_index + NW, square_index + NE };
@@ -662,10 +820,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 								moves->push_back(m);
 							}
 						}
-						else 
-						{
-							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
-						}
+						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
 					}
 				}
 				
@@ -676,7 +831,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				if (square_index / 16 == 6) 
 				{
 					current_target = square_index + SS;
-					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE) 
+					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE && board->pieces->at(current_target + N) == NONE) 
 					{
 						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, current_target, board));
 					}
@@ -701,10 +856,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 							moves->push_back(m);
 						}
 					}
-					else 
-					{
-						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE,NONE, board));
-					}
+					moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE,NONE, board));
 				}
 
 				int pawn_captures[] = { square_index + SW, square_index + SE };
@@ -720,10 +872,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 								moves->push_back(m);
 							}
 						}
-						else 
-						{
-							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
-						}
+						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
 					}
 				}
 			}
