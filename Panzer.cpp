@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 {
 	// Using time point and system_clock 
     std::chrono::time_point<std::chrono::steady_clock> start, end; 
-	int depth = 5;
+	int depth = 6;
 	if (argc > 1) 
 	{
 		depth = argv[1][0] - '0';
@@ -67,9 +67,11 @@ int main(int argc, char *argv[])
 	hashed_board* starting_hashboard = new hashed_board();
   
 	std::cout << "Running\n";
-	auto b1c3d7d5c3d5 = "r1bqkbnr/pppppppp/8/8/3n4/8/PPP1PPPP/RNBQKBNR";
+	auto problem_fen = "rnbqkbnr/1ppppppp/8/8/pPP5/N7/P2PPPPP/R1BQKBNR";
 	fen_to_board(STARTFEN, b);
+	std::string fen = board_to_fen(b);
 	b->side_to_move = WHITE;
+	b->ep_square = NONE;
 	hash_start_board(b);
 	hash starting_hash = b->zorbist;
 
@@ -79,13 +81,42 @@ int main(int argc, char *argv[])
 	//auto e7e5 = build_move(E7, E5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
 	//make_move(g1f3, b);
 	//make_move(e7e5, b);
-	generate_moves(moves, b);
-	for (auto it =  moves->begin(); it != moves->end(); it++)
-	{
-		auto move = *it;
-		std::cout << square_names[move->from] << square_names[move->to] << "\n";
-	}
-	std::cout << moves->size() << "\n";
+	//auto a2a4 = build_move(A2, A4, PAWN, NONE, NO_FLAGS, NONE, A4, b);
+	//auto c7c5 = build_move(C7, C5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//auto a4a5 = build_move(A4, A5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//auto b7b5 = build_move(B7, B5, PAWN, NONE, NO_FLAGS, NONE, B5, b);
+	//auto a5b6 = build_move(A5, B6, PAWN, PAWN, EP | CAPTURE, NONE, NONE, b);
+	//b->ep_square = B5;
+	//auto a5a6 = build_move(A5, A6, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//b->ep_square = EMPTY;
+	//make_move(a2a4, b);
+	//make_move(c7c5, b);
+	//make_move(a4a5, b);
+	//make_move(b7b5, b);
+	//make_move(a5a6, b);
+	//unmake_move(a5a6, b);
+	//std::cout << board_to_fen(b);
+	//make_move(a5b6, b);
+	//unmake_move(a5b6, b);
+	//std::cout << board_to_fen(b);
+	//auto a4b3EP = build_move(A4, B3, PAWN, PAWN, CAPTURE | EP, NONE, NONE, b);
+	//make_move(a4b3EP, b);
+	//unmake_move(a4b3EP, b);
+	//generate_moves(moves, b);
+	//for (auto it =  moves->begin(); it != moves->end(); it++)
+	//{
+	//	auto move = *it;
+	//	std::cout << square_names[move->from] << square_names[move->to] << "\n";
+	//	make_move(move, b);
+	//	auto count = perft_raw(1, b);
+	//	std::cout << count << "\n";
+	//	if (b->black_pieces->size() > 16 || b->white_pieces->size() > 16)
+	//	{
+	//		std::cout << "too many pieces";
+	//	}
+	//	unmake_move(move, b);
+	//}
+	//std::cout << moves->size() << "\n";
 	outfile.open(filename, std::ios_base::app);
 
 	outfile << "Peft depth " << depth << "\n";
@@ -115,7 +146,8 @@ int main(int argc, char *argv[])
 	outfile << "TOTAL MOVES" << total << "\n";
 	std::cout << "Moves PS: " << total / elapsed_seconds.count() << "\n";
 	std::cout << "TOAL MOVES" << total << "\n";
-	std::cout << "DONE";
+	std::cout << "DONE" << "\n";
+	std::cout << board_to_fen(b);
 	std::cin.get();
 }
 size_t sum_perft_nodes(board* b, int depth)
@@ -197,7 +229,7 @@ unsigned long perft_raw(int depth, board* b)
 		//move_chain->push_back(square_names[m->from] + square_names[m->to]);
 		if (!isAttacked(b->side_to_move == WHITE ? b->black_king : b->white_king, b))
 		{
-			outfile << print_move_chain(move_chain);
+			//outfile << print_move_chain(move_chain);
 			if (depth != 1)
 			{
 				unsigned long node = perft_raw(depth - 1, b);
@@ -451,18 +483,19 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
 	// remove to piece
 	board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
-	square ep = EMPTY;
+	board->pieces->at(m->to) = NONE;
+	board->colors->at(m->to) = NO_COLOR;
+	board->ep_square = m->prior_ep;
 	if (CAPTURE & m->flags) 
 	{
 		color captured_color = board->side_to_move == WHITE ? BLACK : WHITE;
 		if (EP & m->flags) 
 		{
-			ep = captured_color == WHITE ? m->to - 16 : m->to + 16;
+			square ep = board->ep_square;
 			board->pieces->at(ep) = m->capture;
 			board->colors->at(ep) = captured_color;
 			// add back captured piece
 			board->zorbist ^= zorbist->Get_Hash_Value(ep, board->pieces->at(ep), board->colors->at(ep));
-			board->ep_square = ep;
 		}
 		else
 		{
@@ -472,12 +505,7 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 			board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
 		}
 	}
-	else
-	{
-		board->pieces->at(m->to) = NONE;
-		board->colors->at(m->to) = NO_COLOR;
-	}
-	board->ep_square = ep;
+
 
 	// add back from piece
 	board->pieces->at(m->from) = m->piece_from;
@@ -733,7 +761,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 	{
 		const square square_index = *it;
 		piece current_piece = board->pieces->at(square_index);
-		int current_target = square_index;
+		square current_target = square_index;
 		bool slides = (current_piece & (PAWN | KNIGHT | KING)) != current_piece;
 
 		int move_rays[8] = {0,0,0,0,0,0,0};
@@ -787,7 +815,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 
 				if (square_index / 16 == 4)
 				{
-					if (square_index - 1 == board->ep_square || square_index + 1 == board->ep_square)
+					if ((square_index - 1 == board->ep_square || square_index + 1 == board->ep_square) and board->colors->at(board->ep_square) != board->side_to_move)
 					{
 						moves->push_back(build_move(square_index, board->ep_square + 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
@@ -839,7 +867,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 
 				if (square_index / 16 == 3)
 				{
-					if (square_index - 1 == board->ep_square || square_index + 1 == board->ep_square)
+					if ((square_index - 1 == board->ep_square || square_index + 1 == board->ep_square) and board->colors->at(board->ep_square) != board->side_to_move)
 					{
 						moves->push_back(build_move(square_index, board->ep_square - 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
@@ -930,89 +958,97 @@ std::shared_ptr<const move> build_move(square from_square,
 		captured,
 		flags,
 		ep,
+		b->ep_square,
 		b->ply);
 	return m;
 }
 
+const int fsi[64] = {
+	A8, B8, C8, D8, E8, F8, G8, H8,
+	A7, B7, C7, D7, E7, F7, G7, H7,
+	A6, B6, C6, D6, E6, F6, G6, H6,
+	A5, B5, C5, D5, E5, F5, G5, H5,
+	A4, B4, C4, D4, E4, F4, G4, H4,
+	A3, B3, C3, D3, E3, F3, G3, H3,
+	A2, B2, C2, D2, E2, F2, G2, H2,
+	A1, B1, C1, D1, E1, F1, G1, H1,
+};
+
 void fen_to_board(const std::string& fen, board* board)
 {
-	int index = 0;
 	bool board_done = false;
-	for (int index = 0; index < 128; index++) 
+	for (int i = 0; i < 128; i++) 
 	{
-		board->pieces->at(index) = NONE;
-		board->colors->at(index) = NO_COLOR;
+		board->pieces->at(i) = NONE;
+		board->colors->at(i) = NO_COLOR;
 	}
+
+	int index = 0;
 	for (char const& c : fen) 
 	{
-		if (board_done)
-		{
-			break;
-		}
-
+		if (board_done) break;
 		switch (c) {
 			case 'r':
-				board->pieces->at(index) = ROOK;
-				board->colors->at(index) = WHITE;
+				board->pieces->at(fsi[index]) = ROOK;
+				board->colors->at(fsi[index]) = BLACK;
 				index++;
 				break;
 			case 'n':
-				board->pieces->at(index) = KNIGHT;
-				board->colors->at(index) = WHITE;
+				board->pieces->at(fsi[index]) = KNIGHT;
+				board->colors->at(fsi[index]) = BLACK;
 				index++;
 				break;
 			case 'b':
-				board->pieces->at(index) = BISHOP;
-				board->colors->at(index) = WHITE;
+				board->pieces->at(fsi[index]) = BISHOP;
+				board->colors->at(fsi[index]) = BLACK;
 				index++;
 				break;
 			case 'q':
-				board->pieces->at(index) = QUEEN;
-				board->colors->at(index) = WHITE;
+				board->pieces->at(fsi[index]) = QUEEN;
+				board->colors->at(fsi[index]) = BLACK;
 				index++;
 				break;
 			case 'k':
-				board->pieces->at(index) = KING;
-				board->colors->at(index) = WHITE;
+				board->pieces->at(fsi[index]) = KING;
+				board->colors->at(fsi[index]) = BLACK;
 				index++;
 				break;
 			case 'p':
-				board->pieces->at(index) = PAWN;
-				board->colors->at(index) = WHITE;
+				board->pieces->at(fsi[index]) = PAWN;
+				board->colors->at(fsi[index]) = BLACK;
 				index++;
 				break;
 			case 'R':
-				board->pieces->at(index) = ROOK;
-				board->colors->at(index) = BLACK;
+				board->pieces->at(fsi[index]) = ROOK;
+				board->colors->at(fsi[index]) = WHITE;
 				index++;
 				break;
 			case 'N':
-				board->pieces->at(index) = KNIGHT;
-				board->colors->at(index) = BLACK;
+				board->pieces->at(fsi[index]) = KNIGHT;
+				board->colors->at(fsi[index]) = WHITE;
 				index++;
 				break;
 			case 'B':
-				board->pieces->at(index) = BISHOP;
-				board->colors->at(index) = BLACK;
+				board->pieces->at(fsi[index]) = BISHOP;
+				board->colors->at(fsi[index]) = WHITE;
 				index++;
 				break;
 			case 'Q':
-				board->pieces->at(index) = QUEEN;
-				board->colors->at(index) = BLACK;
+				board->pieces->at(fsi[index]) = QUEEN;
+				board->colors->at(fsi[index]) = WHITE;
 				index++;
 				break;
 			case 'K':
-				board->pieces->at(index) = KING;
-				board->colors->at(index) = BLACK;
+				board->pieces->at(fsi[index]) = KING;
+				board->colors->at(fsi[index]) = WHITE;
 				index++;
 				break;
 			case 'P':
-				board->pieces->at(index) = PAWN;
-				board->colors->at(index) = BLACK;
+				board->pieces->at(fsi[index]) = PAWN;
+				board->colors->at(fsi[index]) = WHITE;
 				index++;
 				break;
 			case '/':
-				index += 8;
 				break;
 			case '1':
 				index += 1;
@@ -1070,7 +1106,7 @@ std::string board_to_fen(board* b)
 {
 	std::string fen = "";
 	int empty_squares = 0;
-	for (square s = A1; s <= H8; s++) 
+	for (square s: fsi) 
 	{
 		if (IS_SQ(s))
 		{
@@ -1090,22 +1126,22 @@ std::string board_to_fen(board* b)
 				switch (p) 
 				{
 					case PAWN:
-						fen += c == WHITE ? "p" : "P";
+						fen += c == BLACK ? "p" : "P";
 						break;
 					case ROOK:
-						fen += c == WHITE ? "r" : "R";
+						fen += c == BLACK ? "r" : "R";
 						break;
 					case KNIGHT:
-						fen += c == WHITE ? "n" : "N";
+						fen += c == BLACK ? "n" : "N";
 						break;
 					case BISHOP:
-						fen += c == WHITE ? "b" : "B";
+						fen += c == BLACK ? "b" : "B";
 						break;
 					case QUEEN:
-						fen += c == WHITE ? "q" : "Q";
+						fen += c == BLACK ? "q" : "Q";
 						break;
 					case KING:
-						fen += c == WHITE ? "k" : "K";
+						fen += c == BLACK ? "k" : "K";
 						break;
 				}
 			}
@@ -1117,15 +1153,15 @@ std::string board_to_fen(board* b)
 					fen += std::to_string(empty_squares);
 					empty_squares = 0;
 				}
-				if (s == H8)
+				if (s != H1)
 				{
-					break;
+					fen += "/";
 				}
-				fen += "/";
 			}
 		}
 	}
 
-	fen += b->side_to_move == WHITE ? "B" : "W";
+	fen += " ";
+	fen += b->side_to_move == WHITE ? "W" : "B";
 	return fen;
 }

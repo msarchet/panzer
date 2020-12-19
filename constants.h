@@ -11,7 +11,7 @@
 
 #define IS_SQ(x) (x) & 0x88 ? 0 : 1
 
-constexpr auto STARTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+constexpr auto STARTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR W";
 
 typedef unsigned __int8 square;
 typedef unsigned __int8 piece;
@@ -125,6 +125,7 @@ struct move
 	int ply = 0;
 	int score = 0;
 	square ep = EMPTY;
+	square prior_ep = EMPTY;
 	move(square from,
 		square to,
 		piece from_piece,
@@ -132,6 +133,7 @@ struct move
 		piece capture,
 		char flags,
 		square ep,
+		square prior_ep,
 		int ply) :
 			from(from),
 			to(to),
@@ -140,6 +142,7 @@ struct move
 			capture(capture),
 			flags(flags),
 			ep(ep),
+			prior_ep(prior_ep),
 			ply(ply)
 	{
 		castle =flags & CASTLE;
