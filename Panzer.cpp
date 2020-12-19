@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 {
 	// Using time point and system_clock 
     std::chrono::time_point<std::chrono::steady_clock> start, end; 
-	int depth = 4;
+	int depth = 5;
 	if (argc > 1) 
 	{
 		depth = argv[1][0] - '0';
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 	std::cout << "Running\n";
 	auto b1c3d7d5c3d5 = "r1bqkbnr/pppppppp/8/8/3n4/8/PPP1PPPP/RNBQKBNR";
 	fen_to_board(STARTFEN, b);
-	b->side_to_move = BLACK;
+	b->side_to_move = WHITE;
 	hash_start_board(b);
 	hash starting_hash = b->zorbist;
 
@@ -197,7 +197,7 @@ unsigned long perft_raw(int depth, board* b)
 		//move_chain->push_back(square_names[m->from] + square_names[m->to]);
 		if (!isAttacked(b->side_to_move == WHITE ? b->black_king : b->white_king, b))
 		{
-			//outfile << print_move_chain(move_chain);
+			outfile << print_move_chain(move_chain);
 			if (depth != 1)
 			{
 				unsigned long node = perft_raw(depth - 1, b);
@@ -621,13 +621,13 @@ bool isAttacked(const square& square, board* board)
 				if (in_pawn_range && target_piece == PAWN) 
 				{	
 					if (attack_color == WHITE 
-						&& (ray == NW || ray == NE)) 
+						&& (ray == SW || ray == SE)) 
 					{
 						return true;
 					}
 
 					if (attack_color == BLACK
-						&& (ray == SW || ray == SE)) 
+						&& (ray == NW || ray == NE)) 
 					{
 						return true;
 					}
