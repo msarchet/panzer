@@ -675,7 +675,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				{
 					if ((square_index - 1 == board->EPSquare() || square_index + 1 == board->EPSquare()) and board->GetColorAt(board->EPSquare()) != same_side)
 					{
-						moves->push_back(build_move(square_index, board->EPSquare(), PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square_index, board->EPSquare() + N, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
 				}
 
@@ -727,7 +727,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				{
 					if ((square_index - 1 == board->EPSquare() || square_index + 1 == board->EPSquare()) and board->GetColorAt(board->EPSquare()) != same_side)
 					{
-						moves->push_back(build_move(square_index, board->EPSquare() - 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square_index, board->EPSquare() + S, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
 				}
 
