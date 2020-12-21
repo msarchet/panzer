@@ -5,16 +5,15 @@
 #include <chrono>
 #include <fstream>
 #include <sstream>
-#include <string>
 #include <assert.h>
 #include <iomanip> // put_time
 #include <sstream>
 
 #include "constants.h"
-#include "zorbist.h"
+#include "board.h"
+#include "name_lookups.h"
+typedef Panzer::Board board;
 
-void fen_to_board(const std::string& fen, board* board);
-std::string board_to_fen(board* b);
 bool isAttacked(const square& square, board* board);
 std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, square ep, board* b);
 
@@ -26,27 +25,10 @@ unsigned long perft_raw(int depth, board* b);
 
 void print_move(move m);
 size_t sum_perft_nodes(board* b, int depth);
-void print_line_with_depth(std::string line, int depth);
 void hash_start_board(board* b);
+
 std::ofstream outfile;
-Panzer::zorbist_lookup* zorbist = new Panzer::zorbist_lookup();
 std::unordered_map<hash, std::shared_ptr<hashed_board>>* hashed_boards = new std::unordered_map<hash, std::shared_ptr<hashed_board>>();
-const std::string piece_name(piece p)
-{
-	switch (p) 
-	{
-		case NONE: return "";
-		case PAWN: return "P";
-		case ROOK: return "R";
-		case BISHOP: return "B";
-		case KNIGHT: return "N";
-		case QUEEN: return "Q ";
-		case KING: return "K";
-	}
-	return "";
-};
-
-
 int main(int argc, char *argv[])
 {
 	// Using time point and system_clock 
@@ -68,55 +50,13 @@ int main(int argc, char *argv[])
   
 	std::cout << "Running\n";
 	auto problem_fen = "rnbqkbnr/1ppppppp/8/8/pPP5/N7/P2PPPPP/R1BQKBNR";
-	fen_to_board(STARTFEN, b);
-	std::string fen = board_to_fen(b);
-	b->side_to_move = WHITE;
-	b->ep_square = NONE;
+	b->FenToBoard(STARTFEN);
+	std::string fen = b->BoardToFen();
+	b->SetSideToMove(WHITE);
+	b->SetEPSquare(NONE);
 	hash_start_board(b);
-	hash starting_hash = b->zorbist;
+	hash starting_hash = b->Zorbist();
 
-//	auto b1c3 = build_move(B1, C3, KNIGHT, NONE, NO_FLAGS, NONE, NONE, b);
-	//make_move(b1c3, b);
-	//auto g1f3 = build_move(G1, F3, KNIGHT, NONE, NO_FLAGS, NONE, NONE, b);
-	//auto e7e5 = build_move(E7, E5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
-	//make_move(g1f3, b);
-	//make_move(e7e5, b);
-	//auto a2a4 = build_move(A2, A4, PAWN, NONE, NO_FLAGS, NONE, A4, b);
-	//auto c7c5 = build_move(C7, C5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
-	//auto a4a5 = build_move(A4, A5, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
-	//auto b7b5 = build_move(B7, B5, PAWN, NONE, NO_FLAGS, NONE, B5, b);
-	//auto a5b6 = build_move(A5, B6, PAWN, PAWN, EP | CAPTURE, NONE, NONE, b);
-	//b->ep_square = B5;
-	//auto a5a6 = build_move(A5, A6, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
-	//b->ep_square = EMPTY;
-	//make_move(a2a4, b);
-	//make_move(c7c5, b);
-	//make_move(a4a5, b);
-	//make_move(b7b5, b);
-	//make_move(a5a6, b);
-	//unmake_move(a5a6, b);
-	//std::cout << board_to_fen(b);
-	//make_move(a5b6, b);
-	//unmake_move(a5b6, b);
-	//std::cout << board_to_fen(b);
-	//auto a4b3EP = build_move(A4, B3, PAWN, PAWN, CAPTURE | EP, NONE, NONE, b);
-	//make_move(a4b3EP, b);
-	//unmake_move(a4b3EP, b);
-	//generate_moves(moves, b);
-	//for (auto it =  moves->begin(); it != moves->end(); it++)
-	//{
-	//	auto move = *it;
-	//	std::cout << square_names[move->from] << square_names[move->to] << "\n";
-	//	make_move(move, b);
-	//	auto count = perft_raw(1, b);
-	//	std::cout << count << "\n";
-	//	if (b->black_pieces->size() > 16 || b->white_pieces->size() > 16)
-	//	{
-	//		std::cout << "too many pieces";
-	//	}
-	//	unmake_move(move, b);
-	//}
-	//std::cout << moves->size() << "\n";
 	outfile.open(filename, std::ios_base::app);
 
 	outfile << "Peft depth " << depth << "\n";
@@ -125,18 +65,9 @@ int main(int argc, char *argv[])
 
 	start = std::chrono::high_resolution_clock::now();
 	unsigned long total = perft_raw(depth, b);
-	//perft(depth, b, moves);
 	end = std::chrono::high_resolution_clock::now();
 	starting_hashboard->moves = moves;
-	outfile << "Ending Hash" << b->zorbist << "\n";
-	//b->zorbist = 0;
-	//hash_start_board(b);
-	//outfile << "RE: Hash (reset board hash)" << b->zorbist << "\n";
-	//hashed_boards->emplace(starting_hash, starting_hashboard);
-	//std::cout << "Summing";
-	//outfile << "Summing" << "\n";
-	//size_t total = sum_perft_nodes(b, depth);
-
+	outfile << "Ending Hash" << b->Zorbist() << "\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
 	outfile << "Time:" << elapsed_seconds.count();
 	outfile << "\n";
@@ -147,13 +78,13 @@ int main(int argc, char *argv[])
 	std::cout << "Moves PS: " << total / elapsed_seconds.count() << "\n";
 	std::cout << "TOAL MOVES" << total << "\n";
 	std::cout << "DONE" << "\n";
-	std::cout << board_to_fen(b);
+	std::cout << b->BoardToFen();
 	std::cin.get();
 }
 size_t sum_perft_nodes(board* b, int depth)
 {
 	size_t sum = 0;
-	auto it = hashed_boards->find(b->zorbist);
+	auto it = hashed_boards->find(b->Zorbist());
 	//print_line_with_depth(std::string("found hashboard with hash ") + std::to_string(b->zorbist), 5 - depth);
 	if (it == hashed_boards->end())
 	{
@@ -178,28 +109,8 @@ size_t sum_perft_nodes(board* b, int depth)
 	return sum;
 }
 
-void print_line_with_depth(std::string line, int depth)
-{
-#ifdef _DEBUG
-	std::string joined = "";
-	for (int i = 0; i < depth; i++) {
-		joined += "\t";
-	}
-	outfile << joined + line + "\n";
-#endif
-}
 void hash_start_board(board* b) 
 {
-	for (square s = 0; s < 128; s++)
-	{
-		if (IS_SQ(s))
-		{
-			if (b->pieces->at(s) != NONE)
-			{
-				b->zorbist ^= zorbist->Get_Hash_Value(s,b->pieces->at(s), b->colors->at(s));
-			}
-		}
-	}
 }
 
 std::string print_move_chain(std::shared_ptr<std::vector<std::string>> moves)
@@ -227,7 +138,7 @@ unsigned long perft_raw(int depth, board* b)
 		make_move(m, b);
 
 		//move_chain->push_back(square_names[m->from] + square_names[m->to]);
-		if (!isAttacked(b->side_to_move == WHITE ? b->black_king : b->white_king, b))
+		if (!isAttacked(b->KingSquare(b->SideToMove() == WHITE ? BLACK : WHITE), b))
 		{
 			//outfile << print_move_chain(move_chain);
 			if (depth != 1)
@@ -277,7 +188,7 @@ void perft(int depth, board* b, std::shared_ptr<std::vector<std::shared_ptr<cons
 	{
 		auto raw_move(*it);
 		make_move(raw_move, b);
-		int king_index = b->side_to_move != WHITE ? b->white_king : b->black_king;
+		int king_index = b->KingSquare(b->SideToMove() == WHITE ? BLACK : WHITE);
 
 		if (!isAttacked(king_index, b))
 		{
@@ -294,10 +205,10 @@ void perft(int depth, board* b, std::shared_ptr<std::vector<std::shared_ptr<cons
 				perft(depth - 1, b, deep_moves);
 				//print_line_with_depth(std::to_string(hashed->hash), 0);
 				//print_line_with_depth(board_to_fen(b), 0);
-				if (hashed_boards->count(b->zorbist) == 0)
+				if (hashed_boards->count(b->Zorbist()) == 0)
 				{
 					auto hashed = std::make_shared<hashed_board>();
-					hashed->hash = b->zorbist;
+					hashed->hash = b->Zorbist();
 					hashed->moves = deep_moves;
 					hashed_boards->insert({ hashed->hash, hashed });
 				}
@@ -325,53 +236,55 @@ void print_move(move m)
 
 void make_move(std::shared_ptr<const move> m, board* board) 
 {
-	board->ply++;
-	if (board->side_to_move == WHITE)
+	board->SetPly(board->Ply() + 1);
+	if (board->SideToMove() == WHITE)
 	{
-		board->white_pieces->erase(m->from);
-		board->white_pieces->insert(m->to);
+		auto whitePieces = board->GetPieces(WHITE);
+		whitePieces->erase(m->from);
+		whitePieces->insert(m->to);
 		if (m->flags & CAPTURE)
 		{
+			auto blackPieces = board->GetPieces(BLACK);
 			if (m->flags & EP)
 			{
-				board->black_pieces->erase(board->ep_square);
+				blackPieces->erase(board->EPSquare());
 			}
 			else
 			{
-				board->black_pieces->erase(m->to);
+				blackPieces->erase(m->to);
 			}
 		}
 		if (m->piece_from == KING) 
 		{
-			board->white_king = m->to;
+			board->SetKingSquare(m->to, WHITE);
 		}
 	}
 	else
 	{
-		board->black_pieces->erase(m->from);
-		board->black_pieces->insert(m->to);
+		auto blackPieces = board->GetPieces(BLACK);
+		blackPieces->erase(m->from);
+		blackPieces->insert(m->to);
 		if (m->flags & CAPTURE)
 		{
+			auto whitePieces = board->GetPieces(WHITE);
 			if (m->flags & EP)
 			{
-				board->white_pieces->erase(board->ep_square);
+				whitePieces->erase(board->EPSquare());
 			}
 			else
 			{
-				board->white_pieces->erase(m->to);
+				whitePieces->erase(m->to);
 			}
 		}
 		if (m->piece_from == KING) 
 		{
-			board->black_king = m->to;
+			board->SetKingSquare(m->to, BLACK);
 		}
 	}
 
-	board->zorbist ^= zorbist->color_hash;
+	board->ToggleColorHash();
 	// remove from piece
-	board->zorbist ^= zorbist->Get_Hash_Value(m->from, board->pieces->at(m->from), board->colors->at(m->from));
-	board->pieces->at(m->from) = NONE;
-	board->colors->at(m->from) = NO_COLOR;
+	board->ClearSquare(m->from);
 
 	// clear to piece
 	if (CAPTURE & m->flags)
@@ -379,54 +292,48 @@ void make_move(std::shared_ptr<const move> m, board* board)
 		if (m->flags & EP) 
 		{
 			// remove hash of EP piece
-			board->zorbist ^= zorbist->Get_Hash_Value(board->ep_square, PAWN, board->colors->at(board->ep_square));
-			// clear ep_square
-			board->pieces->at(board->ep_square) = NONE;
-			board->colors->at(board->ep_square) = NONE;
-
+			board->ClearSquare(board->EPSquare());
 		}
 		else
 		{
-			board->zorbist ^= zorbist->Get_Hash_Value((m->to), board->pieces->at(m->to), board->colors->at(m->to));
+			board->ClearSquare(m->to);
 		}
 	}
 
 	// add moved piece
-	board->colors->at(m->to) = board->side_to_move;
-	board->pieces->at(m->to) = m->piece_to;
-	board->zorbist ^= zorbist->Get_Hash_Value(m->to, m->piece_to, board->colors->at(m->to));
+	board->FillSquare(m->to, m->piece_to, board->SideToMove());
 
 	// adjust castling flags
-	if (board->castle_moves) 
+	if (board->CastleFlags()) 
 	{
 		if (m->from == E1) 
 		{
-			board->castle_moves ^= (WHITEK | WHITEQ);
+			board->ToggleCastleMoves(WHITEK | WHITEQ);
 		}
 
 		if (m->from == A1)
 		{
-			board->castle_moves ^= WHITEQ;
+			board->ToggleCastleMoves(WHITEQ);
 		}
 
 		if (m->from == H1)
 		{
-			board->castle_moves ^= WHITEK;
+			board->ToggleCastleMoves(WHITEK);
 		}
 
 		if (m->from == E8) 
 		{
-			board->castle_moves ^= (BLACKK | BLACKQ);
+			board->ToggleCastleMoves(BLACKK | BLACKQ);
 		}
 
 		if (m->from == A8)
 		{
-			board->castle_moves ^= BLACKQ;
+			board->ToggleCastleMoves(BLACKQ);
 		}
 
 		if (m->from == H8)
 		{
-			board->castle_moves ^= BLACKK;
+			board->ToggleCastleMoves(BLACKK);
 		}
 	}
 
@@ -436,121 +343,99 @@ void make_move(std::shared_ptr<const move> m, board* board)
 		{
 			case C1:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(A1, ROOK, WHITE);
-				board->pieces->at(A1) = NONE;
-				board->colors->at(A1) =	NO_COLOR;
-				board->pieces->at(D1) = ROOK;
-				board->colors->at(D1) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(D1, ROOK, WHITE);
+				board->ClearSquare(A1);
+				board->FillSquare(D1, ROOK, WHITE);
 				break;
 			case G1:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(H1, ROOK, WHITE);
-				board->pieces->at(H1) = NONE;
-				board->colors->at(H1) =	NO_COLOR;
-				board->pieces->at(F1) = ROOK;
-				board->colors->at(F1) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(F1, ROOK, WHITE);
+				board->ClearSquare(H1);
+				board->FillSquare(F1, ROOK, WHITE);
 				break;
 			case C8:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(A8, ROOK, WHITE);
-				board->pieces->at(A8) = NONE;
-				board->colors->at(A8) =	NO_COLOR;
-				board->pieces->at(D8) = ROOK;
-				board->colors->at(D8) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(D8, ROOK, WHITE);
+				board->ClearSquare(A8);
+				board->FillSquare(D8, ROOK, BLACK);
 				break;
 			case G8:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(H8, ROOK, WHITE);
-				board->pieces->at(H8) = NONE;
-				board->colors->at(H8) =	NO_COLOR;
-				board->pieces->at(F8) = ROOK;
-				board->colors->at(F8) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(F8, ROOK, WHITE);
+				board->ClearSquare(H8);
+				board->FillSquare(F8, ROOK, BLACK);
 				break;
 		}
 	}
 
-	board->ep_square = m->ep;
-	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
+	board->SetEPSquare(m->ep);
+	board->SetSideToMove(board->SideToMove() == BLACK ? WHITE : BLACK);
 }
 
 void unmake_move(std::shared_ptr<const move> m, board* board) 
 {
-	board->ply--;
-	board->side_to_move = board->side_to_move == BLACK ? WHITE : BLACK;
+	board->SetPly(board->Ply() - 1);
+	board->SetSideToMove(board->SideToMove() == BLACK ? WHITE : BLACK);
 	// remove to piece
-	board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
-	board->pieces->at(m->to) = NONE;
-	board->colors->at(m->to) = NO_COLOR;
-	board->ep_square = m->prior_ep;
+	board->ClearSquare(m->to);
+	board->SetEPSquare(m->prior_ep);
 	if (CAPTURE & m->flags) 
 	{
-		color captured_color = board->side_to_move == WHITE ? BLACK : WHITE;
+		color captured_color = board->SideToMove() == WHITE ? BLACK : WHITE;
 		if (EP & m->flags) 
 		{
-			square ep = board->ep_square;
-			board->pieces->at(ep) = m->capture;
-			board->colors->at(ep) = captured_color;
-			// add back captured piece
-			board->zorbist ^= zorbist->Get_Hash_Value(ep, board->pieces->at(ep), board->colors->at(ep));
+			square ep = board->EPSquare();
+			board->FillSquare(ep, m->capture, captured_color);
 		}
 		else
 		{
-			board->pieces->at(m->to) = m->capture;
-			board->colors->at(m->to) = board->side_to_move == WHITE ? BLACK : WHITE;
-			// add back captured piece
-			board->zorbist ^= zorbist->Get_Hash_Value(m->to, board->pieces->at(m->to), board->colors->at(m->to));
+			board->FillSquare(m->to, m->capture, captured_color);
 		}
 	}
 
 
 	// add back from piece
-	board->pieces->at(m->from) = m->piece_from;
-	board->colors->at(m->from) = board->side_to_move;
-	board->zorbist ^= zorbist->Get_Hash_Value(m->from, board->pieces->at(m->from), board->colors->at(m->from));
-	board->zorbist ^= zorbist->color_hash;
+	board->FillSquare(m->from, m->piece_from, board->SideToMove());
+	board->ToggleColorHash();
 
-	if (board->side_to_move == WHITE)
+	if (board->SideToMove() == WHITE)
 	{
-		board->white_pieces->insert(m->from);
-		board->white_pieces->erase(m->to);
+		auto whitePieces = board->GetPieces(WHITE);
+		whitePieces->insert(m->from);
+		whitePieces->erase(m->to);
 		if (m->flags & CAPTURE)
 		{
+			auto blackPieces = board->GetPieces(BLACK);
 			if (m->flags & EP)
 			{
-				board->black_pieces->insert(board->ep_square);
+				blackPieces->insert(board->EPSquare());
 			}
 			else
 			{
-				board->black_pieces->insert(m->to);
+				blackPieces->insert(m->to);
 			}
 		}
 		if (m->piece_from == KING) 
 		{
-			board->white_king = m->from;
+			board->SetKingSquare(m->from, WHITE);
 		}
 	}
 	else
 	{
-		board->black_pieces->insert(m->from);
-		board->black_pieces->erase(m->to);
+		auto blackPieces = board->GetPieces(BLACK);
+		blackPieces->insert(m->from);
+		blackPieces->erase(m->to);
 		if (m->flags & CAPTURE)
 		{
+			auto whitePieces = board->GetPieces(WHITE);
 			if (m->flags & EP)
 			{
-				board->white_pieces->insert(board->ep_square);
+				whitePieces->insert(board->EPSquare());
 			}
 			else
 			{
-				board->white_pieces->insert(m->to);
+				whitePieces->insert(m->to);
 			}
 		}
 		if (m->piece_from == KING)
 		{
-			board->black_king = m->from;
+			board->SetKingSquare(m->from, BLACK);
 		}
 	}
 	// adjust castling flags
@@ -562,53 +447,34 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 		{
 			case C1:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(D1, ROOK, WHITE);
-				board->pieces->at(D1) = NONE;
-				board->colors->at(D1) =	NO_COLOR;
-				board->pieces->at(A1) = ROOK;
-				board->colors->at(A1) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(A1, ROOK, WHITE);
-				board->castle_moves ^= WHITEK;
+				board->ClearSquare(D1);
+				board->FillSquare(A1, ROOK, WHITE);
 				break;
 			case G1:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(F1, ROOK, WHITE);
-				board->pieces->at(F1) = NONE;
-				board->colors->at(F1) =	NO_COLOR;
-				board->pieces->at(H1) = ROOK;
-				board->colors->at(H1) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(H1, ROOK, WHITE);
-				board->castle_moves ^= WHITEQ;
+				board->ClearSquare(F1);
+				board->FillSquare(H1, ROOK, WHITE);
 				break;
 			case C8:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(D8, ROOK, WHITE);
-				board->pieces->at(D8) = NONE;
-				board->colors->at(D8) =	NO_COLOR;
-				board->pieces->at(A8) = ROOK;
-				board->colors->at(A8) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(A8, ROOK, WHITE);
-				board->castle_moves ^= BLACKK;
+				board->ClearSquare(D8);
+				board->FillSquare(A8, ROOK, BLACK);
 				break;
 			case G8:
 				// move rook
-				board->zorbist ^= zorbist->Get_Hash_Value(F8, ROOK, WHITE);
-				board->pieces->at(F8) = NONE;
-				board->colors->at(F8) =	NO_COLOR;
-				board->pieces->at(H8) = ROOK;
-				board->colors->at(H8) = WHITE;
-				board->zorbist ^= zorbist->Get_Hash_Value(H8, ROOK, WHITE);
-				board->castle_moves ^= BLACKQ;
+				board->ClearSquare(F8);
+				board->FillSquare(H8, ROOK, BLACK);
 				break;
 		}
 	}
+	board->SetCastleFlags(m->prior_castle);
 
 	//update_hash(m, board);
 }
 
 bool isAttacked(const square& square, board* board) 
 {
-	color moving_color = board->colors->at(square);
+	color moving_color = board->GetColorAt(square);
 	color attack_color = NO_COLOR;
 
 	if (moving_color == WHITE) 
@@ -624,9 +490,9 @@ bool isAttacked(const square& square, board* board)
 	{
 		const int target = square + ray;
 		
-		if (IS_SQ(target) and board->colors->at(target) == attack_color) 
+		if (IS_SQ(target) and board->GetColorAt(target) == attack_color) 
 		{
-			if (board->pieces->at(target) == KNIGHT) 
+			if (board->GetPieceAt(target) == KNIGHT) 
 			{
 				return true;
 			}
@@ -639,13 +505,13 @@ bool isAttacked(const square& square, board* board)
 		bool in_pawn_range = true;
 		while (IS_SQ(target))
 		{
-			if (board->colors->at(target) == moving_color)
+			if (board->GetColorAt(target) == moving_color)
 			{
 				break;
 			}
-			else if (board->colors->at(target) == attack_color)
+			else if (board->GetColorAt(target) == attack_color)
 			{
-				piece target_piece = board->pieces->at(target);
+				piece target_piece = board->GetPieceAt(target);
 				if (in_pawn_range && target_piece == PAWN) 
 				{	
 					if (attack_color == WHITE 
@@ -695,15 +561,15 @@ bool isAttacked(const square& square, board* board)
 
 void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> moves, board* board)
 {
-	char castle_moves = board->castle_moves;
-	color same_side = board->side_to_move;
-	color other_side = board->side_to_move == WHITE ? BLACK : WHITE;
+	char castle_moves = board->CastleFlags();
+	color same_side = board->SideToMove();
+	color other_side = board->SideToMove()== WHITE ? BLACK : WHITE;
 
-	if (board->side_to_move == WHITE)
+	if (same_side == WHITE)
 	{
 		if (castle_moves & WHITEK)
 		{
-			if (board->pieces->at(B1) == NONE and board->pieces->at(C1) == NONE and board->pieces->at(D1) == NONE)
+			if (board->GetPieceAt(B1) == NONE and board->GetPieceAt(C1) == NONE and board->GetPieceAt(D1) == NONE)
 			{
 				if (!isAttacked(C1, board) and !isAttacked(D1, board))
 				{
@@ -713,7 +579,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		}
 		if (castle_moves & WHITEQ)
 		{
-			if (board->pieces->at(F1) == NONE and board->pieces->at(G1) == NONE)
+			if (board->GetPieceAt(F1) == NONE and board->GetPieceAt(G1) == NONE)
 			{
 				if (!isAttacked(F1, board) and !isAttacked(G1, board))
 				{
@@ -723,11 +589,11 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		}
 
 	}
-	else if (board->side_to_move == BLACK)
+	else if (same_side == BLACK)
 	{
 		if (castle_moves & BLACKK)
 		{
-			if (board->pieces->at(B8) == NONE and board->pieces->at(C8) == NONE and board->pieces->at(D8) == NONE)
+			if (board->GetPieceAt(B8) == NONE and board->GetPieceAt(C8) == NONE and board->GetPieceAt(D8) == NONE)
 			{
 				if (!isAttacked(C8, board) and !isAttacked(D8, board))
 				{
@@ -737,7 +603,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		}
 		if (castle_moves & BLACKQ)
 		{
-			if (board->pieces->at(F8) == NONE and board->pieces->at(G8) == NONE)
+			if (board->GetPieceAt(F8) == NONE and board->GetPieceAt(G8) == NONE)
 			{
 				if (!isAttacked(F8, board) and !isAttacked(G8, board))
 				{
@@ -747,20 +613,12 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		}
 	}
 
-	std::shared_ptr<std::unordered_set<piece>> same_side_pieces;
-	if (board->side_to_move == WHITE)
-	{
-		same_side_pieces = board->white_pieces;
-	}
-	else
-	{
-		same_side_pieces = board->black_pieces;
-	}
+	std::shared_ptr<std::unordered_set<piece>> same_side_pieces = board->GetPieces(same_side);
 
 	for (auto it = same_side_pieces->begin(); it != same_side_pieces->end(); it++)
 	{
 		const square square_index = *it;
-		piece current_piece = board->pieces->at(square_index);
+		piece current_piece = board->GetPieceAt(square_index);
 		square current_target = square_index;
 		bool slides = (current_piece & (PAWN | KNIGHT | KING)) != current_piece;
 
@@ -802,12 +660,12 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		}
 		if (current_piece & PAWN) 
 		{
-			if (board->side_to_move == WHITE) 
+			if (same_side == WHITE) 
 			{
 				if (square_index / 16 == 1) 
 				{
 					current_target = square_index + NN;
-					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE && board->pieces->at(current_target + S) == NONE) 
+					if (IS_SQ(current_target) and board->GetPieceAt(current_target) == NONE && board->GetPieceAt(current_target + S) == NONE) 
 					{
 						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, current_target, board));
 					}
@@ -815,14 +673,14 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 
 				if (square_index / 16 == 4)
 				{
-					if ((square_index - 1 == board->ep_square || square_index + 1 == board->ep_square) and board->colors->at(board->ep_square) != board->side_to_move)
+					if ((square_index - 1 == board->EPSquare() || square_index + 1 == board->EPSquare()) and board->GetColorAt(board->EPSquare()) != same_side)
 					{
-						moves->push_back(build_move(square_index, board->ep_square + 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square_index, board->EPSquare(), PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
 				}
 
 				current_target = square_index + N;
-				if (IS_SQ(current_target) && board->pieces->at(current_target) == NONE) 
+				if (IS_SQ(current_target) && board->GetPieceAt(current_target) == NONE) 
 				{
 					if (current_target / 16 == 7) 
 					{
@@ -838,28 +696,28 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				int pawn_captures[] = { square_index + NW, square_index + NE };
 				for (int capture_index: pawn_captures) 
 				{
-					if (IS_SQ(capture_index) and board->pieces->at(capture_index) != NONE && board->colors->at(capture_index) != board->side_to_move) 
+					if (IS_SQ(capture_index) and board->GetPieceAt(capture_index) != NONE && board->GetColorAt(capture_index) != same_side) 
 					{
 						if (capture_index / 16 == 7) 
 						{
 							for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 							{
-								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, NONE, board);
+								auto m = build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), (CAPTURE | PROMOTION), promote, NONE, board);
 								moves->push_back(m);
 							}
 						}
-						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), CAPTURE, NONE, NONE, board));
 					}
 				}
 				
 			}
 
-			if (board->side_to_move == BLACK) 
+			if (same_side == BLACK) 
 			{
 				if (square_index / 16 == 6) 
 				{
 					current_target = square_index + SS;
-					if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE && board->pieces->at(current_target + N) == NONE) 
+					if (IS_SQ(current_target) and board->GetPieceAt(current_target) == NONE && board->GetPieceAt(current_target + N) == NONE) 
 					{
 						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, current_target, board));
 					}
@@ -867,14 +725,14 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 
 				if (square_index / 16 == 3)
 				{
-					if ((square_index - 1 == board->ep_square || square_index + 1 == board->ep_square) and board->colors->at(board->ep_square) != board->side_to_move)
+					if ((square_index - 1 == board->EPSquare() || square_index + 1 == board->EPSquare()) and board->GetColorAt(board->EPSquare()) != same_side)
 					{
-						moves->push_back(build_move(square_index, board->ep_square - 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square_index, board->EPSquare() - 16, PAWN, PAWN, EP | CAPTURE, NONE, NONE, board));
 					}
 				}
 
 				current_target = square_index + S;
-				if (IS_SQ(current_target) and board->pieces->at(current_target) == NONE) 
+				if (IS_SQ(current_target) and board->GetPieceAt(current_target) == NONE) 
 				{
 					if (current_target / 16 == 0) 
 					{
@@ -890,17 +748,17 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				int pawn_captures[] = { square_index + SW, square_index + SE };
 				for (int capture_index: pawn_captures) 
 				{
-					if (IS_SQ(capture_index) and board->pieces->at(capture_index) != NONE && board->colors->at(capture_index) != board->side_to_move) 
+					if (IS_SQ(capture_index) and board->GetPieceAt(capture_index) != NONE && board->GetColorAt(capture_index) != same_side) 
 					{
 						if (capture_index/ 16 == 7) 
 						{
 							for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 							{
-								auto m = build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), (CAPTURE | PROMOTION), promote, NONE, board);
+								auto m = build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), (CAPTURE | PROMOTION), promote, NONE, board);
 								moves->push_back(m);
 							}
 						}
-						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->pieces->at(capture_index), CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), CAPTURE, NONE, NONE, board));
 					}
 				}
 			}
@@ -913,18 +771,18 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 				current_target = square_index + dir;
 				while (IS_SQ(current_target)) 
 				{
-					if (board->colors->at(current_target) == board->side_to_move) 
+					if (board->GetColorAt(current_target) == same_side) 
 					{
 						break;
 					}
 
-					if (board->pieces->at(current_target) == NONE) 
+					if (board->GetPieceAt(current_target) == NONE) 
 					{
 						moves->push_back(build_move(square(square_index), square(current_target), current_piece, NONE, NO_FLAGS, NONE, NONE, board));
 					}
 					else
 					{
-						moves->push_back(build_move(square(square_index), square(current_target), current_piece, board->pieces->at(current_target), CAPTURE, NONE, NONE, board));
+						moves->push_back(build_move(square(square_index), square(current_target), current_piece, board->GetPieceAt(current_target), CAPTURE, NONE, NONE, board));
 						break;
 					}
 
@@ -958,210 +816,8 @@ std::shared_ptr<const move> build_move(square from_square,
 		captured,
 		flags,
 		ep,
-		b->ep_square,
-		b->ply);
+		b->EPSquare(),
+		b->CastleFlags(),
+		b->Ply());
 	return m;
-}
-
-const int fsi[64] = {
-	A8, B8, C8, D8, E8, F8, G8, H8,
-	A7, B7, C7, D7, E7, F7, G7, H7,
-	A6, B6, C6, D6, E6, F6, G6, H6,
-	A5, B5, C5, D5, E5, F5, G5, H5,
-	A4, B4, C4, D4, E4, F4, G4, H4,
-	A3, B3, C3, D3, E3, F3, G3, H3,
-	A2, B2, C2, D2, E2, F2, G2, H2,
-	A1, B1, C1, D1, E1, F1, G1, H1,
-};
-
-void fen_to_board(const std::string& fen, board* board)
-{
-	bool board_done = false;
-	for (int i = 0; i < 128; i++) 
-	{
-		board->pieces->at(i) = NONE;
-		board->colors->at(i) = NO_COLOR;
-	}
-
-	int index = 0;
-	for (char const& c : fen) 
-	{
-		if (board_done) break;
-		switch (c) {
-			case 'r':
-				board->pieces->at(fsi[index]) = ROOK;
-				board->colors->at(fsi[index]) = BLACK;
-				index++;
-				break;
-			case 'n':
-				board->pieces->at(fsi[index]) = KNIGHT;
-				board->colors->at(fsi[index]) = BLACK;
-				index++;
-				break;
-			case 'b':
-				board->pieces->at(fsi[index]) = BISHOP;
-				board->colors->at(fsi[index]) = BLACK;
-				index++;
-				break;
-			case 'q':
-				board->pieces->at(fsi[index]) = QUEEN;
-				board->colors->at(fsi[index]) = BLACK;
-				index++;
-				break;
-			case 'k':
-				board->pieces->at(fsi[index]) = KING;
-				board->colors->at(fsi[index]) = BLACK;
-				index++;
-				break;
-			case 'p':
-				board->pieces->at(fsi[index]) = PAWN;
-				board->colors->at(fsi[index]) = BLACK;
-				index++;
-				break;
-			case 'R':
-				board->pieces->at(fsi[index]) = ROOK;
-				board->colors->at(fsi[index]) = WHITE;
-				index++;
-				break;
-			case 'N':
-				board->pieces->at(fsi[index]) = KNIGHT;
-				board->colors->at(fsi[index]) = WHITE;
-				index++;
-				break;
-			case 'B':
-				board->pieces->at(fsi[index]) = BISHOP;
-				board->colors->at(fsi[index]) = WHITE;
-				index++;
-				break;
-			case 'Q':
-				board->pieces->at(fsi[index]) = QUEEN;
-				board->colors->at(fsi[index]) = WHITE;
-				index++;
-				break;
-			case 'K':
-				board->pieces->at(fsi[index]) = KING;
-				board->colors->at(fsi[index]) = WHITE;
-				index++;
-				break;
-			case 'P':
-				board->pieces->at(fsi[index]) = PAWN;
-				board->colors->at(fsi[index]) = WHITE;
-				index++;
-				break;
-			case '/':
-				break;
-			case '1':
-				index += 1;
-				break;
-			case '2':
-				index += 2;
-				break;
-			case '3':
-				index += 3;
-				break;
-			case '4':
-				index += 4;
-				break;
-			case '5':
-				index += 5;
-				break;
-			case '6':
-				index += 6;
-				break;
-			case '7':
-				index += 7;
-				break;
-			case '8':
-				index += 8;
-				break;
-			case ' ':
-				board_done = true;
-				break;
-		}
-	}
-
-	for (int index = 0; index < 128; index++) 
-	{
-		if (board->colors->at(index) == WHITE) 
-		{
-			if (board->pieces->at(index) == KING) 
-			{
-				board->white_king = square(index);
-			}
-
-			board->white_pieces->insert(index);
-		}
-		else if (board->colors->at(index) == BLACK) 
-		{
-			board->black_pieces->insert(index);
-			if (board->pieces->at(index) == KING) 
-			{
-				board->black_king = square(index);
-			}
-		}
-	}
-} 
-
-std::string board_to_fen(board* b)
-{
-	std::string fen = "";
-	int empty_squares = 0;
-	for (square s: fsi) 
-	{
-		if (IS_SQ(s))
-		{
-			color c = b->colors->at(s);
-			piece p = b->pieces->at(s);
-			if (p == NONE)
-			{
-				empty_squares++;
-			}
-			else
-			{
-				if (empty_squares != 0)
-				{
-					fen += std::to_string(empty_squares);
-					empty_squares = 0;
-				}
-				switch (p) 
-				{
-					case PAWN:
-						fen += c == BLACK ? "p" : "P";
-						break;
-					case ROOK:
-						fen += c == BLACK ? "r" : "R";
-						break;
-					case KNIGHT:
-						fen += c == BLACK ? "n" : "N";
-						break;
-					case BISHOP:
-						fen += c == BLACK ? "b" : "B";
-						break;
-					case QUEEN:
-						fen += c == BLACK ? "q" : "Q";
-						break;
-					case KING:
-						fen += c == BLACK ? "k" : "K";
-						break;
-				}
-			}
-
-			if ((s & 7) == 7)
-			{
-				if (empty_squares != 0)
-				{
-					fen += std::to_string(empty_squares);
-					empty_squares = 0;
-				}
-				if (s != H1)
-				{
-					fen += "/";
-				}
-			}
-		}
-	}
-
-	fen += " ";
-	fen += b->side_to_move == WHITE ? "W" : "B";
-	return fen;
 }

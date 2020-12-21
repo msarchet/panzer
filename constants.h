@@ -106,12 +106,12 @@ const color	WHITE = 0;
 const color	BLACK = 1;
 const color	NO_COLOR = 2;
 
-
 const move_flags NO_FLAGS = 0;
 const move_flags CASTLE = 2;
 const move_flags EP = 4;
 const move_flags PROMOTION = 8;
 const move_flags CAPTURE = 16;
+
 struct move
 {
 	char id = 0;
@@ -126,6 +126,7 @@ struct move
 	int score = 0;
 	square ep = EMPTY;
 	square prior_ep = EMPTY;
+	castle_flags prior_castle = EMPTY;
 	move(square from,
 		square to,
 		piece from_piece,
@@ -134,6 +135,7 @@ struct move
 		char flags,
 		square ep,
 		square prior_ep,
+		castle_flags prior_castle,
 		int ply) :
 			from(from),
 			to(to),
@@ -143,27 +145,12 @@ struct move
 			flags(flags),
 			ep(ep),
 			prior_ep(prior_ep),
+			prior_castle(prior_castle),
 			ply(ply)
 	{
 		castle =flags & CASTLE;
 	}
 			
-};
-
-
-struct board
-{
-	std::shared_ptr<std::array<piece, 128>> pieces = std::make_shared<std::array<piece, 128>>();
-	std::shared_ptr<std::array<color, 128>> colors = std::make_shared<std::array<color, 128>>();
-	std::shared_ptr<std::unordered_set<piece>> white_pieces = std::make_shared<std::unordered_set<piece>>();
-	std::shared_ptr<std::unordered_set<piece>> black_pieces = std::make_shared<std::unordered_set<piece>>();
-	color side_to_move = WHITE;
-	char castle_moves = (1 | 2 | 4 | 8); // 1K 2 Q 4 k 4 q
-	square ep_square = EMPTY;
-	int ply = 0;
-	hash zorbist = 0;
-	square black_king = E8;
-	square white_king = E1;
 };
 
 
@@ -211,138 +198,6 @@ const int rays [] =
 
 #pragma region LOOKUPS
 
-const std::string square_names[]
-{
-	"A1",
-	"B1",
-	"C1",
-	"D1",
-	"E1",
-	"F1",
-	"G1",
-	"H1",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A2",
-	"B2",
-	"C2",
-	"D2",
-	"E2",
-	"F2",
-	"G2",
-	"H2",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A3",
-	"B3",
-	"C3",
-	"D3",
-	"E3",
-	"F3",
-	"G3",
-	"H3",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A4",
-	"B4",
-	"C4",
-	"D4",
-	"E4",
-	"F4",
-	"G4",
-	"H4",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A5",
-	"B5",
-	"C5",
-	"D5",
-	"E5",
-	"F5",
-	"G5",
-	"H5",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A6",
-	"B6",
-	"C6",
-	"D6",
-	"E6",
-	"F6",
-	"G6",
-	"H6",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A7",
-	"B7",
-	"C7",
-	"D7",
-	"E7",
-	"F7",
-	"G7",
-	"H7",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"",
-	"A8",
-	"B8",
-	"C8",
-	"D8",
-	"E8",
-	"F8",
-	"G8",
-	"H8",
-	"EMPTY"
-};
-
-const std::string color_names[]
-{
-	"WHITE",
-	"BLACK",
-	"NO_COLOR"
-};
-
 struct hashed_board
 {
 	hash hash = 0;
@@ -352,4 +207,3 @@ struct hashed_board
 	bool isCheckmate = false;
 };
 
-//std::unordered_map<square, std::unordered_map<piece, std::unordered_map<color, hash>>>  zorbist_hash_lookup;
