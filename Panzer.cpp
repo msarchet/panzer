@@ -49,11 +49,12 @@ int main(int argc, char *argv[])
 	hashed_board* starting_hashboard = new hashed_board();
   
 	std::cout << "Running\n";
-	auto problem_fen = "rnbqkbnr/1ppppppp/8/8/pPP5/N7/P2PPPPP/R1BQKBNR";
-	b->FenToBoard(STARTFEN);
+	auto problem_fen = "8/p7/8/1P6/K1k3p1/6P1/7P/8";
+	b->FenToBoard(problem_fen);
 	std::string fen = b->BoardToFen();
 	b->SetSideToMove(WHITE);
 	b->SetEPSquare(NONE);
+	b->SetCastleFlags(NO_FLAGS);
 	hash_start_board(b);
 	hash starting_hash = b->Zorbist();
 
@@ -62,7 +63,14 @@ int main(int argc, char *argv[])
 	outfile << "Peft depth " << depth << "\n";
 	outfile << "Starting Hash" << starting_hash << "\n";
 
-
+	//auto b5b6 = build_move(B5, B6, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//make_move(b5b6, b);
+	//auto a7a6 = build_move(A7, A6, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//make_move(a7a6, b);
+	//auto b6b7 = build_move(B6, B7, PAWN, NONE, NO_FLAGS, NONE, NONE, b);
+	//make_move(b6b7, b);
+	//auto c4d5 = build_move(C4, D5, KING, NONE, NO_FLAGS, NONE, NONE, b);
+	//make_move(c4d5, b);
 	uint32_t legal_count = 0;
 	start = std::chrono::high_resolution_clock::now();
 	generate_moves(moves, b);
@@ -75,6 +83,10 @@ int main(int argc, char *argv[])
 			legal_count++;
 			std::cout << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[move->to] << ": ";
 			outfile << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[move->to] << ": ";
+			if (move->flags & PROMOTION)
+			{
+				std::cout << Panzer::Utils::piece_name(move->piece_to);
+			}
 			auto count = perft_raw(depth - 1, b);
 			std::cout << count << "\n";
 			outfile << count << "\n";
@@ -696,11 +708,14 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 					{
 						for (piece promote : {QUEEN, ROOK, KNIGHT, BISHOP}) 
 						{
-							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, NONE, NONE, board);
+							auto m = build_move(square(square_index), square(current_target), PAWN, NONE, PROMOTION, promote, NONE, board);
 							moves->push_back(m);
 						}
 					}
-					moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, NONE, board));
+					else
+					{
+						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE, NONE, board));
+					}
 				}
 
 				int pawn_captures[] = { square_index + NW, square_index + NE };
@@ -716,7 +731,10 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 								moves->push_back(m);
 							}
 						}
-						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), CAPTURE, NONE, NONE, board));
+						else
+						{
+							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), CAPTURE, NONE, NONE, board));
+						}
 					}
 				}
 				
@@ -752,7 +770,10 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 							moves->push_back(m);
 						}
 					}
-					moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE,NONE, board));
+					else
+					{
+						moves->push_back(build_move(square(square_index), square(current_target), PAWN, NONE, NO_FLAGS, NONE,NONE, board));
+					}
 				}
 
 				int pawn_captures[] = { square_index + SW, square_index + SE };
@@ -768,7 +789,10 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 								moves->push_back(m);
 							}
 						}
-						moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), CAPTURE, NONE, NONE, board));
+						else
+						{
+							moves->push_back(build_move(square(square_index), square(capture_index), PAWN, board->GetPieceAt(capture_index), CAPTURE, NONE, NONE, board));
+						}
 					}
 				}
 			}
