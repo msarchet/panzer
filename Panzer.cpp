@@ -63,20 +63,37 @@ int main(int argc, char *argv[])
 	outfile << "Starting Hash" << starting_hash << "\n";
 
 
+	uint32_t legal_count = 0;
 	start = std::chrono::high_resolution_clock::now();
-	unsigned long total = perft_raw(depth, b);
+	generate_moves(moves, b);
+	for (auto it = moves->begin(); it != moves->end(); it++)
+	{
+		auto move = *it;
+		make_move(move, b);
+		if (!isAttacked(b->KingSquare(b->SideToMove() != WHITE ? WHITE : BLACK), b))
+		{
+			legal_count++;
+			std::cout << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[m->to] << ": ";
+			outfile << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[m->to] << ": ";
+			auto count = perft_raw(depth - 1, b);
+			std::cout << count << "\n";
+			outfile << count << "\n";
+		}
+		unmake_move(move, b);
+	}
+		
 	end = std::chrono::high_resolution_clock::now();
 	starting_hashboard->moves = moves;
 	outfile << "Ending Hash" << b->Zorbist() << "\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
 	outfile << "Time:" << elapsed_seconds.count();
 	outfile << "\n";
-	outfile << "Perft" << depth << " " << total;
-	outfile << "Moves PS: " << total / elapsed_seconds.count() << "\n";
+	outfile << "Perft" << depth << " " << legal_count;
+	outfile << "Moves PS: " << legal_count / elapsed_seconds.count() << "\n";
 
-	outfile << "TOTAL MOVES" << total << "\n";
-	std::cout << "Moves PS: " << total / elapsed_seconds.count() << "\n";
-	std::cout << "TOAL MOVES" << total << "\n";
+	outfile << "TOTAL MOVES" << legal_count << "\n";
+	std::cout << "Moves PS: " << legal_count / elapsed_seconds.count() << "\n";
+	std::cout << "TOAL MOVES" << legal_count << "\n";
 	std::cout << "DONE" << "\n";
 	std::cout << b->BoardToFen();
 	std::cin.get();
