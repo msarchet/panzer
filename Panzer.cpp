@@ -73,8 +73,8 @@ int main(int argc, char *argv[])
 		if (!isAttacked(b->KingSquare(b->SideToMove() != WHITE ? WHITE : BLACK), b))
 		{
 			legal_count++;
-			std::cout << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[m->to] << ": ";
-			outfile << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[m->to] << ": ";
+			std::cout << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[move->to] << ": ";
+			outfile << Panzer::Utils::square_names[move->from] << Panzer::Utils::square_names[move->to] << ": ";
 			auto count = perft_raw(depth - 1, b);
 			std::cout << count << "\n";
 			outfile << count << "\n";
@@ -323,32 +323,27 @@ void make_move(std::shared_ptr<const move> m, board* board)
 	// adjust castling flags
 	if (board->CastleFlags()) 
 	{
-		if (m->from == E1) 
+		if (m->from == E1 || m->to == E1) 
 		{
 			board->ToggleCastleMoves(WHITEK | WHITEQ);
 		}
-
-		if (m->from == A1)
+		else if (m->from == A1 || m->to == A1)
 		{
 			board->ToggleCastleMoves(WHITEQ);
 		}
-
-		if (m->from == H1)
+		else if (m->from == H1 || m->to == H1)
 		{
 			board->ToggleCastleMoves(WHITEK);
 		}
-
-		if (m->from == E8) 
+		else if (m->from == E8 || m->to== E8) 
 		{
 			board->ToggleCastleMoves(BLACKK | BLACKQ);
 		}
-
-		if (m->from == A8)
+		else if (m->from == A8 || m->to == A8)
 		{
 			board->ToggleCastleMoves(BLACKQ);
 		}
-
-		if (m->from == H8)
+		else if (m->from == H8 || m->to == H8)
 		{
 			board->ToggleCastleMoves(BLACKK);
 		}
@@ -485,9 +480,7 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 		}
 	}
 	board->SetCastleFlags(m->prior_castle);
-
-	//update_hash(m, board);
-}
+	}
 
 bool isAttacked(const square& square, board* board) 
 {
