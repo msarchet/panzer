@@ -1,9 +1,9 @@
 #pragma once
+#include <stdlib.h>
 #include <set>
 #include <map>
 #include <array>
 #include <unordered_map>
-#include <stdlib.h>
 #include <random>
 #include <cmath>
 #include <memory>
@@ -13,12 +13,12 @@
 
 constexpr auto STARTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR W";
 
-typedef unsigned __int8 square;
-typedef unsigned __int8 piece;
-typedef unsigned __int8 color;
-typedef unsigned __int8 move_flags;
-typedef unsigned __int64 hash;
-typedef unsigned __int8 castle_flags;
+typedef uint8_t square;
+typedef uint8_t piece;
+typedef uint8_t color;
+typedef uint8_t move_flags;
+typedef uint64_t hash;
+typedef uint8_t castle_flags;
 
 const square A1 = 0;
 const square B1 = 1;

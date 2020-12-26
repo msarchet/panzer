@@ -1,6 +1,3 @@
-// Panzer.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include <chrono>
 #include <fstream>
@@ -12,6 +9,7 @@
 #include "constants.h"
 #include "board.h"
 #include "name_lookups.h"
+
 typedef Panzer::Board board;
 
 bool isAttacked(const square& square, board* board);
@@ -30,20 +28,17 @@ void hash_start_board(board* b);
 
 std::ofstream outfile;
 std::unordered_map<hash, std::shared_ptr<hashed_board>>* hashed_boards = new std::unordered_map<hash, std::shared_ptr<hashed_board>>();
+
 int main(int argc, char *argv[])
 {
 	// Using time point and system_clock 
     std::chrono::time_point<std::chrono::steady_clock> start, end; 
-	int depth = 6;
+	int depth = 4;
 	if (argc > 1) 
 	{
 		depth = argv[1][0] - '0';
 	}
 	auto const now = std::time(NULL);
-	std::tm bt{};
-	auto start_time = localtime_s(&bt, &now);
-	std::stringstream temp;
-	temp << std::put_time(&bt, "%F %T");
 	std::string filename = "perft-depth" + std::to_string(depth) + ".log";
 	board* b = new board;
 	auto moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
@@ -72,6 +67,7 @@ int main(int argc, char *argv[])
 	//auto c4d5 = build_move(C4, D5, KING, NONE, NO_FLAGS, NONE, NONE, b);
 	//make_move(c4d5, b);
 	uint32_t legal_count = 0;
+	uint32_t total_count = 0;
 	start = std::chrono::high_resolution_clock::now();
 	generate_moves(moves, b);
 	for (auto it = moves->begin(); it != moves->end(); it++)
@@ -88,11 +84,15 @@ int main(int argc, char *argv[])
 				std::cout << Panzer::Utils::piece_name(move->piece_to);
 			}
 			auto count = perft_raw(depth - 1, b);
+			total_count += count;
 			std::cout << count << "\n";
 			outfile << count << "\n";
 		}
 		unmake_move(move, b);
 	}
+	
+	std::cout << "-------------------\n";
+	std::cout << legal_count << "\n";
 		
 	end = std::chrono::high_resolution_clock::now();
 	starting_hashboard->moves = moves;
@@ -100,12 +100,12 @@ int main(int argc, char *argv[])
 	std::chrono::duration<double> elapsed_seconds = end - start; 
 	outfile << "Time:" << elapsed_seconds.count();
 	outfile << "\n";
-	outfile << "Perft" << depth << " " << legal_count;
-	outfile << "Moves PS: " << legal_count / elapsed_seconds.count() << "\n";
+	outfile << "Perft" << depth << " " << total_count;
+	outfile << "Moves PS: " << total_count / elapsed_seconds.count() << "\n";
 
-	outfile << "TOTAL MOVES" << legal_count << "\n";
-	std::cout << "Moves PS: " << legal_count / elapsed_seconds.count() << "\n";
-	std::cout << "TOAL MOVES" << legal_count << "\n";
+	outfile << "TOTAL MOVES" << total_count << "\n";
+	std::cout << "Moves PS: " << total_count / elapsed_seconds.count() << "\n";
+	std::cout << "TOAL MOVES" << total_count << "\n";
 	std::cout << "DONE" << "\n";
 	std::cout << b->BoardToFen();
 	std::cin.get();
