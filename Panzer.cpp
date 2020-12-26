@@ -15,6 +15,7 @@
 typedef Panzer::Board board;
 
 bool isAttacked(const square& square, board* board);
+bool isAttacked(const square& square, color c, board* board);
 std::shared_ptr<const move> build_move(square from_square, square to_square, piece from, piece captured, char flags, piece to_piece, square ep, board* b);
 
 void make_move(std::shared_ptr<const move>, board* board);
@@ -49,12 +50,11 @@ int main(int argc, char *argv[])
 	hashed_board* starting_hashboard = new hashed_board();
   
 	std::cout << "Running\n";
-	auto problem_fen = "8/p7/8/1P6/K1k3p1/6P1/7P/8";
+	auto problem_fen = "r3k2r/p6p/8/B7/1pp1p3/3b4/P6P/R3K2R";
 	b->FenToBoard(problem_fen);
 	std::string fen = b->BoardToFen();
 	b->SetSideToMove(WHITE);
 	b->SetEPSquare(NONE);
-	b->SetCastleFlags(NO_FLAGS);
 	hash_start_board(b);
 	hash starting_hash = b->Zorbist();
 
@@ -494,9 +494,15 @@ void unmake_move(std::shared_ptr<const move> m, board* board)
 	board->SetCastleFlags(m->prior_castle);
 	}
 
-bool isAttacked(const square& square, board* board) 
+bool isAttacked(const square& square, board* board)
 {
 	color moving_color = board->GetColorAt(square);
+	return isAttacked(square, moving_color, board);
+}
+
+bool isAttacked(const square& square, color c, board* board)
+{
+	color moving_color = c;
 	color attack_color = NO_COLOR;
 
 	if (moving_color == WHITE) 
@@ -593,7 +599,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		{
 			if (board->GetPieceAt(B1) == NONE and board->GetPieceAt(C1) == NONE and board->GetPieceAt(D1) == NONE)
 			{
-				if (!isAttacked(C1, board) and !isAttacked(D1, board))
+				if (!isAttacked(C1, WHITE, board) and !isAttacked(D1, WHITE, board))
 				{
 					moves->push_back(build_move(E1, C1, KING, NONE, CASTLE, NONE, NONE, board));
 				}
@@ -603,7 +609,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		{
 			if (board->GetPieceAt(F1) == NONE and board->GetPieceAt(G1) == NONE)
 			{
-				if (!isAttacked(F1, board) and !isAttacked(G1, board))
+				if (!isAttacked(F1, WHITE, board) and !isAttacked(G1, WHITE, board))
 				{
 					moves->push_back(build_move(E1, G1, KING, NONE, CASTLE, NONE, NONE, board));
 				}
@@ -617,7 +623,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		{
 			if (board->GetPieceAt(B8) == NONE and board->GetPieceAt(C8) == NONE and board->GetPieceAt(D8) == NONE)
 			{
-				if (!isAttacked(C8, board) and !isAttacked(D8, board))
+				if (!isAttacked(C8, BLACK, board) and !isAttacked(D8, BLACK, board))
 				{
 					moves->push_back(build_move(E8, C8, KING, NONE, CASTLE, NONE, NONE, board));
 				}
@@ -627,7 +633,7 @@ void generate_moves(std::shared_ptr<std::vector<std::shared_ptr<const move>>> mo
 		{
 			if (board->GetPieceAt(F8) == NONE and board->GetPieceAt(G8) == NONE)
 			{
-				if (!isAttacked(F8, board) and !isAttacked(G8, board))
+				if (!isAttacked(F8, BLACK, board) and !isAttacked(G8, BLACK, board))
 				{
 					moves->push_back(build_move(E8, G8, KING, NONE, CASTLE, NONE, NONE, board));
 				}
