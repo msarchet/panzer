@@ -30,6 +30,8 @@ namespace Panzer
 		square ep_square = NO_SQUARE;
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
 		uint8_t ply = 1;
+		std::array<piece, 64> *pieces = new std::array<piece, 64> {NO_PIECE};
+
 	public:
 		void FillSquare(square s, piece p, color c);
 		void ClearSquare(square s,piece p, color c);
@@ -58,36 +60,16 @@ namespace Panzer
 	private:
 		int GetMSB(bitboard b);
 		int GetLSB(bitboard b);
-		piece GetPieceAtSquare(bitboard b, color c);
+		piece GetPieceAtSquare(square s);
+		void ToggleBitBoards(square s, piece p, color c);
 	};
 
-	piece Board_Bit::GetPieceAtSquare(bitboard b, color c)
+	piece Board_Bit::GetPieceAtSquare(square s)
 	{
-		piece piece = NO_PIECE;
-
-		if (c & WHITE)
-		{
-			piece |= !!(WHITE_PAWNS & b) << 1;
-			piece |= !!(WHITE_ROOKS & b) << 2;
-			piece |= !!(WHITE_KNIGHTS & b) << 3;
-			piece |= !!(WHITE_BISHOPS & b) << 4;
-			piece |= !!(WHITE_QUEENS & b) << 5;
-			piece |= !!(WHITE_KINGS & b) << 6;
-		}
-		else
-		{
-			piece |= !!(BLACK_PAWNS & b) << 1;
-			piece |= !!(BLACK_ROOKS & b) << 2;
-			piece |= !!(BLACK_KNIGHTS & b) << 3;
-			piece |= !!(BLACK_BISHOPS & b) << 4;
-			piece |= !!(BLACK_QUEENS & b) << 5;
-			piece |= !!(BLACK_KINGS & b) << 6;
-		}
-
-		return  piece;
+		return pieces->at(s);
 	}
 
-	void Board_Bit::FillSquare(square s, piece p, color c)
+	void Board_Bit::ToggleBitBoards(square s, piece p, color c)
 	{
 		bitboard shifted = ONE_BIT << s;
 		OCCUPIED ^= shifted;
@@ -97,7 +79,7 @@ namespace Panzer
 
 		// no branching
 
-		WHITE_PAWNS   ^= static_cast<uint64_t>((!c & !WHITE) && (p & PAWN)) << s;
+		WHITE_PAWNS   ^= static_cast<uint64_t>((!c & !WHITE)&&(p & PAWN)) << s;
 		WHITE_ROOKS   ^= static_cast<uint64_t>((!c & !WHITE)&&(p & ROOK)) << s;
 		WHITE_KNIGHTS ^= static_cast<uint64_t>((!c & !WHITE)&&(p & KNIGHT)) << s;
 		WHITE_BISHOPS ^= static_cast<uint64_t>((!c & !WHITE)&&(p & BISHOP)) << s;
@@ -112,9 +94,16 @@ namespace Panzer
 		BLACK_KINGS   ^= static_cast<uint64_t>((c & BLACK)&&(p & KING)) << s;
 	}
 
+	void Board_Bit::FillSquare(square s, piece p, color c)
+	{
+		ToggleBitBoards(s, p, c);
+		pieces->at(s) = p;
+	}
+
 	void Board_Bit::ClearSquare(square s,piece p, color c)
 	{
-		FillSquare(s, p, c);
+		ToggleBitBoards(s, p, c);
+		pieces->at(s) = NO_PIECE;
 	}
 
 	std::shared_ptr<std::vector<std::shared_ptr<Move>>> Board_Bit::GenerateMoves()
@@ -155,7 +144,7 @@ namespace Panzer
 
 		while (pushes != 0)
 		{
-			int index = GetMSB(pushes);
+			int index = GetLSB(pushes);
 			square to = ONE_BIT << index;
 			square from = to >> S;
 			auto move = std::make_shared<Move>
@@ -170,12 +159,12 @@ namespace Panzer
 				this->castle_flags, 
 				this->ply); 
 			moves->push_back(move);
-			pushes ^= to;
+			pushes &= pushes-1ULL;
 		}
 
 		while (double_push != 0)
 		{
-			int index = GetMSB(double_push);
+			int index = GetLSB(double_push);
 			square to = ONE_BIT << index;
 			square from = to >> SS;
 			auto move = std::make_shared<Move>
@@ -190,12 +179,12 @@ namespace Panzer
 				this->castle_flags,
 				this->ply);
 			moves->push_back(move);
-			double_push ^= to;
+			double_push &= double_push - 1ULL;
 		}
 
 		while(right_captures != 0)
 		{
-			int index = GetMSB(right_captures);
+			int index = GetLSB(right_captures);
 			square to = ONE_BIT << index;
 			square from = to >> SW;
 			auto move = std::make_shared<Move>
@@ -204,19 +193,19 @@ namespace Panzer
 				to,
 				PAWN,
 				NO_PIECE,
-				this->GetPieceAtSquare(to, BLACK),
+				this->GetPieceAtSquare(index),
 				NO_SQUARE,
 				this->ep_square,
 				CAPTURE,
 				this->castle_flags,
 				this->ply);
 			moves->push_back(move);
-			right_captures ^= to;
+			right_captures &= to;
 		}
 
 		while(left_captures != 0)
 		{
-			int index = GetMSB(left_captures);
+			int index = GetLSB(left_captures);
 			square to = ONE_BIT << index;
 			square from = to >> SE;
 			auto move = std::make_shared<Move>
@@ -225,14 +214,14 @@ namespace Panzer
 				to,
 				PAWN,
 				NO_PIECE,
-				this->GetPieceAtSquare(to, BLACK),
+				this->GetPieceAtSquare(index),
 				NO_SQUARE,
 				this->ep_square,
 				CAPTURE,
 				this->castle_flags,
 				this->ply);
 			moves->push_back(move);
-			left_captures ^= to;	
+			left_captures &= left_captures - 1;	
 		}
 
 		return moves;

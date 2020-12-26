@@ -25,8 +25,8 @@ int main (int argc, char *argv[])
     board->FillSquare(D7, PAWN, BLACK);
     board->FillSquare(E7, PAWN, BLACK);
     board->FillSquare(F7, PAWN, BLACK);
-    board->FillSquare(G3, PAWN, BLACK);
-    board->FillSquare(H3, PAWN, BLACK);
+    board->FillSquare(G7, PAWN, BLACK);
+    board->FillSquare(H7, PAWN, BLACK);
 
     std::cout << "Black Pieces\n";
     board->PrintBoard(board->GetBlackPieces());
@@ -36,8 +36,9 @@ int main (int argc, char *argv[])
     board->PrintBoard(board->GetOccupancy());
 
     std::chrono::time_point<std::chrono::steady_clock> start,end;
-    start = std::chrono::high_resolution_clock::now();
     auto moves = board->GenerateWhiteMoves();
+    std::cout << moves->size() << "\n";
+    start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1000000; i++)
     {
         moves = board->GenerateWhiteMoves();
@@ -46,6 +47,6 @@ int main (int argc, char *argv[])
     end = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> elapsed_seconds = end - start; 
-    std::cout << elapsed_seconds.count();
+    std::cout << elapsed_seconds.count() << "\n";
     std::cout << "MPS" << moves->size() * 1000000/ elapsed_seconds.count();
 }
