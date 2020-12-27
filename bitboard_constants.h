@@ -1,12 +1,15 @@
 #pragma once
-typedef uint64_t square;
+typedef uint8_t square;
 typedef uint8_t piece;
-typedef bool color;
 typedef uint8_t move_flag;
 typedef uint8_t castle_flag;
+
 typedef uint64_t hash;
 typedef uint64_t bitboard;
 typedef uint64_t mask;
+
+typedef bool color;
+
 const square NO_SQUARE = 0;
 const piece NO_PIECE = 0;
 const move_flag EMPTY_MOVE_FLAGS = 0;
@@ -32,15 +35,40 @@ const mask G_FILE = 0x4040404040404040ULL;
 const mask H_FILE = 0x8080808080808080ULL;
 const mask AB_FILE = A_FILE | B_FILE;
 const mask GH_FILE = G_FILE | H_FILE;
+const bitboard FILLED_BOARD = ~0ULL;
+
+const std::array<bitboard, 8> knight_move_masks = 
+{ 
+    ~(G_FILE|H_FILE), // A_FILE
+    ~(H_FILE), // B_FILE
+    FILLED_BOARD, // C_FILE
+    FILLED_BOARD, // D_FILE
+    FILLED_BOARD, // E_FILE
+    FILLED_BOARD, // F_FILE
+    ~(A_FILE), // G_FILE
+    ~(A_FILE|B_FILE), // H_FILE
+};
+const bitboard king_move_masks[8] = 
+{
+    ~H_FILE,
+    FILLED_BOARD,
+    FILLED_BOARD,
+    FILLED_BOARD,
+    FILLED_BOARD,
+    FILLED_BOARD,
+    FILLED_BOARD,
+    ~A_FILE,
+};
 
 const color WHITE = 0;
 const color BLACK = 1;
-const piece PAWN = 2;
-const piece ROOK = 4;
-const piece KNIGHT = 8;
-const piece BISHOP = 16;
-const piece QUEEN = 32;
-const piece KING = 64;
+
+const piece PAWN = 1;
+const piece ROOK = 2;
+const piece KNIGHT = 3;
+const piece BISHOP = 4;
+const piece QUEEN = 5;
+const piece KING = 6;
 
 const bitboard ONE_BIT = 1ULL;
 const square A1 = 0;
@@ -132,41 +160,58 @@ const int W = 1;
 const int NN = 16;
 const int SS = 16;
 
-const int KING_SPAN_CENTER = 9;
+const int KING_SPAN_CENTER = 14;
 
+// 0 0 0 0 0 1 1 1
+// 0 0 0 0 0 1 0 1
+// 0 0 0 0 0 1 1 1
 struct KingSpan {
     bitboard span = 0;
 
     KingSpan() {
-        span ^= ONE_BIT << (9 + NW);
-        span ^= ONE_BIT << (9 + N);
-        span ^= ONE_BIT << (9 + NE);
-        span ^= ONE_BIT << (9 + E);
-        span ^= ONE_BIT << (9 - SE);
-        span ^= ONE_BIT << (9 - S);
-        span ^= ONE_BIT << (9 - SW);
-        span ^= ONE_BIT << (9 + W);
+        span ^= ONE_BIT << (KING_SPAN_CENTER + NW);
+        span ^= ONE_BIT << (KING_SPAN_CENTER + N);
+        span ^= ONE_BIT << (KING_SPAN_CENTER + NE);
+        span ^= ONE_BIT << (KING_SPAN_CENTER + E);
+        span ^= ONE_BIT << (KING_SPAN_CENTER - SE);
+        span ^= ONE_BIT << (KING_SPAN_CENTER - S);
+        span ^= ONE_BIT << (KING_SPAN_CENTER - SW);
+        span ^= ONE_BIT << (KING_SPAN_CENTER + W);
     }
 
 };
 
-const int KNIGHT_SPAN_CENTER = 18;
+const int KNIGHT_SPAN_CENTER = 21;
 struct KnightSpan {
     bitboard span = 0;
 
+    // 0 0 0 0 0 0 0 0
+    // 0 0 0 0 0 0 0 0
+    // 0 0 0 0 0 0 0 0
+    // 0 0 0 0 1 0 1 0
+    // 0 0 0 1 0 0 0 1
+    // 0 0 0 0 0 x 0 0
+    // 0 0 0 1 0 0 0 1
+    // 0 0 0 0 1 0 1 0
     KnightSpan()
     {
-        span ^= ONE_BIT << (18 - 2 + N);
-        span ^= ONE_BIT << (18 - 2 - S);
-        span ^= ONE_BIT << (18 + NN - 1);
-        span ^= ONE_BIT << (18 + NN + 1);
-        span ^= ONE_BIT << (18 + 2 + N);
-        span ^= ONE_BIT << (18 + 2 - S);
-        span ^= ONE_BIT << (18 - 1 - SS);
-        span ^= ONE_BIT << (18 + 1 - SS);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER - 2 + N);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER - 2 - S);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER + NN - 1);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER + NN + 1);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER + 2 + N);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER + 2 - S);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER - 1 - SS);
+        span ^= ONE_BIT << (KNIGHT_SPAN_CENTER + 1 - SS);
     }
 
 };
+
+const KnightSpan ns;
+const KingSpan ks;
+
+const bitboard KNIGHT_SPAN = ns.span;
+const bitboard KING_SPAN = ks.span;
 
 const move_flag NO_FLAGS = 0;
 const move_flag CASTLE = 2;

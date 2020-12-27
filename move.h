@@ -42,6 +42,7 @@ namespace Panzer
         {
             is_castle = !!(move_flags & CASTLE);
             is_capture = !!(move_flags & CAPTURE);
+            piece_to = to_piece > NO_PIECE ? to_piece : from_piece;
         }
     };
 }
