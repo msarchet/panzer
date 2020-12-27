@@ -1,0 +1,12 @@
+.vscode/
+*.log
+*.perfraw
+*.profraw
+*.profdata
+*.dSYM/
+
+panzerbb
+panzerbb-debug
+panzer
+panzerbb-profile
+
