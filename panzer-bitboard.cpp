@@ -60,5 +60,5 @@ int main (int argc, char *argv[])
 	std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout << elapsed_seconds.count() << "\n";
     std::cout << "total moves " << total_count << "\n";
-    std::cout << "MPS" <<total_count / elapsed_seconds.count();
+    std::cout << "MPS" << 20e6 / elapsed_seconds.count();
 }

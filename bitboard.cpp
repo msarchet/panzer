@@ -68,11 +68,11 @@ namespace Panzer
 		void MakeBlackQueenMoves(MoveVector moves);
 		void MakeBlackKingMoves(MoveVector moves);
 
-		void MakeRookMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side);
+		void MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side);
 		void MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side);
-		void MakeBishopMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side);
-		void MakeQueenMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side);
-		void MakeKingMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side);
+		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side);
+		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side);
+		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side);
 	};
 
 	piece Board_Bit::GetPieceAtSquare(square s)
@@ -125,7 +125,14 @@ namespace Panzer
 
 	MoveVector Board_Bit::GenerateBlackMoves()
 	{
-
+		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move>>>();
+		this->MakeBlackPawnMoves(moves);
+		this->MakeBlackRooksMoves(moves);
+		this->MakeBlackKnightMoves(moves);
+		this->MakeBlackBishopMoves(moves);
+		this->MakeBlackQueenMoves(moves);
+		this->MakeBlackKingMoves(moves);
+		return moves;
 	}
 
 	int Board_Bit::GetMSB(bitboard b)
@@ -285,8 +292,7 @@ namespace Panzer
 		const bitboard pawns = this->GetWhitePawns();
 		const bitboard black_pieces = this->GetBlackPieces();
 		const bitboard occupied = this->GetOccupancy();
-		bitboard pushes = pawns << N; // shift north
-		pushes = pushes & ~occupied; // space cant be occupied
+		bitboard pushes = (pawns << N) & ~occupied; // shift north
 		// scan the bits and make the move
 		// char from = bit_index - 8;
 		// char to = bit_index;
@@ -296,11 +302,9 @@ namespace Panzer
 		// char from = bit_index - 16;
 		// char to = bit_index;
 		// flag move_type = PAWN_DOUBLE_PUSH;
-		bitboard left_captures = (pawns & ~A_FILE) << NW; // shift NW
-		left_captures = left_captures & black_pieces;
+		bitboard left_captures = ((pawns & ~A_FILE) << NW) & black_pieces; // shift NW
 
-		bitboard right_captures = (pawns & ~H_FILE) << NE; // shift NE
-		right_captures = right_captures & black_pieces;
+		bitboard right_captures = ((pawns & ~H_FILE) << NE) & black_pieces; // shift NE
 
 		while (pushes != 0)
 		{
@@ -411,7 +415,10 @@ namespace Panzer
 
 	void Board_Bit::MakeWhiteKingMoves(MoveVector moves)
 	{
-
+		auto kings = this->GetWhiteKings();
+		auto white_pieces = this->GetWhitePieces();
+		auto black_pieces = this->GetBlackPieces();
+		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
 	}
 
 	void Board_Bit::MakeBlackPawnMoves(MoveVector moves)
@@ -430,7 +437,6 @@ namespace Panzer
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
 		this->MakeKnightMoves(moves, knights, black_pieces, white_pieces);
-
 	}
 
 	void Board_Bit::MakeBlackBishopMoves(MoveVector moves)
@@ -445,10 +451,13 @@ namespace Panzer
 
 	void Board_Bit::MakeBlackKingMoves(MoveVector moves)
 	{
-
+		auto kings = this->GetWhiteKings();
+		auto white_pieces = this->GetWhitePieces();
+		auto black_pieces = this->GetBlackPieces();
+		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
 	}
 
-	void Board_Bit::MakeRookMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
+	void Board_Bit::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side)
 	{
 
 	}
@@ -486,7 +495,7 @@ namespace Panzer
 					this->GetPieceAtSquare(to),
 					NO_SQUARE,
 					this->ep_square,
-					EMPTY_MOVE_FLAGS,
+					CAPTURE,
 					this->castle_flags,
 					this->ply
 				);
@@ -518,19 +527,80 @@ namespace Panzer
 		}
 	}
 
-	void Board_Bit::MakeBishopMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
+	void Board_Bit::MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side)
 	{
 
 	}
 
-	void Board_Bit::MakeQueenMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
+	void Board_Bit::MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side)
 	{
 
 	}
 
-	void Board_Bit::MakeKingMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
+	void Board_Bit::MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side)
 	{
+		while (kings != 0)
+		{
+			int from = this->GetLSB(kings);
+			auto king_span = KING_SPAN_CENTER;
 
+			if (from >= KING_SPAN_CENTER)
+			{
+				king_span = king_span << (from - KING_SPAN_CENTER);
+			}
+			else
+			{
+				king_span = king_span >> (KING_SPAN_CENTER - from);
+			}
+
+			auto all_moves = king_span & ~same_side;
+			auto captures = all_moves & other_side;
+			auto regular_moves = all_moves &~captures;
+
+			while (captures != 0)
+			{
+				int to = this->GetLSB(captures);
+				const auto move = std::make_shared<Move>
+				(
+					from,
+					to,
+					KING,
+					NO_PIECE,
+					this->GetPieceAtSquare(to),
+					NO_SQUARE,
+					this->ep_square,
+					CAPTURE,
+					this->castle_flags,
+					this->ply
+				);
+
+				moves->push_back(move);
+				captures &= captures - ONE_BIT;
+			}
+
+			while (regular_moves != 0)
+			{
+				int to = this->GetLSB(regular_moves);
+				const auto move = std::make_shared<Move>
+				(
+					from,
+					to,
+					KING,
+					NO_PIECE,
+					NO_PIECE,
+					NO_SQUARE,
+					this->ep_square,
+					EMPTY_MOVE_FLAGS,
+					this->castle_flags,
+					this->ply
+				);
+
+				moves->push_back(move);
+				regular_moves &= regular_moves - ONE_BIT;
+			}
+
+			from &= from - ONE_BIT;
+		}
 	}
 
 }
