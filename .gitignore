@@ -4,9 +4,13 @@
 *.profraw
 *.profdata
 *.dSYM/
+*.dat
+.DS_Store
 
 panzerbb
 panzerbb-debug
 panzer
 panzerbb-profile
+magic
+magic-debug
 
