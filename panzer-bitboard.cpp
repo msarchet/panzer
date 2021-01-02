@@ -4,9 +4,15 @@
 
 int main (int argc, char *argv[])
 {
-    auto board = new Panzer::Board_Bit();
+    const auto board = new Panzer::Board_Bit();
+    board->FillSquare(A1, ROOK, WHITE);
     board->FillSquare(B1, KNIGHT, WHITE);
+    board->FillSquare(C1, BISHOP, WHITE);
+    board->FillSquare(D1, QUEEN, WHITE);
+    board->FillSquare(E1, KING, WHITE);
+    board->FillSquare(F1, BISHOP, WHITE);
     board->FillSquare(G1, KNIGHT, WHITE);
+    board->FillSquare(H1, ROOK, WHITE);
     board->FillSquare(A2, PAWN, WHITE);
     board->FillSquare(B2, PAWN, WHITE);
     board->FillSquare(C2, PAWN, WHITE);
@@ -15,12 +21,6 @@ int main (int argc, char *argv[])
     board->FillSquare(F2, PAWN, WHITE);
     board->FillSquare(G2, PAWN, WHITE);
     board->FillSquare(H2, PAWN, WHITE);
-    std::cout << "White Pieces\n";
-    board->PrintBoard(board->GetWhitePieces());
-    std::cout << "White Pawns\n";
-    board->PrintBoard(board->GetWhitePawns());
-    std::cout << "Occupied\n";
-    board->PrintBoard(board->GetOccupancy());
 
     board->FillSquare(A7, PAWN, BLACK);
     board->FillSquare(B7, PAWN, BLACK);
@@ -30,35 +30,48 @@ int main (int argc, char *argv[])
     board->FillSquare(F7, PAWN, BLACK);
     board->FillSquare(G7, PAWN, BLACK);
     board->FillSquare(H7, PAWN, BLACK);
+    board->FillSquare(A8, ROOK, BLACK);
+    board->FillSquare(B8, KNIGHT, BLACK);
+    board->FillSquare(C8, BISHOP, BLACK);
+    board->FillSquare(D8, QUEEN, BLACK);
+    board->FillSquare(E8, KING, BLACK);
+    board->FillSquare(F8, BISHOP, BLACK);
+    board->FillSquare(G8, KNIGHT, BLACK);
+    board->FillSquare(H8, ROOK, BLACK);
 
-    std::cout << "Black Pieces\n";
-    board->PrintBoard(board->GetBlackPieces());
-    std::cout << "Black Pawns\n";
-    board->PrintBoard(board->GetBlackPawns());
-    std::cout << "Occupied\n";
+    auto copyBoard = new Panzer::Board_Bit(*board);
+    copyBoard->ClearSquare(A2, PAWN, WHITE);
+
+    std::cout << "First Board\n";
     board->PrintBoard(board->GetOccupancy());
+    auto moves = board->GenerateBlackMoves();
+    std::cout << moves->size() << "\n";
 
     std::chrono::time_point<std::chrono::steady_clock> start,end;
-    auto moves = board->GenerateWhiteMoves();
-    std::cout << moves->size() << "\n";
-    uint32_t total_count = 0;
-    start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1e6; i++)
+    //uint32_t total_count = 0;
+    for (auto it = moves->begin(); it != moves->end(); it++)
     {
-        moves = board->GenerateWhiteMoves();
-        for (auto it = moves->begin(); it != moves->end(); it++)
-        {                
-            board->MakeMove(*it);
-            board->UnmakeMove(*it);
-            total_count++;
-        }
+        std::cout << int((*it)->from) << " " << int((*it)->to) << "\n";
     }
 
-    const auto a2a4 = std::make_shared<Panzer::Move>(A2, A4, PAWN, NO_PIECE, NO_PIECE, A4, NO_SQUARE, EMPTY_MOVE_FLAGS, EMPTY_MOVE_FLAGS, 1);
+    start = std::chrono::high_resolution_clock::now();
+    //for (int i = 0; i < 1e6; i++)
+    //{
+    //    auto copyBoard = new Panzer::Board_Bit(*board);
+    //    //moves = board->GenerateWhiteMoves();
+    //    //for (auto it = moves->begin(); it != moves->end(); it++)
+    //    //{                
+    //    //    board->MakeMove(*it);
+    //    //    board->UnmakeMove(*it);
+    //    //    total_count++;
+    //    //}
+    //}
+
+    //const auto a2a4 = std::make_shared<Panzer::Move>(A2, A4, PAWN, NO_PIECE, NO_PIECE, A4, NO_SQUARE, EMPTY_MOVE_FLAGS, EMPTY_MOVE_FLAGS, 1);
     end = std::chrono::high_resolution_clock::now();
-    std::cout << "MOVES\n";
+    //std::cout << "MOVES\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout << elapsed_seconds.count() << "\n";
-    std::cout << "total moves " << total_count << "\n";
-    std::cout << "MPS" << 20e6 / elapsed_seconds.count();
+    //std::cout << "total moves " << total_count << "\n";
+    std::cout << "CPS" << 1e6 / elapsed_seconds.count();
 }

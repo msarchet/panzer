@@ -5,23 +5,46 @@
 #include <iostream>
 #include "bitboard_constants.h"
 #include "move.h"
+#include "utils/board_utils.h"
 
 typedef std::shared_ptr<std::vector<std::shared_ptr<const Panzer::Move>>> MoveVector;
 namespace Panzer
 {
 	class Board_Bit
 	{
-		bitboard OCCUPIED = 0;
 		std::array<bitboard, 7> *Pieces = new std::array<bitboard, 7> { 0ULL };
 		std::array<bitboard, 2> *Colors = new std::array<bitboard, 2> { 0ULL };
+		std::array<piece, 64> *pieces = new std::array<piece, 64> {NO_PIECE};
 
 		char side_to_move = WHITE;
 		square ep_square = NO_SQUARE;
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
 		uint8_t ply = 1;
-		std::array<piece, 64> *pieces = new std::array<piece, 64> {NO_PIECE};
 
 	public:
+		Board_Bit() {}
+
+		Board_Bit(const Board_Bit &board)
+		{
+			for (int i = 0; i< 7; i++)
+			{
+				Pieces->at(i) = board.Pieces->at(i);
+			}
+			for (int i = 0; i< 2; i++)
+			{
+				Colors->at(i) = board.Colors->at(i);
+			}
+			for (int i = 0; i < 64; i++)
+			{
+				pieces->at(i) = board.pieces->at(i);
+			}
+
+			side_to_move = board.side_to_move;
+			ep_square = board.ep_square;
+			castle_flags = board.castle_flags;
+			ply = board.ply;
+		}
+
 		void FillSquare(square s, piece p, color c);
 		void ClearSquare(square s,piece p, color c);
 		void PrintBoard(bitboard b);
@@ -91,12 +114,16 @@ namespace Panzer
 
 	void Board_Bit::FillSquare(square s, piece p, color c)
 	{
-		ToggleBitBoards(NO_SQUARE, s, p, c);
+		bitboard bb = ONE_BIT << s;
+		this->Colors->at(c) ^= bb;
+		this->Pieces->at(p) ^= bb;
 	}
 
 	void Board_Bit::ClearSquare(square s,piece p, color c)
 	{
-		ToggleBitBoards(s, NO_SQUARE, p, c);
+		bitboard bb = ONE_BIT << s;
+		this->Colors->at(c) ^= bb;
+		this->Pieces->at(p) ^= bb;
 	}
 
 	MoveVector Board_Bit::GenerateMoves()
@@ -127,8 +154,10 @@ namespace Panzer
 	{
 		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move>>>();
 		this->MakeBlackPawnMoves(moves);
+		std::cout << "Black Pawwn Moves" << moves->size() << "\n";
 		this->MakeBlackRooksMoves(moves);
 		this->MakeBlackKnightMoves(moves);
+		std::cout << "Black Knight Moves" << moves->size() << "\n";
 		this->MakeBlackBishopMoves(moves);
 		this->MakeBlackQueenMoves(moves);
 		this->MakeBlackKingMoves(moves);
@@ -148,21 +177,7 @@ namespace Panzer
 
 	void Board_Bit::PrintBoard(bitboard b)
 	{
-		for (int row = 7; row >= 0; --row) 
-		{
-			for (int col = 0; col <= 7; ++col) 
-			{
-				if (b & (1ULL << ((row * 8) + col))) 
-				{
-					std::cout << "1 ";
-				} else 
-				{
-					std::cout << "0 ";
-				}
-			}
-
-			std::cout << std::endl;
-		}
+		Panzer::Utils::PrintBoard(b);
 	}
 
 	void Board_Bit::MakeMove(std::shared_ptr<const Move> move)
@@ -306,6 +321,29 @@ namespace Panzer
 
 		bitboard right_captures = ((pawns & ~H_FILE) << NE) & black_pieces; // shift NE
 
+		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]);
+
+		while (ep_captures != 0)
+		{
+			square from = GetLSB(ep_captures);
+			square to = this->ep_square + N;
+			const auto move = std::make_shared<Move>
+			(
+				from,
+				to,
+				PAWN,
+				NO_PIECE,
+				PAWN,
+				NO_SQUARE,
+				this->ep_square,
+				CAPTURE,
+				this->castle_flags,
+				this->ply
+			);
+			moves->push_back(move);
+			ep_captures &= ep_captures - 1;
+		}
+
 		while (pushes != 0)
 		{
 			int index = GetLSB(pushes);
@@ -424,6 +462,129 @@ namespace Panzer
 	void Board_Bit::MakeBlackPawnMoves(MoveVector moves)
 	{
 
+		// generate pawn moves
+		// first shift pawns up one
+		const bitboard pawns = this->GetBlackPawns();
+		const bitboard white_pieces = this->GetWhitePieces();
+		const bitboard occupied = this->GetOccupancy();
+		bitboard pushes = (pawns >> S) & ~occupied; // shift north
+		// scan the bits and make the move
+		// char from = bit_index - 8;
+		// char to = bit_index;
+		// flag move_type = PAWN_PUSH;
+		bitboard double_push = ((pushes & SIXTH_RANK) >> S) & ~occupied; // moves forward that cant be occupied
+		// scan the bits and make the moves
+		// char from = bit_index - 16;
+		// char to = bit_index;
+		// flag move_type = PAWN_DOUBLE_PUSH;
+		bitboard left_captures = ((pawns & ~A_FILE) >> SW) & white_pieces; // shift NW
+
+		bitboard right_captures = ((pawns & ~H_FILE) >> SE) & white_pieces; // shift NE
+
+		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]);
+		while (ep_captures != 0)
+		{
+			square from = GetLSB(ep_captures);
+			square to = this->ep_square + S;
+			const auto move = std::make_shared<Move>
+			(
+				from,
+				to,
+				PAWN,
+				NO_PIECE,
+				PAWN,
+				NO_SQUARE,
+				this->ep_square,
+				CAPTURE,
+				this->castle_flags,
+				this->ply
+			);
+			moves->push_back(move);
+			ep_captures &= ep_captures - 1;
+		}
+
+		while (pushes != 0)
+		{
+			int index = GetLSB(pushes);
+			square to = index;
+			square from = to + N;
+			const auto move = std::make_shared<Move>
+				(from, 
+				to, 
+				PAWN, 
+				NO_PIECE, 
+				NO_PIECE , 
+				NO_SQUARE, 
+				this->ep_square,
+				EMPTY_MOVE_FLAGS, 
+				this->castle_flags, 
+				this->ply); 
+			moves->push_back(move);
+			pushes &= pushes-1ULL;
+		}
+
+		while (double_push != 0)
+		{
+			int index = GetLSB(double_push);
+			square to = index;
+			square from = to + NN;
+			const auto move = std::make_shared<Move>
+				(from,
+				to,
+				PAWN,
+				NO_PIECE,
+				NO_PIECE,
+				to,
+				this->ep_square,
+				EMPTY_MOVE_FLAGS,
+				this->castle_flags,
+				this->ply);
+			moves->push_back(move);
+			double_push &= double_push - 1ULL;
+		}
+
+		while(right_captures != 0)
+		{
+			int index = GetLSB(right_captures);
+			square to = index;
+			square from = to + NW;
+			auto move = std::make_shared<Move>
+			(
+				from,
+				to,
+				PAWN,
+				NO_PIECE,
+				this->GetPieceAtSquare(index),
+				NO_SQUARE,
+				this->ep_square,
+				CAPTURE,
+				this->castle_flags,
+				this->ply);
+			moves->push_back(move);
+			right_captures &= to;
+		}
+
+		while(left_captures != 0)
+		{
+			int index = GetLSB(left_captures);
+			square to = index;
+			square from = to + NE;
+			auto move = std::make_shared<Move>
+			(
+				from,
+				to,
+				PAWN,
+				NO_PIECE,
+				this->GetPieceAtSquare(index),
+				NO_SQUARE,
+				this->ep_square,
+				CAPTURE,
+				this->castle_flags,
+				this->ply);
+			moves->push_back(move);
+			left_captures &= left_captures - 1ULL;	
+		}
+
 	}
 
 	void Board_Bit::MakeBlackRooksMoves(MoveVector moves)
@@ -451,7 +612,7 @@ namespace Panzer
 
 	void Board_Bit::MakeBlackKingMoves(MoveVector moves)
 	{
-		auto kings = this->GetWhiteKings();
+		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
 		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
@@ -542,7 +703,7 @@ namespace Panzer
 		while (kings != 0)
 		{
 			int from = this->GetLSB(kings);
-			auto king_span = KING_SPAN_CENTER;
+			auto king_span = KING_SPAN;
 
 			if (from >= KING_SPAN_CENTER)
 			{
@@ -599,7 +760,7 @@ namespace Panzer
 				regular_moves &= regular_moves - ONE_BIT;
 			}
 
-			from &= from - ONE_BIT;
+			kings &= kings - ONE_BIT;
 		}
 	}
 

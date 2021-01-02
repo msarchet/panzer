@@ -1,4 +1,6 @@
 #pragma once
+#include <array>
+
 typedef uint8_t square;
 typedef uint8_t piece;
 typedef uint8_t move_flag;
@@ -7,10 +9,14 @@ typedef uint8_t castle_flag;
 typedef uint64_t hash;
 typedef uint64_t bitboard;
 typedef uint64_t mask;
-
+typedef int direction;
 typedef bool color;
 
-const square NO_SQUARE = 0;
+typedef std::shared_ptr<std::array<std::vector<bitboard>, 64>> square_bitboards;
+typedef std::shared_ptr<std::array<uint64_t, 64>> magics_array;
+typedef std::array<bitboard, 64> mask_array;
+
+const square NO_SQUARE = 64;
 const piece NO_PIECE = 0;
 const move_flag EMPTY_MOVE_FLAGS = 0;
 const castle_flag EMPTY_CASTLE_FLAGS = 0;
@@ -149,16 +155,16 @@ const castle_flag BLACKK = 4;
 const castle_flag BLACKQ = 8;
 
 
-const int NW = 7;
-const int N = 8;
-const int NE = 9;
-const int E = 1;
-const int SE = 7;
-const int S = 8;
-const int SW = 9;
-const int W = 1;
-const int NN = 16;
-const int SS = 16;
+const direction NW = 7;
+const direction N = 8;
+const direction NE = 9;
+const direction E = 1;
+const direction SE = 7;
+const direction S = 8;
+const direction SW = 9;
+const direction W = 1;
+const direction NN = 16;
+const direction SS = 16;
 
 const int KING_SPAN_CENTER = 14;
 
@@ -172,7 +178,7 @@ struct KingSpan {
         span ^= ONE_BIT << (KING_SPAN_CENTER + NW);
         span ^= ONE_BIT << (KING_SPAN_CENTER + N);
         span ^= ONE_BIT << (KING_SPAN_CENTER + NE);
-        span ^= ONE_BIT << (KING_SPAN_CENTER + E);
+        span ^= ONE_BIT << (KING_SPAN_CENTER - E);
         span ^= ONE_BIT << (KING_SPAN_CENTER - SE);
         span ^= ONE_BIT << (KING_SPAN_CENTER - S);
         span ^= ONE_BIT << (KING_SPAN_CENTER - SW);
@@ -218,4 +224,31 @@ const move_flag CASTLE = 2;
 const move_flag EP = 4;
 const move_flag PROMOTION = 8;
 const move_flag CAPTURE = 16;
+
+const bitboard rank_EP_masks[65] =
+{
+    0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,  0ULL, 0ULL,
+    0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,  0ULL, 0ULL,
+    0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,  0ULL, 0ULL,
+    ONE_BIT << B4,
+    ONE_BIT << A4 | ONE_BIT << C4,
+    ONE_BIT << B4 | ONE_BIT << D4,
+    ONE_BIT << C4 | ONE_BIT << E4,
+    ONE_BIT << D4 | ONE_BIT << F4,
+    ONE_BIT << F4 | ONE_BIT << H4,
+    ONE_BIT << G4,
+    ONE_BIT << B4,
+    ONE_BIT << A5 | ONE_BIT << C5,
+    ONE_BIT << B5 | ONE_BIT << D5,
+    ONE_BIT << C5 | ONE_BIT << E5,
+    ONE_BIT << D5 | ONE_BIT << F5,
+    ONE_BIT << F5 | ONE_BIT << H5,
+    ONE_BIT << G5,
+    0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,  0ULL, 0ULL,
+    0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,  0ULL, 0ULL,
+    0ULL, 0ULL, 0ULL, 0ULL, 0ULL, 0ULL,  0ULL, 0ULL,
+    0ULL,
+};
+
+
 
