@@ -2,6 +2,7 @@ CC=g++
 STD=-std=c++17
 MAIN=panzer-bitboard.cpp
 MAGIC=./sliding-attacks/make-magic.cpp
+TEST=./tests/main.cpp
 DEBUG_OPTS=-ggdb -g3
 main:
 	$(CC) $(STD) $(MAIN) -O3 -o panzerbb
@@ -17,3 +18,9 @@ magic:
 
 magic-debug:
 	$(CC) $(STD) $(MAGIC) $(DEBUG_OPTS) -o magic-debug
+
+test:
+	$(CC) $(STD) $(TEST) -o test
+
+test-debug:
+	$(CC) $(STD) $(TEST) $(DEBUG_OPTS) -o test-debug

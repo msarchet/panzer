@@ -7,12 +7,12 @@ namespace Panzer
     class Sliders
     {
         magics_array rook_magics;
-        square_bitboards rook_attacks;
+        std::shared_ptr<std::array<std::shared_ptr<std::vector<bitboard>>, 64>> rook_attacks;
         mask_array rook_masks;
         int rook_shifts[64];
 
         magics_array bishop_magics;
-        square_bitboards bishop_attacks;
+        std::shared_ptr<std::array<std::shared_ptr<std::vector<bitboard>>, 64>> bishop_attacks;
         mask_array bishop_masks;
         int bishop_shifts[64];
 
@@ -32,8 +32,8 @@ namespace Panzer
     {
         rook_magics = std::make_shared<mask_array>();
         bishop_magics = std::make_shared<mask_array>();
-        rook_attacks = std::make_shared<std::array<std::vector<bitboard>, 64>>();
-        bishop_attacks = std::make_shared<std::array<std::vector<bitboard>, 64>>();
+        rook_attacks = std::make_shared<std::array<std::shared_ptr<std::vector<bitboard>>, 64>>();
+        bishop_attacks = std::make_shared<std::array<std::shared_ptr<std::vector<bitboard>>, 64>>();
 
         std::string rook_magics_file("rook_magics.dat");
         std::string rook_attacks_file("rook_attacks.dat");
@@ -65,48 +65,46 @@ namespace Panzer
 
             rook_masks_stream >> rook_masks[i];
             bishop_masks_stream >> bishop_masks[i];
-            auto rook_attacks_vector = std::vector<bitboard>();
+            auto rook_attacks_vector = std::make_shared<std::vector<bitboard>>();
             rook_attacks->at(i) = rook_attacks_vector;
 
-            while(true)
+            const std::string terminator = "---";
+            std::string line;
+            while(rook_attacks_stream >> line)
             {
-                char *line;
-                rook_attacks_stream >> line;
-                if (line == "---")
+                if (terminator.compare(line) == 0)
                 {                        
                     break;
                 }
 
-                auto attack = std::strtoull(line, NULL, 10);
-                rook_attacks_vector.push_back(attack);
+                auto attack = std::strtoull(line.c_str(), NULL, 10);
+                rook_attacks_vector->push_back(attack);
             }
 
-            auto bishop_attacks_vector = std::vector<bitboard>();
+            auto bishop_attacks_vector = std::make_shared<std::vector<bitboard>>();
             bishop_attacks->at(i) = bishop_attacks_vector;
 
-            while(true)
+            while(bishop_attacks_stream >> line)
             {
-                char *line;
-                bishop_attacks_stream >> line;
-                if (line == "---")
+                if (terminator.compare(line) == 0)
                 {                        
                     break;
                 }
 
-                auto attack = std::strtoull(line, NULL, 10);
-                bishop_attacks_vector.push_back(attack);
+                auto attack = std::strtoull(line.c_str(), NULL, 10);
+                bishop_attacks_vector->push_back(attack);
             }
         }
     }
 
     bitboard Sliders::GetRookAttacks(square s, bitboard occupancy)
     {
-        return rook_attacks->at(s).at(GetAttackIndex(occupancy, rook_masks.at(s), rook_magics->at(s), rook_shifts[s]));
+        return rook_attacks->at(s)->at(GetAttackIndex(occupancy, rook_masks.at(s), rook_magics->at(s), rook_shifts[s]));
     }
 
     bitboard Sliders::GetBishopAttacks(square s, bitboard occupancy)
     {
-        return bishop_attacks->at(s).at(GetAttackIndex(occupancy, bishop_masks.at(s), bishop_magics->at(s), bishop_shifts[s]));
+        return bishop_attacks->at(s)->at(GetAttackIndex(occupancy, bishop_masks.at(s), bishop_magics->at(s), bishop_shifts[s]));
     }
 
     bitboard Sliders::GetQueenAttacks(square s, bitboard occupancy)
