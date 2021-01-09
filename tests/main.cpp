@@ -7,6 +7,7 @@ int main()
     std::cout << "Running Tests" << std::endl;
     slider_tests->Setup();
     slider_tests->ValidateBishopAttacks();
+    slider_tests->ValidateRookAttacks();
 
     std::cout << "Done!";
 }

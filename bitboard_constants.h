@@ -12,8 +12,8 @@ typedef uint64_t mask;
 typedef int direction;
 typedef bool color;
 
-typedef std::shared_ptr<std::array<std::vector<bitboard>, 64>> square_bitboards;
-typedef std::shared_ptr<std::array<uint64_t, 64>> magics_array;
+typedef std::shared_ptr<std::array<std::vector<bitboard>, 64> > square_bitboards;
+typedef std::shared_ptr<std::array<uint64_t, 64> > magics_array;
 typedef std::array<bitboard, 64> mask_array;
 
 const square NO_SQUARE = 64;

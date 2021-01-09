@@ -39,39 +39,29 @@ int main (int argc, char *argv[])
     board->FillSquare(G8, KNIGHT, BLACK);
     board->FillSquare(H8, ROOK, BLACK);
 
-    auto copyBoard = new Panzer::Board_Bit(*board);
-    copyBoard->ClearSquare(A2, PAWN, WHITE);
 
-    std::cout << "First Board\n";
-    board->PrintBoard(board->GetOccupancy());
-    auto moves = board->GenerateBlackMoves();
-    std::cout << moves->size() << "\n";
 
     std::chrono::time_point<std::chrono::steady_clock> start,end;
-    //uint32_t total_count = 0;
-    for (auto it = moves->begin(); it != moves->end(); it++)
-    {
-        std::cout << int((*it)->from) << " " << int((*it)->to) << "\n";
-    }
+    uint32_t total_count = 0;
 
     start = std::chrono::high_resolution_clock::now();
-    //for (int i = 0; i < 1e6; i++)
-    //{
-    //    auto copyBoard = new Panzer::Board_Bit(*board);
-    //    //moves = board->GenerateWhiteMoves();
-    //    //for (auto it = moves->begin(); it != moves->end(); it++)
-    //    //{                
-    //    //    board->MakeMove(*it);
-    //    //    board->UnmakeMove(*it);
-    //    //    total_count++;
-    //    //}
-    //}
+    for (int i = 0; i < 1e6; i++)
+    {
+        auto copyBoard = new Panzer::Board_Bit(*board);
+        auto moves = board->GenerateWhiteMoves();
 
-    //const auto a2a4 = std::make_shared<Panzer::Move>(A2, A4, PAWN, NO_PIECE, NO_PIECE, A4, NO_SQUARE, EMPTY_MOVE_FLAGS, EMPTY_MOVE_FLAGS, 1);
+        for (auto it = moves->begin(); it != moves->end(); it++)
+        {                
+            board->MakeMove(*it);
+            board->UnmakeMove(*it);
+            total_count++;
+        }
+    }
+
     end = std::chrono::high_resolution_clock::now();
     //std::cout << "MOVES\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout << elapsed_seconds.count() << "\n";
-    //std::cout << "total moves " << total_count << "\n";
+    std::cout << "total moves " << total_count << "\n";
     std::cout << "CPS" << 1e6 / elapsed_seconds.count();
 }

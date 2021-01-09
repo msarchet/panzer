@@ -60,6 +60,7 @@ namespace Panzer
             Direction(Directions dir) :
                 d(dir) {}
     
+            Directions GetDirection() { return d; }
             square GetNextSquare(square start);
             uint8_t DistanceToEdge(square s);
             std::vector<bitboard> GenerateOccupancies(square s);
@@ -136,47 +137,47 @@ namespace Panzer
 
     square Direction::GetNextSquare(square start) 
     {
-        square next = start;
-
-        if (IsBoardEdge(d, next))
-        {
-            return NO_SQUARE;
-        }
+        auto row = Row(start);
+        auto column = Column(start);
 
         switch (d)
         {
             case Directions::N:
-                next = start + 8;
+                row++;
                 break;
             case Directions::NE:
-                next = start + 9;
+                row++;
+                column++;
                 break;
             case Directions::E:
-                next = start + 1;
+                column++;
                 break;
             case Directions::SE:
-                next = start - 7;
+                row--;
+                column++;
                 break;
             case Directions::S:
-                next = start - 8;
+                row--;
                 break;
             case Directions::SW:
-                next = start - 9;
+                row--;
+                column--;
                 break;
             case Directions::W:
-                next = start - 1;
+                column--;
                 break;
             case Directions::NW:
-                next = start + 7;
+                row++;
+                column--;
                 break;
         }
 
-        if (next >= 64 || IsBoardEdge(d, next))
+        if (row > 7 || row < 0 || column > 7 || column < 0)
         {
             return NO_SQUARE;
         }
 
-        return next;
+        return row * 8 + column;
     }
 
     std::vector<bitboard> CombineBitboards(std::vector<bitboard> left, std::vector<bitboard> right)
@@ -211,7 +212,7 @@ namespace Panzer
         for (auto d: directions)
         {
             square current_square = d.GetNextSquare(s);
-            while (current_square != NO_SQUARE)
+            while (current_square != NO_SQUARE && !IsBoardEdge(d.GetDirection(), current_square))
             {
                 mask |= ONE_BIT << current_square;
                 current_square = d.GetNextSquare(current_square);
@@ -320,7 +321,6 @@ void GenerateMagic(square i,
 void WriteToFile(std::string piece_name, const int shifts[], mask_array masks, magics_array magics, square_bitboards attacks)
 {
 
-    // write em all to files
     // write em all to files
     std::ofstream shift_file;
     std::ofstream mask_file;

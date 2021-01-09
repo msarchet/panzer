@@ -668,7 +668,7 @@ namespace Panzer
 				captures &= captures - 1;
 			}
 
-			auto slides = possible & ~captures;
+			auto slides = possible & ~captures & ~same_side;
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
@@ -785,7 +785,7 @@ namespace Panzer
 				captures &= captures - 1;
 			}
 
-			auto slides = possible & ~captures;
+			auto slides = possible & ~captures & ~same_side;
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
@@ -837,7 +837,7 @@ namespace Panzer
 				captures &= captures - 1;
 			}
 
-			auto slides = possible & ~captures;
+			auto slides = possible & ~captures & ~same_side;
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
