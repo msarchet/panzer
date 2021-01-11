@@ -219,11 +219,20 @@ const KingSpan ks;
 const bitboard KNIGHT_SPAN = ns.span;
 const bitboard KING_SPAN = ks.span;
 
-const move_flag NO_FLAGS = 0;
-const move_flag CASTLE = 2;
-const move_flag EP = 4;
-const move_flag PROMOTION = 8;
-const move_flag CAPTURE = 16;
+const move_flag NO_MOVE_FLAGS = 0;
+const move_flag DOUBLE_PAWN_PUSH = 1;
+const move_flag KING_CASTLE = 2;
+const move_flag QUEEN_CASTLE = 3;
+const move_flag CAPTURE = 4;
+const move_flag EP_CAPTURE = 5;
+const move_flag KNIGHT_PROMO = 8;
+const move_flag BISHOP_PROMO = 9;
+const move_flag ROOK_PROMO = 10;
+const move_flag QUEEN_PROMO = 11;
+const move_flag KNIGHT_PROMO_CAPTURE = 12;
+const move_flag BISHOP_PROMO_CAPTURE = 13;
+const move_flag ROOK_PROMO_CAPTURE = 14;
+const move_flag QUEEN_PROMO_CAPTURE = 15;
 
 const bitboard rank_EP_masks[65] =
 {

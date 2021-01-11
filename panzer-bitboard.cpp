@@ -1,6 +1,7 @@
-#include "bitboard.cpp"
 #include <chrono>
 #include <memory>
+
+#include "bitboard.h"
 
 int main (int argc, char *argv[])
 {
@@ -47,15 +48,14 @@ int main (int argc, char *argv[])
     start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < 1e6; i++)
     {
-        auto copyBoard = new Panzer::Board_Bit(*board);
         auto moves = board->GenerateWhiteMoves();
-
-        for (auto it = moves->begin(); it != moves->end(); it++)
-        {                
+        for(auto it = moves->begin(); it != moves->end(); it++)
+        {
             board->MakeMove(*it);
             board->UnmakeMove(*it);
             total_count++;
         }
+
     }
 
     end = std::chrono::high_resolution_clock::now();
@@ -63,5 +63,5 @@ int main (int argc, char *argv[])
 	std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout << elapsed_seconds.count() << "\n";
     std::cout << "total moves " << total_count << "\n";
-    std::cout << "CPS" << 1e6 / elapsed_seconds.count();
+    std::cout << "CPS" << total_count / elapsed_seconds.count();
 }

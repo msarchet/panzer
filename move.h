@@ -4,45 +4,20 @@ namespace Panzer
 {
     struct Move
     {
-        char id = 0;
-        square from = NO_SQUARE;
-        square to = NO_SQUARE;
-        piece piece_from = NO_PIECE;
-        piece piece_to = NO_PIECE;
-        piece captured_piece = NO_PIECE;
-        bool is_castle = false;
-        bool is_capture= false;
-        int ply = 0;
-        int score = 0;
-        square ep = NO_SQUARE;
-        square prior_ep = NO_SQUARE;
-        move_flag move_flags = EMPTY_MOVE_FLAGS;
-        castle_flag prior_castle_flags = EMPTY_CASTLE_FLAGS;
-
-        Move(square from,
-            square to,
-            piece from_piece,
-            piece to_piece,
-            piece captured_piece,
-            square ep_square,
-            square prior_ep,
-            move_flag move_flags,
-            castle_flag prior_castle_flags,
-            int ply) :
-                from(from),
-                to(to),
-                piece_from(from_piece),
-                piece_to(to_piece),
-                captured_piece(captured_piece),
-                move_flags(move_flags),
-                ep(ep_square),
-                prior_ep(prior_ep),
-                prior_castle_flags(prior_castle_flags),
-                ply(ply)
+        unsigned int move;
+        Move(square from, square to, move_flag flags)
         {
-            is_castle = !!(move_flags & CASTLE);
-            is_capture = !!(move_flags & CAPTURE);
-            piece_to = to_piece > NO_PIECE ? to_piece : from_piece;
+            move = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
         }
+
+        void operator=(Move a) { move = a.move; };
+
+        square getTo() const { return move & 0x3ff; }
+        square getFrom() const { return (move >> 6) & 0x3ff; }
+        move_flag getFlags() const { return (move >> 12) & 0xf; }
+
+        bool isCapture() const { return move & CAPTURE; }
+        bool isCastle() const { return move & KING_CASTLE || move & QUEEN_CASTLE ; }
+        bool isPromo() const { return move >= KNIGHT_PROMO; }
     };
 }
