@@ -147,7 +147,6 @@ struct KingSpan {
         span ^= ONE_BIT << (9 - SW);
         span ^= ONE_BIT << (9 + W);
     }
-
 };
 
 const int KNIGHT_SPAN_CENTER = 18;

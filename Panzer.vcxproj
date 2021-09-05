@@ -153,13 +153,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bitboard.cpp" />
     <ClCompile Include="board.cpp" />
-    <ClCompile Include="Panzer.cpp" />
+    <ClCompile Include="panzer-bitboard.cpp" />
     <ClCompile Include="zorbist.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bitboard.h" />
+    <ClInclude Include="bitboard_constants.h" />
     <ClInclude Include="board.h" />
     <ClInclude Include="constants.h" />
+    <ClInclude Include="move.h" />
     <ClInclude Include="name_lookups.h" />
     <ClInclude Include="zorbist.h" />
   </ItemGroup>

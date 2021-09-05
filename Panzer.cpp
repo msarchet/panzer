@@ -43,7 +43,6 @@ int main(int argc, char *argv[])
 	board* b = new board;
 	auto moves = std::make_shared<std::vector<std::shared_ptr<const move>>>();
 	hashed_board* starting_hashboard = new hashed_board();
-  
 	std::cout << "Running\n";
 	auto problem_fen = "r3k2r/p6p/8/B7/1pp1p3/3b4/P6P/R3K2R";
 	b->FenToBoard(problem_fen);

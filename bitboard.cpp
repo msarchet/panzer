@@ -1,69 +1,8 @@
-#include <stdlib.h>
-#include <array>
-#include <memory>
-#include <vector>
-#include <iostream>
-#include "bitboard_constants.h"
-#include "move.h"
+
+#include "bitboard.h"
 
 namespace Panzer
 {
-	class Board_Bit
-	{
-		bitboard WHITE_PIECES = 0;
-		bitboard WHITE_PAWNS = 0;
-		bitboard WHITE_KINGS = 0;
-		bitboard WHITE_ROOKS = 0;
-		bitboard WHITE_BISHOPS = 0;
-		bitboard WHITE_KNIGHTS = 0;
-		bitboard WHITE_QUEENS = 0;
-		bitboard BLACK_PIECES = 0;
-		bitboard BLACK_PAWNS = 0;
-		bitboard BLACK_KINGS = 0;
-		bitboard BLACK_ROOKS = 0;
-		bitboard BLACK_BISHOPS = 0;
-		bitboard BLACK_KNIGHTS = 0;
-		bitboard BLACK_QUEENS = 0;
-		bitboard OCCUPIED = 0;
-
-		char side_to_move = WHITE;
-		square ep_square = NO_SQUARE;
-		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
-		uint8_t ply = 1;
-		std::array<piece, 64> *pieces = new std::array<piece, 64> {NO_PIECE};
-
-	public:
-		void FillSquare(square s, piece p, color c);
-		void ClearSquare(square s,piece p, color c);
-		std::shared_ptr<std::vector<std::shared_ptr<Move>>> GenerateMoves();
-		std::shared_ptr<std::vector<std::shared_ptr<Move>>> GenerateWhiteMoves();
-		std::shared_ptr<std::vector<std::shared_ptr<Move>>> GenerateBlackMoves();
-		void PrintBoard(bitboard b);
-
-		bitboard GetWhitePieces() { return WHITE_PIECES; };
-		bitboard GetWhitePawns() { return WHITE_PAWNS; };
-		bitboard GetWhiteRooks() { return WHITE_ROOKS; };
-		bitboard GetWhiteKnights() { return WHITE_KNIGHTS; };
-		bitboard GetWhiteBishops() { return WHITE_BISHOPS; };
-		bitboard GetWhiteQueens() { return WHITE_QUEENS; };
-		bitboard GetWhiteKings() { return WHITE_KINGS; };
-
-		bitboard GetBlackPieces() { return BLACK_PIECES; };
-		bitboard GetBlackPawns() { return BLACK_PAWNS; };
-		bitboard GetBlackRooks() { return BLACK_ROOKS; };
-		bitboard GetBlackKnights() { return BLACK_KNIGHTS; };
-		bitboard GetBlackBishops() { return BLACK_BISHOPS; };
-		bitboard GetBlackQueens() { return BLACK_QUEENS; };
-		bitboard GetBlackKings() { return BLACK_KINGS; };
-
-		bitboard GetOccupancy() { return OCCUPIED; }
-	private:
-		int GetMSB(bitboard b);
-		int GetLSB(bitboard b);
-		piece GetPieceAtSquare(square s);
-		void ToggleBitBoards(square s, piece p, color c);
-	};
-
 	piece Board_Bit::GetPieceAtSquare(square s)
 	{
 		return pieces->at(s);
@@ -232,15 +171,51 @@ namespace Panzer
 
 	}
 
+	void Board_Bit::MakeMove(std::shared_ptr<Move> move)
+	{
+		ToggleBitBoards(move->from, move->piece_from, side_to_move);
+		ToggleBitBoards(move->to, move->piece_to, side_to_move);
+		side_to_move != side_to_move;
+	}
+
+	void Board_Bit::UnmakeMove(std::shared_ptr<Move> move)
+	{
+		side_to_move != side_to_move;
+		ToggleBitBoards(move->from, move->piece_from, side_to_move);
+		ToggleBitBoards(move->to, move->piece_to, side_to_move);
+	}
+
 	int Board_Bit::GetMSB(bitboard b)
 	{
+#ifdef _MSC_VER
+		unsigned long leading_zero = 0;
+
+		if (_BitScanReverse64(&leading_zero, b))
+		{
+			return 63 - leading_zero;
+		}
+
+		return 63;
+#else
 		int leading_zeros = __builtin_clzll(b);
 		return 63 - leading_zeros;
+#endif
 	}
 
 	int Board_Bit::GetLSB(bitboard b)
 	{
+#ifdef _MSC_VER
+		unsigned long trailing_zero = 0;
+
+		if (_BitScanForward64(&trailing_zero, b))
+		{
+			return  trailing_zero;
+		}
+
+		return 0;
+#else
 		return __builtin_ctzll(b);
+#endif
 	}
 
 	void Board_Bit::PrintBoard(bitboard b)
