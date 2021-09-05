@@ -9,6 +9,14 @@ namespace Panzer
 		return pieces->at(s);
 	}
 
+	bool Board_Bit::IsChecked()
+	{
+		if (this->side_to_move == WHITE)
+		{
+			this->Make	
+		}
+	}
+
 	void Board_Bit::ToggleBitBoards(square from, square to, piece p, color c)
 	{
 		bitboard fromToBB = ONE_BIT << from | ONE_BIT << to;
