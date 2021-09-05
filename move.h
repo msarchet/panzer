@@ -5,19 +5,37 @@ namespace Panzer
     struct Move
     {
         unsigned int move;
-        Move(square from, square to, move_flag flags)
+        piece capturedPiece = NO_PIECE;
+        castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS;
+        square priorEP = NO_SQUARE;
+        Move(square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE)
         {
-            move = ((flags & 0xf) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
+            move = ((flags & 0x3f) << 12) | ((from & 0x3f) << 6) | (to & 0x3f);
+            priorCastleFlags = castleFlags;
+            capturedPiece = captured;
+            priorEP = epSquare;
         }
 
-        void operator=(Move a) { move = a.move; };
 
-        square getTo() const { return move & 0x3ff; }
-        square getFrom() const { return (move >> 6) & 0x3ff; }
-        move_flag getFlags() const { return (move >> 12) & 0xf; }
+        void operator=(Move a) 
+        { 
+            move = a.move; 
+            capturedPiece = a.capturedPiece;
+            priorCastleFlags = a.priorCastleFlags;
+            priorEP = a.priorEP;
+        };
 
-        bool isCapture() const { return move & CAPTURE; }
-        bool isCastle() const { return move & KING_CASTLE || move & QUEEN_CASTLE ; }
-        bool isPromo() const { return move >= KNIGHT_PROMO; }
+        square getTo() const { return move & 0x3f; }
+        square getFrom() const { return (move >> 6) & 0x3f; }
+        move_flag getFlags() const { return (move >> 12) & 0x3f; }
+
+        bool isCapture() const { return getFlags() & CAPTURE; }
+        bool isEPCapture() const { return getFlags() & EP_CAPTURE; }
+        bool isCastle() const { return getFlags() & KING_CASTLE || getFlags() & QUEEN_CASTLE ; }
+        bool isPromo() const { return getFlags() >= KNIGHT_PROMO; }
+
+        castle_flag getCastleFlags() const { return priorCastleFlags; }
+        piece getCapturedPiece() const { return capturedPiece; }
+        square getPriorEPSquare() const { return priorEP; }
     };
 }

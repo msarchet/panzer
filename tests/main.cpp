@@ -8,6 +8,6 @@ int main()
     slider_tests->Setup();
     slider_tests->ValidateBishopAttacks();
     slider_tests->ValidateRookAttacks();
-
+    slider_tests->PrintMasks();
     std::cout << "Done!";
 }

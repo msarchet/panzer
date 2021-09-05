@@ -2,7 +2,7 @@ CC=g++
 STD=-std=c++17
 MAIN=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp bitboard.cpp panzer-bitboard.cpp
 MAGIC=./sliding-attacks/make-magic.cpp
-TEST=./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/main.cpp
+TEST=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/main.cpp
 DEBUG_OPTS=-ggdb -g3
 
 main:

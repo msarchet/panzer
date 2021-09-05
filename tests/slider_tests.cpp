@@ -80,6 +80,21 @@ namespace Panzer
 
     bool SlidingTests::ValidateQueenAttacks()
     {
+            return true;
+    }
 
+    void SlidingTests::PrintMasks()
+    {
+        for(auto mask : NW_DIAGONALS)
+        {
+                Panzer::Utils::PrintBoard(mask);
+                std::cout << std::endl;
+        }
+
+        for(auto mask : NE_DIAGONALS)
+        {
+                Panzer::Utils::PrintBoard(mask);
+                std::cout << std::endl;
+        }
     }
 }

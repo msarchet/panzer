@@ -1,5 +1,6 @@
 #include "bitboard.h"
 #include "bitboard_constants.h"
+#include "utils/board_utils.h"
 
 namespace Panzer
 {
@@ -22,6 +23,7 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
+		this->pieces->at(s) = p;
 	}
 
 	void Board_Bit::ClearSquare(square s,piece p, color c)
@@ -29,6 +31,7 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
+		this->pieces->at(s) = NO_PIECE;
 	}
 
 	MoveVector Board_Bit::GenerateMoves()
@@ -45,7 +48,7 @@ namespace Panzer
 
 	MoveVector Board_Bit::GenerateWhiteMoves()
 	{
-		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move>>>();
+		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move> > >();
 		this->MakeWhitePawnMoves(moves);
 		this->MakeWhiteRooksMoves(moves);
 		this->MakeWhiteKnightMoves(moves);
@@ -57,7 +60,7 @@ namespace Panzer
 
 	MoveVector Board_Bit::GenerateBlackMoves()
 	{
-		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move>>>();
+		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move> > >();
 		this->MakeBlackPawnMoves(moves);
 		std::cout << "Black Pawwn Moves" << moves->size() << "\n";
 		this->MakeBlackRooksMoves(moves);
@@ -88,46 +91,64 @@ namespace Panzer
 	void Board_Bit::MakeMove(std::shared_ptr<const Move> move)
 	{
 		// remove the from piece
-		if (move->is_capture)
+		if (move->isCapture())
 		{
 			// clear the captured piece
-			if (move->move_flags & EP)
+			if (move->getFlags() & EP_CAPTURE)
 			{
-				this->ClearSquare(this->ep_square, move->captured_piece, !this->side_to_move);
+				this->ClearSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
 			{
-				this->ClearSquare(move->to, move->captured_piece, !this->side_to_move);
+				this->PrintBoard(this->GetWhitePawns());
+				this->ClearSquare(move->getTo(), this->GetPieceAtSquare(move->getTo()), !this->side_to_move);
 			}
 			
 		}
 
 		// fill the to square
-		if (move->move_flags & PROMOTION)
+		if (move->isPromo())
 		{
-			this->FillSquare(move->to, move->piece_to, this->side_to_move);
-			this->ClearSquare(move->from, move->piece_from, this->side_to_move);
+			// get type from promotion type
+			const auto flags = move->getFlags();
+			if (flags & QUEEN_PROMO || flags & QUEEN_PROMO_CAPTURE)
+			{
+				this->FillSquare(move->getTo(), QUEEN, this->side_to_move);
+			}
+			else if (flags & KNIGHT_PROMO || flags & KNIGHT_PROMO_CAPTURE)
+			{
+				this->FillSquare(move->getTo(), KNIGHT, this->side_to_move);
+			}
+			else if (flags & ROOK_PROMO || flags & ROOK_PROMO_CAPTURE)
+			{
+				this->FillSquare(move->getTo(), ROOK, this->side_to_move);
+			}
+			else if (flags & BISHOP_PROMO || flags & BISHOP_PROMO_CAPTURE)
+			{
+				this->FillSquare(move->getTo(), BISHOP, this->side_to_move);
+			}
+			this->ClearSquare(move->getFrom(), PAWN, this->side_to_move);
 		}
 		else
 		{
-			this->ToggleBitBoards(move->from, move->to, move->piece_from, this->side_to_move);
+			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getTo()), this->side_to_move);
 		}
 		
 
-		if (this->castle_flags != NO_FLAGS)
+		if (this->castle_flags != EMPTY_CASTLE_FLAGS)
 		{
 			// toggle off castle flags
-			if (move->from == E1 || move->to == E1) this->castle_flags ^= (WHITEK|WHITEQ);
-			else if (move->from == A1 || move->to == A1) this->castle_flags ^= (WHITEQ);
-			else if (move->from == H1 || move->to == H1) this->castle_flags ^= (WHITEK);
-			else if (move->from == E8 || move->to == E8) this->castle_flags ^= (BLACKK|BLACKQ);
-			else if (move->from == A8 || move->to == A8) this->castle_flags ^= (BLACKQ);
-			else if (move->from == H8 || move->to == H8) this->castle_flags ^= (BLACKK);
+			if (move->getFrom() == E1 || move->getTo() == E1) this->castle_flags ^= (WHITEK|WHITEQ);
+			else if (move->getFrom() == A1 || move->getTo() == A1) this->castle_flags ^= (WHITEQ);
+			else if (move->getFrom() == H1 || move->getTo() == H1) this->castle_flags ^= (WHITEK);
+			else if (move->getFrom() == E8 || move->getTo() == E8) this->castle_flags ^= (BLACKK|BLACKQ);
+			else if (move->getFrom() == A8 || move->getTo() == A8) this->castle_flags ^= (BLACKQ);
+			else if (move->getFrom() == H8 || move->getTo() == H8) this->castle_flags ^= (BLACKK);
 		}
 
-		if (move->is_castle)
+		if (move->isCastle())
 		{
-			switch (move->to)
+			switch (move->getTo())
 			{
 				case C1:
 					this->ToggleBitBoards(A1, D1, ROOK, WHITE);
@@ -144,7 +165,18 @@ namespace Panzer
 			}
 		}
 
-		this->ep_square = move->ep;
+		if (move->getFlags() & DOUBLE_PAWN_PUSH)
+		{
+			if (this->side_to_move == WHITE)
+			{
+				this->ep_square = move->getTo();
+			}
+			else
+			{
+				this->ep_square = move->getTo();
+			}
+		}
+
 		this->side_to_move = !this->side_to_move;
 		this->ply++;
 	}
@@ -155,11 +187,11 @@ namespace Panzer
 		// debugging purposes
 		this->ply--;
 		this->side_to_move = !this->side_to_move;
-		this->ep_square = move->prior_ep;
+		this->ep_square = move->getPriorEPSquare();
 
-		if (move->is_castle)
+		if (move->isCastle())
 		{
-			switch (move->to)
+			switch (move->getTo())
 			{
 				case C1:
 					this->ToggleBitBoards(D1, A1, ROOK, WHITE);
@@ -176,31 +208,49 @@ namespace Panzer
 			}
 		}
 
-		this->castle_flags = move->prior_castle_flags;
+		this->castle_flags = move->getCastleFlags();
 
 		// clear the to square
 		// fill the from square
-		if (move->move_flags & PROMOTION)
+		if (move->isPromo())
 		{
-			this->FillSquare(move->from, move->piece_from, this->side_to_move);
-			this->ClearSquare(move->to, move->piece_to, this->side_to_move);
+			// get type from promotion type
+			const auto flags = move->getFlags();
+			if (flags & QUEEN_PROMO || flags & QUEEN_PROMO_CAPTURE)
+			{
+				this->ClearSquare(move->getTo(), QUEEN, this->side_to_move);
+			}
+			else if (flags & KNIGHT_PROMO || flags & KNIGHT_PROMO_CAPTURE)
+			{
+				this->ClearSquare(move->getTo(), KNIGHT, this->side_to_move);
+			}
+			else if (flags & ROOK_PROMO || flags & ROOK_PROMO_CAPTURE)
+			{
+				this->ClearSquare(move->getTo(), ROOK, this->side_to_move);
+			}
+			else if (flags & BISHOP_PROMO || flags & BISHOP_PROMO_CAPTURE)
+			{
+				this->ClearSquare(move->getTo(), BISHOP, this->side_to_move);
+			}
+			this->FillSquare(move->getFrom(), PAWN, this->side_to_move);
+
 		}
 		else
 		{
-			this->ToggleBitBoards(move->from, move->to, move->piece_from, this->side_to_move);
+			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getFrom()), this->side_to_move);
 		}
 		
 
 		// put captured piece back
-		if (move->is_capture)
+		if (move->isCapture())
 		{
-			if (move->move_flags & EP)
+			if (move->isEPCapture())
 			{
-				this->FillSquare(this->ep_square, move->captured_piece, !this->side_to_move);
+				this->FillSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
 			{
-				this->FillSquare(move->to, move->captured_piece, !this->side_to_move);
+				this->FillSquare(move->getTo(), move->getCapturedPiece(), !this->side_to_move);
 			}
 		}
 	}
@@ -236,7 +286,9 @@ namespace Panzer
 			(
 				from,
 				to,
-				EP_CAPTURE
+				EP_CAPTURE,
+				this->castle_flags,
+				PAWN
 			);
 			moves->push_back(move);
 			ep_captures &= ep_captures - 1;
@@ -251,7 +303,8 @@ namespace Panzer
 			(
 				from, 
 				to, 
-				NO_MOVE_FLAGS
+				NO_MOVE_FLAGS,
+				this->castle_flags
 			);
 			moves->push_back(move);
 			pushes &= pushes-1ULL;
@@ -262,11 +315,12 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to - SS;
-			const auto move = std::make_shared<Move>
+			std::shared_ptr<Move> move = std::make_shared<Move>
 			(
 				from,
 				to,
-				DOUBLE_PAWN_PUSH
+				DOUBLE_PAWN_PUSH,
+				this->castle_flags
 			);
 			moves->push_back(move);
 			double_push &= double_push - 1ULL;
@@ -277,11 +331,13 @@ namespace Panzer
 			int index = GetLSB(right_captures);
 			square to = index;
 			square from = to - SW;
-			auto move = std::make_shared<Move>
+			std::shared_ptr<Move> move = std::make_shared<Move>
 			(
 				from,
 				to,
-				CAPTURE
+				CAPTURE,
+				this->castle_flags,
+				this->pieces->at(to)
 			);
 			moves->push_back(move);
 			right_captures &= to;
@@ -292,11 +348,13 @@ namespace Panzer
 			int index = GetLSB(left_captures);
 			square to = index;
 			square from = to - SE;
-			auto move = std::make_shared<Move>
+			std::shared_ptr<Move> move = std::make_shared<Move>
 			(
 				from,
 				to,
-				CAPTURE
+				CAPTURE,
+				this->castle_flags,
+				this->pieces->at(to)
 			);
 			moves->push_back(move);
 			left_captures &= left_captures - 1ULL;	
@@ -374,7 +432,9 @@ namespace Panzer
 			(
 				from,
 				to,
-				EP_CAPTURE
+				EP_CAPTURE,
+				this->castle_flags,
+				PAWN
 			);
 			moves->push_back(move);
 			ep_captures &= ep_captures - 1;
@@ -386,16 +446,12 @@ namespace Panzer
 			square to = index;
 			square from = to + N;
 			const auto move = std::make_shared<Move>
-				(from, 
+			(
+				from, 
 				to, 
-				PAWN, 
-				NO_PIECE, 
-				NO_PIECE , 
-				NO_SQUARE, 
-				this->ep_square,
-				EMPTY_MOVE_FLAGS, 
-				this->castle_flags, 
-				this->ply); 
+				NO_MOVE_FLAGS,
+				this->castle_flags
+			); 
 			moves->push_back(move);
 			pushes &= pushes-1ULL;
 		}
@@ -409,7 +465,8 @@ namespace Panzer
 			(
 				from,
 				to,
-				DOUBLE_PAWN_PUSH
+				DOUBLE_PAWN_PUSH,
+				this->castle_flags
 			);
 			moves->push_back(move);
 			double_push &= double_push - 1ULL;
@@ -424,7 +481,9 @@ namespace Panzer
 			(
 				from,
 				to,
-				CAPTURE
+				CAPTURE,
+				this->castle_flags,
+				this->pieces->at(to)
 			);
 			moves->push_back(move);
 			right_captures &= to;
@@ -439,7 +498,9 @@ namespace Panzer
 			(
 				from,
 				to,
-				CAPTURE
+				CAPTURE,
+				this->castle_flags,
+				this->pieces->at(to)
 			);
 			moves->push_back(move);
 			left_captures &= left_captures - 1ULL;	
@@ -502,7 +563,9 @@ namespace Panzer
 				const auto move = std::make_shared<Move>(
 					from,
 					to,
-					CAPTURE
+					CAPTURE,
+					this->castle_flags,
+					this->pieces->at(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1;
@@ -515,7 +578,8 @@ namespace Panzer
 				const auto move = std::make_shared<Move>(
 					from,
 					to,
-					NO_MOVE_FLAGS
+					NO_MOVE_FLAGS,
+					this->castle_flags
 				);
 				moves->push_back(move);
 				slides &= slides - 1;
@@ -553,7 +617,9 @@ namespace Panzer
 				(
 					from,
 					to,
-					CAPTURE
+					CAPTURE,
+					this->castle_flags,
+					this->pieces->at(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1ULL;
@@ -566,7 +632,8 @@ namespace Panzer
 				(
 					from,
 					to,
-					NO_MOVE_FLAGS
+					NO_MOVE_FLAGS,
+					this->castle_flags
 				);
 
 				moves->push_back(move);
@@ -591,7 +658,9 @@ namespace Panzer
 				const auto move = std::make_shared<Move>(
 					from,
 					to,
-					CAPTURE
+					CAPTURE,
+					this->castle_flags,
+					this->pieces->at(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1;
@@ -604,14 +673,8 @@ namespace Panzer
 				const auto move = std::make_shared<Move>(
 					from,
 					to,
-					BISHOP,
-					NO_PIECE,
-					NO_PIECE,
-					NO_SQUARE,
-					this->ep_square,
-					EMPTY_MOVE_FLAGS,
-					this->castle_flags,
-					this->ply
+					NO_MOVE_FLAGS,
+					this->castle_flags
 				);
 				moves->push_back(move);
 				slides &= slides - 1;
@@ -636,14 +699,9 @@ namespace Panzer
 				const auto move = std::make_shared<Move>(
 					from,
 					to,
-					QUEEN,
-					NO_PIECE,
-					this->GetPieceAtSquare(to),
-					NO_SQUARE,
-					this->ep_square,
 					CAPTURE,
 					this->castle_flags,
-					this->ply
+					this->pieces->at(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1;
@@ -656,14 +714,8 @@ namespace Panzer
 				const auto move = std::make_shared<Move>(
 					from,
 					to,
-					QUEEN,
-					NO_PIECE,
-					NO_PIECE,
-					NO_SQUARE,
-					this->ep_square,
-					EMPTY_MOVE_FLAGS,
-					this->castle_flags,
-					this->ply
+					NO_MOVE_FLAGS,
+					this->castle_flags
 				);
 				moves->push_back(move);
 				slides &= slides - 1;
@@ -699,14 +751,9 @@ namespace Panzer
 				(
 					from,
 					to,
-					KING,
-					NO_PIECE,
-					this->GetPieceAtSquare(to),
-					NO_SQUARE,
-					this->ep_square,
 					CAPTURE,
 					this->castle_flags,
-					this->ply
+					this->pieces->at(to)
 				);
 
 				moves->push_back(move);
@@ -720,14 +767,8 @@ namespace Panzer
 				(
 					from,
 					to,
-					KING,
-					NO_PIECE,
-					NO_PIECE,
-					NO_SQUARE,
-					this->ep_square,
-					EMPTY_MOVE_FLAGS,
-					this->castle_flags,
-					this->ply
+					NO_MOVE_FLAGS,
+					this->castle_flags
 				);
 
 				moves->push_back(move);
