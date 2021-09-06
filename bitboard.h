@@ -18,10 +18,10 @@ namespace Panzer
 	{
 		std::array<bitboard, 7> *Pieces = new std::array<bitboard, 7> { 0ULL };
 		std::array<bitboard, 2> *Colors = new std::array<bitboard, 2> { 0ULL };
-		std::array<piece, 64> *pieces = new std::array<piece, 64> {NO_PIECE};
+		std::array<piece, 64> *pieceLookup = new std::array<piece, 64> {NO_PIECE};
 		std::shared_ptr<Sliders> slider_attacks = std::make_shared<Sliders>();
 
-		char side_to_move = WHITE;
+		color side_to_move = WHITE;
 		square ep_square = NO_SQUARE;
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
 		uint8_t ply = 1;
@@ -43,13 +43,14 @@ namespace Panzer
 			}
 			for (int i = 0; i < 64; i++)
 			{
-				pieces->at(i) = board.pieces->at(i);
+				pieceLookup->at(i) = board.pieceLookup->at(i);
 			}
 
 			side_to_move = board.side_to_move;
 			ep_square = board.ep_square;
 			castle_flags = board.castle_flags;
 			ply = board.ply;
+			slider_attacks = board.slider_attacks;
 		}
 
 		void FillSquare(square s, piece p, color c);
@@ -83,6 +84,9 @@ namespace Panzer
 		void ToggleBitBoards(square from, square to, piece p, color c);
 
 		bool IsChecked();
+
+		void FenToBoard(const std::string& fen);
+		std::string BoardToFen();
 	private:
 		int GetMSB(bitboard b);
 		int GetLSB(bitboard b);
@@ -105,6 +109,8 @@ namespace Panzer
 		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side);
 		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side);
 		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side);
+
+		bitboard GetKnightPossible(square center);
 	}; //class Board_Bit
      
 } //namespace Panzer

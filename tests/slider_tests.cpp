@@ -1,8 +1,9 @@
 #include <iostream>
-
+#include <cassert>
 #include "slider_tests.h"
 #include "../utils/board_utils.h"
 #include "../sliding-attacks/sliders.h"
+#include "../bitboard.h"
 
 #define DEBUG_PRINT
 
@@ -80,7 +81,7 @@ namespace Panzer
 
     bool SlidingTests::ValidateQueenAttacks()
     {
-            return true;
+		return true;
     }
 
     void SlidingTests::PrintMasks()
@@ -96,5 +97,10 @@ namespace Panzer
                 Panzer::Utils::PrintBoard(mask);
                 std::cout << std::endl;
         }
+    }
+
+    bool SlidingTests::ValidateIsChecked()
+    {
+        auto board = new Board_Bit();
     }
 }

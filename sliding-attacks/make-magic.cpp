@@ -4,6 +4,7 @@
 #include <cmath>
 #include <fstream>
 #include <set>
+#include <climits>
 
 #include "../bitboard_constants.h"
 #include "../utils/board_utils.h"
@@ -234,7 +235,7 @@ void makeGenerator()
         std::seed_seq seeds(seed_data->begin(), seed_data->end());
         std::mt19937 seededEngine (seeds);
         engine = seededEngine;
-        dist = std::uniform_int_distribution<uint64_t>(1ULL, -1ULL);
+        dist = std::uniform_int_distribution<uint64_t>(1ULL, ULLONG_MAX);
 }
 
 uint64_t random64()
@@ -273,7 +274,7 @@ void GenerateMagic(square i,
         temp_attacks.push_back(square_attacks);
     }
 
-    assert(temp_attacks.size() == occupancies.size());
+    //assert(temp_attacks.size() == occupancies.size());
 
     // set some bits p for finding out magic bits
     bool generated_magic = false;
@@ -290,7 +291,7 @@ void GenerateMagic(square i,
     while(!generated_magic)
     {
         bool collision = false;
-        std::vector<bitboard> temp_attack_magiced(1U << occupancy_shift, ~0ULL);
+        std::vector<bitboard> temp_attack_magiced(1ULL << occupancy_shift, ~0ULL);
         // more zero bits
         uint64_t magic = random64();
 

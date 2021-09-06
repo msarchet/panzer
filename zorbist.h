@@ -1,6 +1,9 @@
 #pragma once
-#include "constants.h"
+#include "bitboard_constants.h"
 #include "utils/board_utils.h"
+#include <random>
+#include <cmath>
+#include <climits>
 
 namespace Panzer
 {
@@ -14,7 +17,7 @@ namespace Panzer
 			zorbist_lookup()
 			{
 				Fill_Hash_Lookup();
-				dist = std::uniform_int_distribution<hash>(1ULL, -1ULL);
+				dist = std::uniform_int_distribution<hash>(1ULL, ULLONG_MAX);
 				engine = RandomlySeededMersenneTwister();
 			};
 
@@ -25,7 +28,7 @@ namespace Panzer
 			};
 
 		private:
-			hash zorbist_hash_lookup[128][65][3] = { 0 };
+			hash zorbist_hash_lookup[64][7][3] = { 0 };
 			unsigned int seed_data[624] = { 0 };
 
 			std::mt19937 RandomlySeededMersenneTwister () {
@@ -39,16 +42,13 @@ namespace Panzer
 			void Fill_Hash_Lookup()
 			{
 
-				for (square s = 0; s < 128; s++)
+				for (square s = 0; s < 64; s++)
 				{
-					if (IS_SQ(s)) 
+					for (piece p : { PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, NO_PIECE})
 					{
-						for (piece p : { PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, NONE})
+						for (color c : { WHITE, BLACK, NO_COLOR})
 						{
-							for (color c : { WHITE, BLACK, NO_COLOR})
-							{
-								zorbist_hash_lookup[s][p][c] = dist(engine);
-							}
+							zorbist_hash_lookup[s][p][c] = dist(engine);
 						}
 					}
 				}

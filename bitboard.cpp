@@ -1,20 +1,100 @@
 #include "bitboard.h"
 #include "bitboard_constants.h"
 #include "utils/board_utils.h"
+#include <sstream>
 
 namespace Panzer
 {
 	piece Board_Bit::GetPieceAtSquare(square s)
 	{
-		return pieces->at(s);
+		return pieceLookup->at(s);
 	}
 
 	bool Board_Bit::IsChecked()
 	{
 		if (this->side_to_move == WHITE)
 		{
-			this->Make	
+			square kingSquare = GetLSB(this->GetWhiteKings());
+			bitboard blackPawnValidMask = ~ONE_BIT << kingSquare;
+			bitboard diagonals = this->GetBlackBishops() | this->GetBlackQueens() | (this->GetBlackPawns() & blackPawnValidMask);
+			bitboard occupancy = this->GetOccupancy();
+			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
+
+			if (attackedOnDiagonal != 0)
+			{
+				return true;
+			}
+
+			bitboard straights = this->GetBlackQueens() | this->GetBlackRooks();
+			bitboard attackedOnStraights = slider_attacks->GetRookAttacks(kingSquare, occupancy) & straights;
+			
+			if (attackedOnStraights != 0)
+			{
+				return true;
+			}
+
+			bitboard knights = this->GetBlackKnights();
+
+
+			// mask for file wraps
+			auto attackedByKnight = this->GetKnightPossible(kingSquare) & knights;
+
+			if (attackedByKnight != 0)
+			{
+				return true;
+			}
+
+			return false;
 		}
+
+		if (this->side_to_move == BLACK)
+		{
+			square kingSquare = GetLSB(this->GetBlackKings());
+			bitboard whitePawnValidMask = (ONE_BIT << kingSquare) - 1;
+			bitboard diagonals = this->GetWhiteBishops() | this->GetWhiteQueens() | (this->GetWhitePawns() & whitePawnValidMask);
+			bitboard occupancy = this->GetOccupancy();
+			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
+
+			if (attackedOnDiagonal != 0)
+			{
+				return true;
+			}
+
+			bitboard straights = this->GetWhiteQueens() | this->GetWhiteRooks();
+			bitboard attackedOnStraights = slider_attacks->GetRookAttacks(kingSquare, occupancy) & straights;
+			
+			if (attackedOnStraights != 0)
+			{
+				return true;
+			}
+
+			bitboard knights = this->GetWhiteKnights();
+
+			// mask for file wraps
+			auto attackedByKnight = this->GetKnightPossible(kingSquare) & knights;
+
+			if (attackedByKnight != 0)
+			{
+				return true;
+			}
+
+			return false;
+		}
+	}
+
+	bitboard Board_Bit::GetKnightPossible(square center)
+	{
+			auto span = KNIGHT_SPAN;
+			if (center >= KNIGHT_SPAN_CENTER)
+			{
+				span = span << (center - KNIGHT_SPAN_CENTER);
+			}
+			else
+			{
+				span = span >> (KNIGHT_SPAN_CENTER - center);
+			}
+
+			return span & knight_move_masks[center % 8];
 	}
 
 	void Board_Bit::ToggleBitBoards(square from, square to, piece p, color c)
@@ -22,8 +102,8 @@ namespace Panzer
 		bitboard fromToBB = ONE_BIT << from | ONE_BIT << to;
 		this->Colors->at(c) ^= fromToBB;
 		this->Pieces->at(p) ^= fromToBB;
-		this->pieces->at(from) = NO_PIECE;
-		this->pieces->at(to) = p;
+		this->pieceLookup->at(from) = NO_PIECE;
+		this->pieceLookup->at(to) = p;
 	}
 
 	void Board_Bit::FillSquare(square s, piece p, color c)
@@ -31,7 +111,7 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
-		this->pieces->at(s) = p;
+		this->pieceLookup->at(s) = p;
 	}
 
 	void Board_Bit::ClearSquare(square s,piece p, color c)
@@ -39,7 +119,7 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
-		this->pieces->at(s) = NO_PIECE;
+		this->pieceLookup->at(s) = NO_PIECE;
 	}
 
 	MoveVector Board_Bit::GenerateMoves()
@@ -82,13 +162,35 @@ namespace Panzer
 
 	int Board_Bit::GetMSB(bitboard b)
 	{
+#ifdef _MSC_VER
+		unsigned long leading_zero = 0;
+
+		if (_BitScanReverse64(&leading_zero, b))
+		{
+			return 63 - leading_zero;
+		}
+
+		return 63;
+#else
 		int leading_zeros = __builtin_clzll(b);
 		return 63 - leading_zeros;
+#endif
 	}
 
 	int Board_Bit::GetLSB(bitboard b)
 	{
+#ifdef _MSC_VER
+		unsigned long trailing_zero = 0;
+
+		if (_BitScanForward64(&trailing_zero, b))
+		{
+			return  trailing_zero;
+		}
+
+		return 0;
+#else
 		return __builtin_ctzll(b);
+#endif
 	}
 
 	void Board_Bit::PrintBoard(bitboard b)
@@ -302,6 +404,41 @@ namespace Panzer
 			ep_captures &= ep_captures - 1;
 		}
 
+		while(right_captures != 0)
+		{
+			int index = GetLSB(right_captures);
+			square to = index;
+			square from = to - SW;
+			std::shared_ptr<Move> move = std::make_shared<Move>
+			(
+				from,
+				to,
+				CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+			moves->push_back(move);
+			right_captures &= to;
+		}
+
+		while(left_captures != 0)
+		{
+			int index = GetLSB(left_captures);
+			square to = index;
+			square from = to - SE;
+			std::shared_ptr<Move> move = std::make_shared<Move>
+			(
+				from,
+				to,
+				CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+			moves->push_back(move);
+			left_captures &= left_captures - 1ULL;	
+		}
+
+
 		while (pushes != 0)
 		{
 			int index = GetLSB(pushes);
@@ -332,40 +469,6 @@ namespace Panzer
 			);
 			moves->push_back(move);
 			double_push &= double_push - 1ULL;
-		}
-
-		while(right_captures != 0)
-		{
-			int index = GetLSB(right_captures);
-			square to = index;
-			square from = to - SW;
-			std::shared_ptr<Move> move = std::make_shared<Move>
-			(
-				from,
-				to,
-				CAPTURE,
-				this->castle_flags,
-				this->pieces->at(to)
-			);
-			moves->push_back(move);
-			right_captures &= to;
-		}
-
-		while(left_captures != 0)
-		{
-			int index = GetLSB(left_captures);
-			square to = index;
-			square from = to - SE;
-			std::shared_ptr<Move> move = std::make_shared<Move>
-			(
-				from,
-				to,
-				CAPTURE,
-				this->castle_flags,
-				this->pieces->at(to)
-			);
-			moves->push_back(move);
-			left_captures &= left_captures - 1ULL;	
 		}
 
 	}
@@ -448,6 +551,41 @@ namespace Panzer
 			ep_captures &= ep_captures - 1;
 		}
 
+		while(right_captures != 0)
+		{
+			int index = GetLSB(right_captures);
+			square to = index;
+			square from = to + NW;
+			auto move = std::make_shared<Move>
+			(
+				from,
+				to,
+				CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+			moves->push_back(move);
+			right_captures &= to;
+		}
+
+		while(left_captures != 0)
+		{
+			int index = GetLSB(left_captures);
+			square to = index;
+			square from = to + NE;
+			auto move = std::make_shared<Move>
+			(
+				from,
+				to,
+				CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+			moves->push_back(move);
+			left_captures &= left_captures - 1ULL;	
+		}
+
+
 		while (pushes != 0)
 		{
 			int index = GetLSB(pushes);
@@ -478,40 +616,6 @@ namespace Panzer
 			);
 			moves->push_back(move);
 			double_push &= double_push - 1ULL;
-		}
-
-		while(right_captures != 0)
-		{
-			int index = GetLSB(right_captures);
-			square to = index;
-			square from = to + NW;
-			auto move = std::make_shared<Move>
-			(
-				from,
-				to,
-				CAPTURE,
-				this->castle_flags,
-				this->pieces->at(to)
-			);
-			moves->push_back(move);
-			right_captures &= to;
-		}
-
-		while(left_captures != 0)
-		{
-			int index = GetLSB(left_captures);
-			square to = index;
-			square from = to + NE;
-			auto move = std::make_shared<Move>
-			(
-				from,
-				to,
-				CAPTURE,
-				this->castle_flags,
-				this->pieces->at(to)
-			);
-			moves->push_back(move);
-			left_captures &= left_captures - 1ULL;	
 		}
 
 	}
@@ -573,7 +677,7 @@ namespace Panzer
 					to,
 					CAPTURE,
 					this->castle_flags,
-					this->pieces->at(to)
+					this->GetPieceAtSquare(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1;
@@ -627,7 +731,7 @@ namespace Panzer
 					to,
 					CAPTURE,
 					this->castle_flags,
-					this->pieces->at(to)
+					this->GetPieceAtSquare(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1ULL;
@@ -668,7 +772,7 @@ namespace Panzer
 					to,
 					CAPTURE,
 					this->castle_flags,
-					this->pieces->at(to)
+					this->GetPieceAtSquare(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1;
@@ -709,7 +813,7 @@ namespace Panzer
 					to,
 					CAPTURE,
 					this->castle_flags,
-					this->pieces->at(to)
+					this->GetPieceAtSquare(to)
 				);
 				moves->push_back(move);
 				captures &= captures - 1;
@@ -761,7 +865,7 @@ namespace Panzer
 					to,
 					CAPTURE,
 					this->castle_flags,
-					this->pieces->at(to)
+					this->GetPieceAtSquare(to)
 				);
 
 				moves->push_back(move);
@@ -787,4 +891,201 @@ namespace Panzer
 		}
 	}
 
+std::string Board_Bit::BoardToFen()
+{
+	std::string fen = "";
+	int empty_squares = 0;
+	for (int index = 0; index < 64; index++) 
+	{
+		square s = fenIndexToSquare[index];
+		bitboard targetSquare = ONE_BIT << s;
+		piece piece = this->GetPieceAtSquare(s);
+		// if there is no piece at this index then increase empty square count
+		if (piece == NO_PIECE)
+		{
+			empty_squares++;
+		}
+		else
+		{
+			color c = (this->GetWhitePieces() & targetSquare) != 0;
+			if (empty_squares != 0)
+			{
+				fen += std::to_string(empty_squares);
+				empty_squares = 0;
+			}
+			switch (piece) 
+			{
+				case PAWN:
+					fen += c == BLACK ? "p" : "P";
+					break;
+				case ROOK:
+					fen += c == BLACK ? "r" : "R";
+					break;
+				case KNIGHT:
+					fen += c == BLACK ? "n" : "N";
+					break;
+				case BISHOP:
+					fen += c == BLACK ? "b" : "B";
+					break;
+				case QUEEN:
+					fen += c == BLACK ? "q" : "Q";
+					break;
+				case KING:
+					fen += c == BLACK ? "k" : "K";
+					break;
+			}
+		}
+
+		if ((s & 7) == 7)
+		{
+			if (empty_squares != 0)
+			{
+				fen += std::to_string(empty_squares);
+				empty_squares = 0;
+			}
+			if (s != H1)
+			{
+				fen += "/";
+			}
+		}
+	}
+
+	fen += " ";
+	fen += this->side_to_move == WHITE ? "w" : "b";
+
+	fen += " ";
+	if (this->castle_flags == EMPTY_CASTLE_FLAGS)
+	{
+		fen += "-";
+	}
+	else
+	{
+		if ((this->castle_flags & WHITEK) != 0)
+		{
+			fen += "K";
+		}
+
+		if ((this->castle_flags & WHITEQ) != 0)
+		{
+			fen += "Q";
+		}
+
+		if ((this->castle_flags & BLACKK) != 0)
+		{
+			fen += "k";
+		}
+
+		if ((this->castle_flags & BLACKQ) != 0)
+		{
+			fen += "q";
+		}
+	}
+
+	fen += " ";
+
+	if (this->ep_square != NO_SQUARE)
+	{
+		fen += squareToString[this->ep_square];
+	}
+	else
+	{
+		fen += "-";
+	}
+
+	// TODO: implement move clocks
+	return fen;
+}
+
+	void Board_Bit::FenToBoard(const std::string& fen)
+	{
+		bool board_done = false;
+		this->pieceLookup = new std::array<piece, 64> { NO_PIECE };
+		this->Pieces = new std::array<bitboard, 7> { 0ULL };
+		this->Colors = new std::array<bitboard, 2> { 0ULL };
+
+		int index = 0;
+		for (char const& c : fen)
+		{
+			if (board_done) break;
+			switch (c) {
+			case 'r':
+				this->FillSquare(index, ROOK, BLACK);
+				index++;
+				break;
+			case 'n':
+				this->FillSquare(index, KNIGHT, BLACK);
+				index++;
+				break;
+			case 'b':
+				this->FillSquare(index, BISHOP, BLACK);
+				index++;
+				break;
+			case 'q':
+				this->FillSquare(index, QUEEN, BLACK);
+				index++;
+				break;
+			case 'k':
+				this->FillSquare(index, KING, BLACK);
+				index++;
+				break;
+			case 'p':
+				this->FillSquare(index, PAWN, BLACK);
+				index++;
+				break;
+			case 'R':
+				this->FillSquare(index, ROOK, WHITE);
+				index++;
+				break;
+			case 'N':
+				this->FillSquare(index, KNIGHT, WHITE);
+				index++;
+				break;
+			case 'B':
+				this->FillSquare(index, BISHOP, WHITE);
+				index++;
+				break;
+			case 'Q':
+				this->FillSquare(index, QUEEN, WHITE);
+				index++;
+				break;
+			case 'K':
+				this->FillSquare(index, KING, WHITE);
+				index++;
+				break;
+			case 'P':
+				this->FillSquare(index, PAWN, WHITE);
+				index++;
+				break;
+			case '/':
+				break;
+			case '1':
+				index += 1;
+				break;
+			case '2':
+				index += 2;
+				break;
+			case '3':
+				index += 3;
+				break;
+			case '4':
+				index += 4;
+				break;
+			case '5':
+				index += 5;
+				break;
+			case '6':
+				index += 6;
+				break;
+			case '7':
+				index += 7;
+				break;
+			case '8':
+				index += 8;
+				break;
+			case ' ':
+				board_done = true;
+				break;
+			}
+		}
+	}
 }
