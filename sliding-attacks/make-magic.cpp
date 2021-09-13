@@ -409,7 +409,6 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < 64; i++)
     {
-        std::cout << i << std::endl;
         GenerateMagic(i, rook_directions, rook_attacks, rook_magics, rook_shifts[i]);
         GenerateMagic(i, bishop_directions, bishop_attacks, bishop_magics, bishop_shifts[i]);
     }

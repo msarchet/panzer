@@ -2,10 +2,19 @@
 #include <memory>
 
 #include "bitboard.h"
+#include "utils/board_utils.h"
+
+long CountMovesRecursive(Panzer::Board_Bit *board, int depth);
 
 int main (int argc, char *argv[])
 {
-    const auto board = new Panzer::Board_Bit();
+	int depth = 4;
+	if (argc > 1) 
+	{
+		depth = argv[1][0] - '0';
+	}
+
+    auto board = new Panzer::Board_Bit();
     board->FillSquare(A1, ROOK, WHITE);
     board->FillSquare(B1, KNIGHT, WHITE);
     board->FillSquare(C1, BISHOP, WHITE);
@@ -42,26 +51,57 @@ int main (int argc, char *argv[])
 
 
 
-    std::chrono::time_point<std::chrono::steady_clock> start,end;
-    uint32_t total_count = 0;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
+
+    long total_count = 0;
 
     start = std::chrono::high_resolution_clock::now();
-    for (int i = 0; i < 1e6; i++)
-    {
-        auto moves = board->GenerateWhiteMoves();
-        for(auto it = moves->begin(); it != moves->end(); it++)
-        {
-            board->MakeMove(*it);
-            board->UnmakeMove(*it);
-            total_count++;
-        }
-
-    }
-
+    
+    total_count = CountMovesRecursive(board, depth);
     end = std::chrono::high_resolution_clock::now();
     //std::cout << "MOVES\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout << elapsed_seconds.count() << "\n";
     std::cout << "total moves " << total_count << "\n";
     std::cout << "CPS" << total_count / elapsed_seconds.count();
+}
+
+long CountMovesRecursive(Panzer::Board_Bit *board, int depth)
+{
+    auto moves = board->GenerateMoves();
+
+    long currentCount = 0;
+
+    if (depth == 1)
+    {
+        currentCount = moves->size();
+        for (auto it = moves->begin(); it != moves->end(); it++)
+        {
+            auto move = *it;
+            std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
+        }
+        std::cout << "\t" << currentCount << std::endl;
+        return currentCount;
+    }
+
+    long totalCount = 0;
+    for (auto it = moves->begin(); it != moves->end(); it++)
+    {
+        auto move = *it;
+        board->MakeMove(move);
+
+        std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
+        if (!board->IsChecked(board->GetSideToMove()))
+        {
+            currentCount = CountMovesRecursive(board, depth - 1);
+            std::cout << currentCount << std::endl;
+            totalCount += currentCount; 
+        }
+
+        board->UnmakeMove(move);
+    }
+
+    std::cout << "-------" << std::endl;
+
+    return totalCount;
 }

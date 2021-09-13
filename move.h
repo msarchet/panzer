@@ -29,9 +29,9 @@ namespace Panzer
         square getFrom() const { return (move >> 6) & 0x3f; }
         move_flag getFlags() const { return (move >> 12) & 0x3f; }
 
-        bool isCapture() const { return getFlags() & CAPTURE; }
-        bool isEPCapture() const { return getFlags() & EP_CAPTURE; }
-        bool isCastle() const { return getFlags() & KING_CASTLE || getFlags() & QUEEN_CASTLE ; }
+        bool isCapture() const { return getFlags() == CAPTURE; }
+        bool isEPCapture() const { return getFlags() == EP_CAPTURE; }
+        bool isCastle() const { return getFlags() == KING_CASTLE || getFlags() == QUEEN_CASTLE ; }
         bool isPromo() const { return getFlags() >= KNIGHT_PROMO; }
 
         castle_flag getCastleFlags() const { return priorCastleFlags; }

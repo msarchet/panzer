@@ -1,5 +1,6 @@
 #include <iostream>
 #include "slider_tests.h"
+#include "check_tests.h"
 
 int main()
 {
@@ -8,6 +9,7 @@ int main()
     slider_tests->Setup();
     slider_tests->ValidateBishopAttacks();
     slider_tests->ValidateRookAttacks();
-    slider_tests->PrintMasks();
+    auto check_tests = new Panzer::CheckTests();
+    check_tests->ValidateCheckLogic();
     std::cout << "Done!";
 }

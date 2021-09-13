@@ -78,13 +78,13 @@ namespace Panzer
 		bitboard GetBlackKings() { return Pieces->at(KING) & Colors->at(BLACK); };
 
 		bitboard GetOccupancy() { return Colors->at(WHITE) | Colors->at(BLACK); }
+		color GetSideToMove() { return side_to_move; } 
 
 		void MakeMove(std::shared_ptr<const Move> move);
 		void UnmakeMove(std::shared_ptr<const Move> move);
 		void ToggleBitBoards(square from, square to, piece p, color c);
 
-		bool IsChecked();
-
+		bool IsChecked(color color);
 		void FenToBoard(const std::string& fen);
 		std::string BoardToFen();
 	private:

@@ -5,8 +5,6 @@
 #include "../sliding-attacks/sliders.h"
 #include "../bitboard.h"
 
-#define DEBUG_PRINT
-
 namespace Panzer
 {
     const bitboard empty_occupancy = 0ULL;
@@ -46,6 +44,8 @@ namespace Panzer
         Panzer::Utils::PrintBoard(blocked_attacks);
 #endif
         assert(blocked_attacks == blocked_occupancy);
+
+        std::cout << "bishop attacks test passed";
     }
 
     bool SlidingTests::ValidateRookAttacks()
@@ -77,26 +77,13 @@ namespace Panzer
         Panzer::Utils::PrintBoard(starting_attacks);
 #endif
         assert(starting_attacks == expected_starting_attacks);
+
+        std::cout << "Rook attacks passed";
     }
 
     bool SlidingTests::ValidateQueenAttacks()
     {
 		return true;
-    }
-
-    void SlidingTests::PrintMasks()
-    {
-        for(auto mask : NW_DIAGONALS)
-        {
-                Panzer::Utils::PrintBoard(mask);
-                std::cout << std::endl;
-        }
-
-        for(auto mask : NE_DIAGONALS)
-        {
-                Panzer::Utils::PrintBoard(mask);
-                std::cout << std::endl;
-        }
     }
 
     bool SlidingTests::ValidateIsChecked()

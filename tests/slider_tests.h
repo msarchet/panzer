@@ -18,7 +18,6 @@ namespace Panzer
             bool ValidateRookAttacks();
             bool ValidateQueenAttacks();
             bool ValidateIsChecked();
-            void PrintMasks();
         private:
             bitboard GenerateBoard(std::vector<square> squares);
     };

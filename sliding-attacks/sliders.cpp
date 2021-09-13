@@ -1,4 +1,5 @@
 #include "sliders.h"
+#include <iostream>
 
 namespace Panzer
 {

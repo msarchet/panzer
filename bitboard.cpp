@@ -10,9 +10,9 @@ namespace Panzer
 		return pieceLookup->at(s);
 	}
 
-	bool Board_Bit::IsChecked()
+	bool Board_Bit::IsChecked(color color)
 	{
-		if (this->side_to_move == WHITE)
+		if (color == WHITE)
 		{
 			square kingSquare = GetLSB(this->GetWhiteKings());
 			bitboard blackPawnValidMask = ~ONE_BIT << kingSquare;
@@ -47,7 +47,7 @@ namespace Panzer
 			return false;
 		}
 
-		if (this->side_to_move == BLACK)
+		if (color == BLACK)
 		{
 			square kingSquare = GetLSB(this->GetBlackKings());
 			bitboard whitePawnValidMask = (ONE_BIT << kingSquare) - 1;
@@ -99,7 +99,7 @@ namespace Panzer
 
 	void Board_Bit::ToggleBitBoards(square from, square to, piece p, color c)
 	{
-		bitboard fromToBB = ONE_BIT << from | ONE_BIT << to;
+		bitboard fromToBB = (ONE_BIT << from) | (ONE_BIT << to);
 		this->Colors->at(c) ^= fromToBB;
 		this->Pieces->at(p) ^= fromToBB;
 		this->pieceLookup->at(from) = NO_PIECE;
@@ -111,6 +111,10 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
+		if (s > 64)
+		{
+			std::cout << "fill is too large" << std::endl;
+		}
 		this->pieceLookup->at(s) = p;
 	}
 
@@ -119,6 +123,10 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
+		if (s > 64)
+		{
+			std::cout << "clear is too large" << std::endl;
+		}
 		this->pieceLookup->at(s) = NO_PIECE;
 	}
 
@@ -150,10 +158,8 @@ namespace Panzer
 	{
 		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move> > >();
 		this->MakeBlackPawnMoves(moves);
-		std::cout << "Black Pawwn Moves" << moves->size() << "\n";
 		this->MakeBlackRooksMoves(moves);
 		this->MakeBlackKnightMoves(moves);
-		std::cout << "Black Knight Moves" << moves->size() << "\n";
 		this->MakeBlackBishopMoves(moves);
 		this->MakeBlackQueenMoves(moves);
 		this->MakeBlackKingMoves(moves);
@@ -204,13 +210,12 @@ namespace Panzer
 		if (move->isCapture())
 		{
 			// clear the captured piece
-			if (move->getFlags() & EP_CAPTURE)
+			if (move->isEPCapture())
 			{
 				this->ClearSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
 			{
-				this->PrintBoard(this->GetWhitePawns());
 				this->ClearSquare(move->getTo(), this->GetPieceAtSquare(move->getTo()), !this->side_to_move);
 			}
 			
@@ -241,7 +246,7 @@ namespace Panzer
 		}
 		else
 		{
-			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getTo()), this->side_to_move);
+			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getFrom()), this->side_to_move);
 		}
 		
 
@@ -347,7 +352,7 @@ namespace Panzer
 		}
 		else
 		{
-			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getFrom()), this->side_to_move);
+			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getTo()), this->side_to_move);
 		}
 		
 
@@ -401,7 +406,7 @@ namespace Panzer
 				PAWN
 			);
 			moves->push_back(move);
-			ep_captures &= ep_captures - 1;
+			ep_captures &= ep_captures - 1ULL;
 		}
 
 		while(right_captures != 0)
@@ -418,7 +423,7 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 			moves->push_back(move);
-			right_captures &= to;
+			right_captures &= right_captures - 1ULL;
 		}
 
 		while(left_captures != 0)
@@ -499,7 +504,7 @@ namespace Panzer
 
 	void Board_Bit::MakeWhiteQueenMoves(MoveVector moves)
 	{
-		auto queens = this->GetWhiteBishops();
+		auto queens = this->GetWhiteQueens();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
 		this->MakeQueenMoves(moves, queens, white_pieces, black_pieces);
@@ -548,7 +553,7 @@ namespace Panzer
 				PAWN
 			);
 			moves->push_back(move);
-			ep_captures &= ep_captures - 1;
+			ep_captures &= ep_captures - 1ULL;
 		}
 
 		while(right_captures != 0)
@@ -565,7 +570,7 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 			moves->push_back(move);
-			right_captures &= to;
+			right_captures &= right_captures - 1ULL;
 		}
 
 		while(left_captures != 0)
@@ -683,7 +688,7 @@ namespace Panzer
 				captures &= captures - 1;
 			}
 
-			auto slides = possible & ~captures & ~same_side;
+			auto slides = possible & ~occupancy;
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
@@ -694,10 +699,10 @@ namespace Panzer
 					this->castle_flags
 				);
 				moves->push_back(move);
-				slides &= slides - 1;
+				slides &= slides - 1ULL;
 			}
 
-			rooks &= rooks - 1;
+			rooks &= rooks - 1ULL;
 		}
 	}
 
@@ -778,7 +783,7 @@ namespace Panzer
 				captures &= captures - 1;
 			}
 
-			auto slides = possible & ~captures & ~same_side;
+			auto slides = possible & ~occupancy;
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
@@ -789,10 +794,10 @@ namespace Panzer
 					this->castle_flags
 				);
 				moves->push_back(move);
-				slides &= slides - 1;
+				slides &= slides - 1ULL;
 			}
 
-			bishops &= bishops - 1;
+			bishops &= bishops - 1ULL;
 		}
 	}
 
@@ -816,10 +821,10 @@ namespace Panzer
 					this->GetPieceAtSquare(to)
 				);
 				moves->push_back(move);
-				captures &= captures - 1;
+				captures &= captures - 1ULL;
 			}
 
-			auto slides = possible & ~captures & ~same_side;
+			auto slides = possible & ~occupancy;
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
@@ -830,9 +835,9 @@ namespace Panzer
 					this->castle_flags
 				);
 				moves->push_back(move);
-				slides &= slides - 1;
+				slides &= slides - 1ULL;
 			}
-			queens &= queens - 1;
+			queens &= queens - 1ULL;
 		}
 	}
 
@@ -1007,53 +1012,54 @@ std::string Board_Bit::BoardToFen()
 		for (char const& c : fen)
 		{
 			if (board_done) break;
+			auto s = fenIndexToSquare[index];
 			switch (c) {
 			case 'r':
-				this->FillSquare(index, ROOK, BLACK);
+				this->FillSquare(s, ROOK, BLACK);
 				index++;
 				break;
 			case 'n':
-				this->FillSquare(index, KNIGHT, BLACK);
+				this->FillSquare(s, KNIGHT, BLACK);
 				index++;
 				break;
 			case 'b':
-				this->FillSquare(index, BISHOP, BLACK);
+				this->FillSquare(s, BISHOP, BLACK);
 				index++;
 				break;
 			case 'q':
-				this->FillSquare(index, QUEEN, BLACK);
+				this->FillSquare(s, QUEEN, BLACK);
 				index++;
 				break;
 			case 'k':
-				this->FillSquare(index, KING, BLACK);
+				this->FillSquare(s, KING, BLACK);
 				index++;
 				break;
 			case 'p':
-				this->FillSquare(index, PAWN, BLACK);
+				this->FillSquare(s, PAWN, BLACK);
 				index++;
 				break;
 			case 'R':
-				this->FillSquare(index, ROOK, WHITE);
+				this->FillSquare(s, ROOK, WHITE);
 				index++;
 				break;
 			case 'N':
-				this->FillSquare(index, KNIGHT, WHITE);
+				this->FillSquare(s, KNIGHT, WHITE);
 				index++;
 				break;
 			case 'B':
-				this->FillSquare(index, BISHOP, WHITE);
+				this->FillSquare(s, BISHOP, WHITE);
 				index++;
 				break;
 			case 'Q':
-				this->FillSquare(index, QUEEN, WHITE);
+				this->FillSquare(s, QUEEN, WHITE);
 				index++;
 				break;
 			case 'K':
-				this->FillSquare(index, KING, WHITE);
+				this->FillSquare(s, KING, WHITE);
 				index++;
 				break;
 			case 'P':
-				this->FillSquare(index, PAWN, WHITE);
+				this->FillSquare(s, PAWN, WHITE);
 				index++;
 				break;
 			case '/':
