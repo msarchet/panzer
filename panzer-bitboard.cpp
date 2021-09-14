@@ -4,7 +4,7 @@
 #include "bitboard.h"
 #include "utils/board_utils.h"
 
-long CountMovesRecursive(Panzer::Board_Bit *board, int depth);
+long CountMovesRecursive(Panzer::Board_Bit *board, int depth, bool isTopDepth);
 
 int main (int argc, char *argv[])
 {
@@ -32,7 +32,7 @@ int main (int argc, char *argv[])
 
     start = std::chrono::high_resolution_clock::now();
     
-    total_count = CountMovesRecursive(board, depth);
+    total_count = CountMovesRecursive(board, depth, true);
     end = std::chrono::high_resolution_clock::now();
     //std::cout << "MOVES\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
@@ -41,41 +41,36 @@ int main (int argc, char *argv[])
     std::cout << "CPS" << total_count / elapsed_seconds.count();
 }
 
-long CountMovesRecursive(Panzer::Board_Bit *board, int depth)
+long CountMovesRecursive(Panzer::Board_Bit *board, int depth, bool isTopDepth)
 {
+    if (depth == 0)
+    {
+        return 1;
+    }
+
     auto moves = board->GenerateMoves();
 
     long currentCount = 0;
-
-    if (depth == 1)
-    {
-        currentCount = moves->size();
-        //for (auto it = moves->begin(); it != moves->end(); it++)
-        //{
-            //auto move = *it;
-            //std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
-        //}
-        //std::cout << "\t" << currentCount << std::endl;
-        return currentCount;
-    }
-
     long totalCount = 0;
+
     for (auto it = moves->begin(); it != moves->end(); it++)
     {
         auto move = *it;
         board->MakeMove(move);
 
-        //std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
-        if (!board->IsChecked(board->GetSideToMove()))
+
+        if (!board->IsChecked(!board->GetSideToMove()))
         {
-            currentCount = CountMovesRecursive(board, depth - 1);
-            //std::cout << currentCount << std::endl;
+            currentCount = CountMovesRecursive(board, depth - 1, false);
+            if (isTopDepth)
+            {
+                std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << ": ";
+                std::cout << currentCount <<  std::endl;
+            }
+
             totalCount += currentCount; 
         }
-        else
-        {
-            //std::cout << "checked";
-        }
+
 
         board->UnmakeMove(move);
     }
