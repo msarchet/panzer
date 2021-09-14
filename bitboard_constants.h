@@ -324,5 +324,14 @@ const std::array<std::string, 64> squareToString= {
 	"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 };
 
+const std::array<std::string, 7> pieceToString= {
+    "",
+    "Pawn",
+    "blkas",
+    "adsf",
+    "asdf",
+    "asdf",
+    "asdf",
+};
 
 

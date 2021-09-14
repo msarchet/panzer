@@ -11,7 +11,7 @@ namespace Panzer
 		board->FillSquare(A1, KING, WHITE);
 		board->FillSquare(A2, QUEEN, BLACK);
 
-		assert(board->IsChecked());
+		assert(board->IsChecked(WHITE));
 
 		std::cout << "Simple check" << std::endl;
 
@@ -19,7 +19,7 @@ namespace Panzer
 		board->FillSquare(A1, KING, WHITE);
 		board->FillSquare(A3, BISHOP, BLACK);
 
-		assert(!board->IsChecked());
+		assert(!board->IsChecked(WHITE));
 
 		std::cout << "Not Checked" << std::endl;
 
@@ -27,18 +27,18 @@ namespace Panzer
 		board->FillSquare(A1, KING, WHITE);
 		board->FillSquare(B3, KNIGHT, BLACK);
 
-		assert(board->IsChecked());
+		assert(board->IsChecked(WHITE));
 
 		std::cout << "Checked by Knight" << std::endl;
 
 		board = new Board_Bit();
 		board->FenToBoard("8/8/8/8/2q5/8/1PPP4/1PKP4");
 
-		assert(!board->IsChecked());
+		assert(!board->IsChecked(WHITE));
 
 		board->FenToBoard("8/8/8/8/8/8/3p4/2K5");
 
-		assert(board->IsChecked());
+		assert(board->IsChecked(WHITE));
 
 		std::cout << "Not Checked, blocked" << std::endl;
 		return true;

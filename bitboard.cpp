@@ -111,10 +111,6 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
-		if (s > 64)
-		{
-			std::cout << "fill is too large" << std::endl;
-		}
 		this->pieceLookup->at(s) = p;
 	}
 
@@ -123,10 +119,6 @@ namespace Panzer
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
-		if (s > 64)
-		{
-			std::cout << "clear is too large" << std::endl;
-		}
 		this->pieceLookup->at(s) = NO_PIECE;
 	}
 
@@ -280,7 +272,7 @@ namespace Panzer
 			}
 		}
 
-		if (move->getFlags() & DOUBLE_PAWN_PUSH)
+		if (move->getFlags() == DOUBLE_PAWN_PUSH)
 		{
 			if (this->side_to_move == WHITE)
 			{
@@ -352,7 +344,7 @@ namespace Panzer
 		}
 		else
 		{
-			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getTo()), this->side_to_move);
+			this->ToggleBitBoards(move->getTo(), move->getFrom(), this->GetPieceAtSquare(move->getTo()), this->side_to_move);
 		}
 		
 
@@ -1011,86 +1003,119 @@ std::string Board_Bit::BoardToFen()
 		int index = 0;
 		for (char const& c : fen)
 		{
-			if (board_done) break;
 			auto s = fenIndexToSquare[index];
-			switch (c) {
-			case 'r':
-				this->FillSquare(s, ROOK, BLACK);
-				index++;
-				break;
-			case 'n':
-				this->FillSquare(s, KNIGHT, BLACK);
-				index++;
-				break;
-			case 'b':
-				this->FillSquare(s, BISHOP, BLACK);
-				index++;
-				break;
-			case 'q':
-				this->FillSquare(s, QUEEN, BLACK);
-				index++;
-				break;
-			case 'k':
-				this->FillSquare(s, KING, BLACK);
-				index++;
-				break;
-			case 'p':
-				this->FillSquare(s, PAWN, BLACK);
-				index++;
-				break;
-			case 'R':
-				this->FillSquare(s, ROOK, WHITE);
-				index++;
-				break;
-			case 'N':
-				this->FillSquare(s, KNIGHT, WHITE);
-				index++;
-				break;
-			case 'B':
-				this->FillSquare(s, BISHOP, WHITE);
-				index++;
-				break;
-			case 'Q':
-				this->FillSquare(s, QUEEN, WHITE);
-				index++;
-				break;
-			case 'K':
-				this->FillSquare(s, KING, WHITE);
-				index++;
-				break;
-			case 'P':
-				this->FillSquare(s, PAWN, WHITE);
-				index++;
-				break;
-			case '/':
-				break;
-			case '1':
-				index += 1;
-				break;
-			case '2':
-				index += 2;
-				break;
-			case '3':
-				index += 3;
-				break;
-			case '4':
-				index += 4;
-				break;
-			case '5':
-				index += 5;
-				break;
-			case '6':
-				index += 6;
-				break;
-			case '7':
-				index += 7;
-				break;
-			case '8':
-				index += 8;
-				break;
-			case ' ':
-				board_done = true;
-				break;
+			if (board_done)
+			{
+				// first space is side
+				// second spacce is castle flags
+				// third space is ep
+				// last two digits are moves and plys
+				switch (c)
+				{
+					case 'b':
+						this->side_to_move = BLACK;
+						std::cout << "set side to move to black" << std::endl;
+						break;
+					case 'w':
+						this->side_to_move = WHITE;
+						std::cout << "set side to move to white" << std::endl;
+						break;
+					case 'k':
+						this->castle_flags |= BLACKK;
+						break;
+					case 'q':
+						this->castle_flags |= BLACKQ;
+						break;
+					case 'K':
+						this->castle_flags |= WHITEK;
+						break;
+					case 'Q':
+						this->castle_flags |= WHITEQ;
+					case '\0':
+						return;
+				}
+			}
+			else 
+			{
+				switch (c) {
+				case 'r':
+					this->FillSquare(s, ROOK, BLACK);
+					index++;
+					break;
+				case 'n':
+					this->FillSquare(s, KNIGHT, BLACK);
+					index++;
+					break;
+				case 'b':
+					this->FillSquare(s, BISHOP, BLACK);
+					index++;
+					break;
+				case 'q':
+					this->FillSquare(s, QUEEN, BLACK);
+					index++;
+					break;
+				case 'k':
+					this->FillSquare(s, KING, BLACK);
+					index++;
+					break;
+				case 'p':
+					this->FillSquare(s, PAWN, BLACK);
+					index++;
+					break;
+				case 'R':
+					this->FillSquare(s, ROOK, WHITE);
+					index++;
+					break;
+				case 'N':
+					this->FillSquare(s, KNIGHT, WHITE);
+					index++;
+					break;
+				case 'B':
+					this->FillSquare(s, BISHOP, WHITE);
+					index++;
+					break;
+				case 'Q':
+					this->FillSquare(s, QUEEN, WHITE);
+					index++;
+					break;
+				case 'K':
+					this->FillSquare(s, KING, WHITE);
+					index++;
+					break;
+				case 'P':
+					this->FillSquare(s, PAWN, WHITE);
+					index++;
+					break;
+				case '/':
+					break;
+				case '1':
+					index += 1;
+					break;
+				case '2':
+					index += 2;
+					break;
+				case '3':
+					index += 3;
+					break;
+				case '4':
+					index += 4;
+					break;
+				case '5':
+					index += 5;
+					break;
+				case '6':
+					index += 6;
+					break;
+				case '7':
+					index += 7;
+					break;
+				case '8':
+					index += 8;
+					break;
+				case ' ':
+					board_done = true;
+					break;
+				}
 			}
 		}
 	}

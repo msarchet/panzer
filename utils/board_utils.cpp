@@ -4,6 +4,8 @@ namespace Panzer
 {
     void Utils::PrintBoard(bitboard board)
     {
+		std::cout << std::endl;
+
 		for (int row = 7; row >= 0; --row) 
 		{
 			for (int col = 0; col <= 7; ++col) 
