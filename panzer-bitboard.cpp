@@ -50,12 +50,12 @@ long CountMovesRecursive(Panzer::Board_Bit *board, int depth)
     if (depth == 1)
     {
         currentCount = moves->size();
-        for (auto it = moves->begin(); it != moves->end(); it++)
-        {
-            auto move = *it;
-            std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
-        }
-        std::cout << "\t" << currentCount << std::endl;
+        //for (auto it = moves->begin(); it != moves->end(); it++)
+        //{
+            //auto move = *it;
+            //std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
+        //}
+        //std::cout << "\t" << currentCount << std::endl;
         return currentCount;
     }
 
@@ -65,22 +65,22 @@ long CountMovesRecursive(Panzer::Board_Bit *board, int depth)
         auto move = *it;
         board->MakeMove(move);
 
-        std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
+        //std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << std::endl;
         if (!board->IsChecked(board->GetSideToMove()))
         {
             currentCount = CountMovesRecursive(board, depth - 1);
-            std::cout << currentCount << std::endl;
+            //std::cout << currentCount << std::endl;
             totalCount += currentCount; 
         }
         else
         {
-            std::cout << "checked";
+            //std::cout << "checked";
         }
 
         board->UnmakeMove(move);
     }
 
-    std::cout << "-------" << std::endl;
+    //std::cout << "-------" << std::endl;
 
     return totalCount;
 }

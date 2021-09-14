@@ -14,9 +14,10 @@ namespace Panzer
 	{
 		if (color == WHITE)
 		{
-			square kingSquare = GetLSB(this->GetWhiteKings());
-			bitboard blackPawnValidMask = ~ONE_BIT << kingSquare;
-			bitboard diagonals = this->GetBlackBishops() | this->GetBlackQueens() | (this->GetBlackPawns() & blackPawnValidMask);
+			bitboard king = this->GetWhiteKings();
+			square kingSquare = GetLSB(king);
+			bitboard pawnMask = ((king & ~A_FILE) << NW)| ((king & ~H_FILE) << NE); // shift NW
+			bitboard diagonals = this->GetBlackBishops() | this->GetBlackQueens() | (this->GetBlackPawns() & pawnMask);
 			bitboard occupancy = this->GetOccupancy();
 			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
 
@@ -49,9 +50,10 @@ namespace Panzer
 
 		if (color == BLACK)
 		{
-			square kingSquare = GetLSB(this->GetBlackKings());
-			bitboard whitePawnValidMask = (ONE_BIT << kingSquare) - 1;
-			bitboard diagonals = this->GetWhiteBishops() | this->GetWhiteQueens() | (this->GetWhitePawns() & whitePawnValidMask);
+			bitboard king = this->GetBlackKings();
+			square kingSquare = GetLSB(king);
+			bitboard pawnMask = ((king & ~A_FILE) << SW)| ((king & ~H_FILE) << SE);
+			bitboard diagonals = this->GetWhiteBishops() | this->GetWhiteQueens() | (this->GetWhitePawns() & pawnMask);
 			bitboard occupancy = this->GetOccupancy();
 			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
 
