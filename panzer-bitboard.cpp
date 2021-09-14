@@ -64,7 +64,7 @@ long CountMovesRecursive(Panzer::Board_Bit *board, int depth, bool isTopDepth)
             currentCount = CountMovesRecursive(board, depth - 1, false);
             if (isTopDepth)
             {
-                std::cout << squareToString[move->getFrom()] << squareToString[move->getTo()] << ": ";
+                std::cout << squareToString[move.getFrom()] << squareToString[move.getTo()] << ": ";
                 std::cout << currentCount <<  std::endl;
             }
 

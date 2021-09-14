@@ -133,12 +133,12 @@ namespace Panzer
 			case BLACK:
 				return GenerateBlackMoves();
 		}
-		return std::make_shared<std::vector<std::shared_ptr<const Move>>>();
+		return std::make_shared<std::vector<Move> >();
 	}
 
 	MoveVector Board_Bit::GenerateWhiteMoves()
 	{
-		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move> > >();
+		auto moves = std::make_shared<std::vector<Move> >();
 		this->MakeWhitePawnMoves(moves);
 		this->MakeWhiteRooksMoves(moves);
 		this->MakeWhiteKnightMoves(moves);
@@ -150,7 +150,7 @@ namespace Panzer
 
 	MoveVector Board_Bit::GenerateBlackMoves()
 	{
-		auto moves = std::make_shared<std::vector<std::shared_ptr<const Move> > >();
+		auto moves = std::make_shared<std::vector<Move> >();
 		this->MakeBlackPawnMoves(moves);
 		this->MakeBlackRooksMoves(moves);
 		this->MakeBlackKnightMoves(moves);
@@ -198,66 +198,66 @@ namespace Panzer
 		Panzer::Utils::PrintBoard(b);
 	}
 
-	void Board_Bit::MakeMove(std::shared_ptr<const Move> move)
+	void Board_Bit::MakeMove(const Move move)
 	{
 		// remove the from piece
-		if (move->isCapture())
+		if (move.isCapture())
 		{
 			// clear the captured piece
-			if (move->isEPCapture())
+			if (move.isEPCapture())
 			{
 				this->ClearSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
 			{
-				this->ClearSquare(move->getTo(), this->GetPieceAtSquare(move->getTo()), !this->side_to_move);
+				this->ClearSquare(move.getTo(), this->GetPieceAtSquare(move.getTo()), !this->side_to_move);
 			}
 			
 		}
 
 		// fill the to square
-		if (move->isPromo())
+		if (move.isPromo())
 		{
 			// get type from promotion type
-			const auto flags = move->getFlags();
+			const auto flags = move.getFlags();
 			if (flags & QUEEN_PROMO || flags & QUEEN_PROMO_CAPTURE)
 			{
-				this->FillSquare(move->getTo(), QUEEN, this->side_to_move);
+				this->FillSquare(move.getTo(), QUEEN, this->side_to_move);
 			}
 			else if (flags & KNIGHT_PROMO || flags & KNIGHT_PROMO_CAPTURE)
 			{
-				this->FillSquare(move->getTo(), KNIGHT, this->side_to_move);
+				this->FillSquare(move.getTo(), KNIGHT, this->side_to_move);
 			}
 			else if (flags & ROOK_PROMO || flags & ROOK_PROMO_CAPTURE)
 			{
-				this->FillSquare(move->getTo(), ROOK, this->side_to_move);
+				this->FillSquare(move.getTo(), ROOK, this->side_to_move);
 			}
 			else if (flags & BISHOP_PROMO || flags & BISHOP_PROMO_CAPTURE)
 			{
-				this->FillSquare(move->getTo(), BISHOP, this->side_to_move);
+				this->FillSquare(move.getTo(), BISHOP, this->side_to_move);
 			}
-			this->ClearSquare(move->getFrom(), PAWN, this->side_to_move);
+			this->ClearSquare(move.getFrom(), PAWN, this->side_to_move);
 		}
 		else
 		{
-			this->ToggleBitBoards(move->getFrom(), move->getTo(), this->GetPieceAtSquare(move->getFrom()), this->side_to_move);
+			this->ToggleBitBoards(move.getFrom(), move.getTo(), this->GetPieceAtSquare(move.getFrom()), this->side_to_move);
 		}
 		
 
 		if (this->castle_flags != EMPTY_CASTLE_FLAGS)
 		{
 			// toggle off castle flags
-			if (move->getFrom() == E1 || move->getTo() == E1) this->castle_flags ^= (WHITEK|WHITEQ);
-			else if (move->getFrom() == A1 || move->getTo() == A1) this->castle_flags ^= (WHITEQ);
-			else if (move->getFrom() == H1 || move->getTo() == H1) this->castle_flags ^= (WHITEK);
-			else if (move->getFrom() == E8 || move->getTo() == E8) this->castle_flags ^= (BLACKK|BLACKQ);
-			else if (move->getFrom() == A8 || move->getTo() == A8) this->castle_flags ^= (BLACKQ);
-			else if (move->getFrom() == H8 || move->getTo() == H8) this->castle_flags ^= (BLACKK);
+			if (move.getFrom() == E1 || move.getTo() == E1) this->castle_flags ^= (WHITEK|WHITEQ);
+			else if (move.getFrom() == A1 || move.getTo() == A1) this->castle_flags ^= (WHITEQ);
+			else if (move.getFrom() == H1 || move.getTo() == H1) this->castle_flags ^= (WHITEK);
+			else if (move.getFrom() == E8 || move.getTo() == E8) this->castle_flags ^= (BLACKK|BLACKQ);
+			else if (move.getFrom() == A8 || move.getTo() == A8) this->castle_flags ^= (BLACKQ);
+			else if (move.getFrom() == H8 || move.getTo() == H8) this->castle_flags ^= (BLACKK);
 		}
 
-		if (move->isCastle())
+		if (move.isCastle())
 		{
-			switch (move->getTo())
+			switch (move.getTo())
 			{
 				case C1:
 					this->ToggleBitBoards(A1, D1, ROOK, WHITE);
@@ -274,15 +274,15 @@ namespace Panzer
 			}
 		}
 
-		if (move->getFlags() == DOUBLE_PAWN_PUSH)
+		if (move.getFlags() == DOUBLE_PAWN_PUSH)
 		{
 			if (this->side_to_move == WHITE)
 			{
-				this->ep_square = move->getTo();
+				this->ep_square = move.getTo();
 			}
 			else
 			{
-				this->ep_square = move->getTo();
+				this->ep_square = move.getTo();
 			}
 		}
 
@@ -290,17 +290,17 @@ namespace Panzer
 		this->ply++;
 	}
 
-	void Board_Bit::UnmakeMove(std::shared_ptr<const Move> move)
+	void Board_Bit::UnmakeMove(const Move move)
 	{
 		// intentionally ordered backwards from make move for 
 		// debugging purposes
 		this->ply--;
 		this->side_to_move = !this->side_to_move;
-		this->ep_square = move->getPriorEPSquare();
+		this->ep_square = move.getPriorEPSquare();
 
-		if (move->isCastle())
+		if (move.isCastle())
 		{
-			switch (move->getTo())
+			switch (move.getTo())
 			{
 				case C1:
 					this->ToggleBitBoards(D1, A1, ROOK, WHITE);
@@ -317,49 +317,49 @@ namespace Panzer
 			}
 		}
 
-		this->castle_flags = move->getCastleFlags();
+		this->castle_flags = move.getCastleFlags();
 
 		// clear the to square
 		// fill the from square
-		if (move->isPromo())
+		if (move.isPromo())
 		{
 			// get type from promotion type
-			const auto flags = move->getFlags();
+			const auto flags = move.getFlags();
 			if (flags & QUEEN_PROMO || flags & QUEEN_PROMO_CAPTURE)
 			{
-				this->ClearSquare(move->getTo(), QUEEN, this->side_to_move);
+				this->ClearSquare(move.getTo(), QUEEN, this->side_to_move);
 			}
 			else if (flags & KNIGHT_PROMO || flags & KNIGHT_PROMO_CAPTURE)
 			{
-				this->ClearSquare(move->getTo(), KNIGHT, this->side_to_move);
+				this->ClearSquare(move.getTo(), KNIGHT, this->side_to_move);
 			}
 			else if (flags & ROOK_PROMO || flags & ROOK_PROMO_CAPTURE)
 			{
-				this->ClearSquare(move->getTo(), ROOK, this->side_to_move);
+				this->ClearSquare(move.getTo(), ROOK, this->side_to_move);
 			}
 			else if (flags & BISHOP_PROMO || flags & BISHOP_PROMO_CAPTURE)
 			{
-				this->ClearSquare(move->getTo(), BISHOP, this->side_to_move);
+				this->ClearSquare(move.getTo(), BISHOP, this->side_to_move);
 			}
-			this->FillSquare(move->getFrom(), PAWN, this->side_to_move);
+			this->FillSquare(move.getFrom(), PAWN, this->side_to_move);
 
 		}
 		else
 		{
-			this->ToggleBitBoards(move->getTo(), move->getFrom(), this->GetPieceAtSquare(move->getTo()), this->side_to_move);
+			this->ToggleBitBoards(move.getTo(), move.getFrom(), this->GetPieceAtSquare(move.getTo()), this->side_to_move);
 		}
 		
 
 		// put captured piece back
-		if (move->isCapture())
+		if (move.isCapture())
 		{
-			if (move->isEPCapture())
+			if (move.isEPCapture())
 			{
 				this->FillSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
 			{
-				this->FillSquare(move->getTo(), move->getCapturedPiece(), !this->side_to_move);
+				this->FillSquare(move.getTo(), move.getCapturedPiece(), !this->side_to_move);
 			}
 		}
 	}
@@ -391,7 +391,7 @@ namespace Panzer
 		{
 			square from = GetLSB(ep_captures);
 			square to = this->ep_square + N;
-			const auto move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from,
 				to,
@@ -408,7 +408,7 @@ namespace Panzer
 			int index = GetLSB(right_captures);
 			square to = index;
 			square from = to - SW;
-			std::shared_ptr<Move> move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from,
 				to,
@@ -425,7 +425,7 @@ namespace Panzer
 			int index = GetLSB(left_captures);
 			square to = index;
 			square from = to - SE;
-			std::shared_ptr<Move> move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from,
 				to,
@@ -443,7 +443,7 @@ namespace Panzer
 			int index = GetLSB(pushes);
 			square to = index;
 			square from = to - S;
-			const auto move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from, 
 				to, 
@@ -459,7 +459,7 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to - SS;
-			std::shared_ptr<Move> move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from,
 				to,
@@ -538,7 +538,7 @@ namespace Panzer
 		{
 			square from = GetLSB(ep_captures);
 			square to = this->ep_square + S;
-			const auto move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from,
 				to,
@@ -555,7 +555,7 @@ namespace Panzer
 			int index = GetLSB(right_captures);
 			square to = index;
 			square from = to + NW;
-			auto move = std::make_shared<Move>
+			auto move = Move
 			(
 				from,
 				to,
@@ -572,7 +572,7 @@ namespace Panzer
 			int index = GetLSB(left_captures);
 			square to = index;
 			square from = to + NE;
-			auto move = std::make_shared<Move>
+			auto move = Move
 			(
 				from,
 				to,
@@ -590,7 +590,7 @@ namespace Panzer
 			int index = GetLSB(pushes);
 			square to = index;
 			square from = to + N;
-			const auto move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from, 
 				to, 
@@ -606,7 +606,7 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to + NN;
-			const auto move = std::make_shared<Move>
+			const auto move = Move
 			(
 				from,
 				to,
@@ -671,7 +671,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				const auto move = std::make_shared<Move>(
+				const auto move = Move(
 					from,
 					to,
 					CAPTURE,
@@ -686,7 +686,7 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				const auto move = std::make_shared<Move>(
+				const auto move = Move(
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -724,7 +724,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				int to = this->GetLSB(captures);
-				const auto move = std::make_shared<Move>
+				const auto move = Move
 				(
 					from,
 					to,
@@ -739,7 +739,7 @@ namespace Panzer
 			while (regular != 0)
 			{
 				int to = this->GetLSB(regular);
-				const auto move = std::make_shared<Move>
+				const auto move = Move
 				(
 					from,
 					to,
@@ -766,7 +766,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				const auto move = std::make_shared<Move>(
+				const auto move = Move(
 					from,
 					to,
 					CAPTURE,
@@ -781,7 +781,7 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				const auto move = std::make_shared<Move>(
+				const auto move = Move(
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -807,7 +807,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				const auto move = std::make_shared<Move>(
+				const auto move = Move(
 					from,
 					to,
 					CAPTURE,
@@ -822,7 +822,7 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				const auto move = std::make_shared<Move>(
+				const auto move = Move(
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -858,7 +858,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				int to = this->GetLSB(captures);
-				const auto move = std::make_shared<Move>
+				const auto move = Move
 				(
 					from,
 					to,
@@ -874,7 +874,7 @@ namespace Panzer
 			while (regular_moves != 0)
 			{
 				int to = this->GetLSB(regular_moves);
-				const auto move = std::make_shared<Move>
+				const auto move = Move
 				(
 					from,
 					to,

@@ -10,7 +10,7 @@
 #include "utils/board_utils.h"
 #include "sliding-attacks/sliders.h"
 
-typedef std::shared_ptr<std::vector<std::shared_ptr<const Panzer::Move> > > MoveVector;
+typedef std::shared_ptr<std::vector<Panzer::Move> > MoveVector;
 
 namespace Panzer
 {
@@ -80,8 +80,8 @@ namespace Panzer
 		bitboard GetOccupancy() { return Colors->at(WHITE) | Colors->at(BLACK); }
 		color GetSideToMove() { return side_to_move; } 
 
-		void MakeMove(std::shared_ptr<const Move> move);
-		void UnmakeMove(std::shared_ptr<const Move> move);
+		void MakeMove(const Move move);
+		void UnmakeMove(const Move move);
 		void ToggleBitBoards(square from, square to, piece p, color c);
 
 		bool IsChecked(color color);

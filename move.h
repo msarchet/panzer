@@ -17,14 +17,6 @@ namespace Panzer
         }
 
 
-        void operator=(Move a) 
-        { 
-            move = a.move; 
-            capturedPiece = a.capturedPiece;
-            priorCastleFlags = a.priorCastleFlags;
-            priorEP = a.priorEP;
-        };
-
         square getTo() const { return move & 0x3f; }
         square getFrom() const { return (move >> 6) & 0x3f; }
         move_flag getFlags() const { return (move >> 12) & 0x3f; }
