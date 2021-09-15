@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
     long total_count = 0;
 
     start = std::chrono::high_resolution_clock::now();
-    
+
     total_count = CountMovesRecursive(board, depth, true);
     end = std::chrono::high_resolution_clock::now();
     //std::cout << "MOVES\n";

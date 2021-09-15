@@ -285,6 +285,10 @@ namespace Panzer
 				this->ep_square = move.getTo();
 			}
 		}
+		else
+		{
+			this->ep_square = NO_SQUARE;
+		}
 
 		this->side_to_move = !this->side_to_move;
 		this->ply++;
@@ -385,7 +389,7 @@ namespace Panzer
 
 		bitboard right_captures = ((pawns & ~H_FILE) << NE) & black_pieces; // shift NE
 
-		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]);
+		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]) & pawns;
 
 		while (ep_captures != 0)
 		{
@@ -533,7 +537,7 @@ namespace Panzer
 
 		bitboard right_captures = ((pawns & ~H_FILE) >> SE) & white_pieces; // shift NE
 
-		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]);
+		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]) & pawns;
 		while (ep_captures != 0)
 		{
 			square from = GetLSB(ep_captures);
