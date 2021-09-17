@@ -20,7 +20,7 @@ namespace Panzer
 		std::array<bitboard, 2> *Colors = new std::array<bitboard, 2> { 0ULL };
 		std::array<piece, 64> *pieceLookup = new std::array<piece, 64> {NO_PIECE};
 		std::shared_ptr<Sliders> slider_attacks = std::make_shared<Sliders>();
-
+		std::vector<Move> *moveChain = new std::vector<Move>();
 		color side_to_move = WHITE;
 		square ep_square = NO_SQUARE;
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
@@ -86,6 +86,7 @@ namespace Panzer
 
 		bool IsChecked(color color);
 		void FenToBoard(const std::string& fen);
+		void PrintMoveChain();
 		std::string BoardToFen();
 	private:
 		int GetMSB(bitboard b);

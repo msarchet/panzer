@@ -5,6 +5,16 @@
 
 namespace Panzer
 {
+	void Board_Bit::PrintMoveChain()
+	{
+    	for (auto it = moveChain->begin(); it != moveChain->end(); it++)
+		{
+			auto move = *it;
+			std::cout << squareToString[move.getFrom()] << squareToString[move.getTo()] << " ";
+		}
+
+		std::cout << std::endl;
+	}
 	piece Board_Bit::GetPieceAtSquare(square s)
 	{
 		return pieceLookup->at(s);
@@ -52,7 +62,7 @@ namespace Panzer
 		{
 			bitboard king = this->GetBlackKings();
 			square kingSquare = GetLSB(king);
-			bitboard pawnMask = ((king & ~A_FILE) << SW)| ((king & ~H_FILE) << SE);
+			bitboard pawnMask = ((king & ~A_FILE) >> SW)| ((king & ~H_FILE) >> SE);
 			bitboard diagonals = this->GetWhiteBishops() | this->GetWhiteQueens() | (this->GetWhitePawns() & pawnMask);
 			bitboard occupancy = this->GetOccupancy();
 			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
@@ -276,14 +286,7 @@ namespace Panzer
 
 		if (move.getFlags() == DOUBLE_PAWN_PUSH)
 		{
-			if (this->side_to_move == WHITE)
-			{
-				this->ep_square = move.getTo();
-			}
-			else
-			{
-				this->ep_square = move.getTo();
-			}
+			this->ep_square = move.getTo();
 		}
 		else
 		{
@@ -292,15 +295,16 @@ namespace Panzer
 
 		this->side_to_move = !this->side_to_move;
 		this->ply++;
+		moveChain->emplace_back(move);
 	}
 
 	void Board_Bit::UnmakeMove(const Move move)
 	{
 		// intentionally ordered backwards from make move for 
 		// debugging purposes
+		moveChain->pop_back();
 		this->ply--;
 		this->side_to_move = !this->side_to_move;
-		this->ep_square = move.getPriorEPSquare();
 
 		if (move.isCastle())
 		{
@@ -353,12 +357,22 @@ namespace Panzer
 			this->ToggleBitBoards(move.getTo(), move.getFrom(), this->GetPieceAtSquare(move.getTo()), this->side_to_move);
 		}
 		
-
 		// put captured piece back
 		if (move.isCapture())
 		{
 			if (move.isEPCapture())
 			{
+				square epCaptured;
+				if (this->side_to_move == BLACK)
+				{
+					epCaptured = move.getTo() + N;
+				}
+				else
+				{
+					epCaptured = move.getTo() - S;
+				}
+
+				this->ep_square = epCaptured;
 				this->FillSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
@@ -541,7 +555,7 @@ namespace Panzer
 		while (ep_captures != 0)
 		{
 			square from = GetLSB(ep_captures);
-			square to = this->ep_square + S;
+			square to = this->ep_square - S;
 			const auto move = Move
 			(
 				from,

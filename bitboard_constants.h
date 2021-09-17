@@ -196,7 +196,7 @@ const castle_flag WHITEK = 1;
 const castle_flag WHITEQ = 2;
 const castle_flag BLACKK = 4;
 const castle_flag BLACKQ = 8;
-
+const castle_flag ALL_CASTLE_FLAGS = WHITEK | WHITEQ | BLACKK | BLACKQ;
 
 const direction NW = 7;
 const direction N = 8;

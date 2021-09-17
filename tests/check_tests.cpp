@@ -25,6 +25,20 @@ namespace Panzer
 
 		board = new Board_Bit();
 		board->FillSquare(A1, KING, WHITE);
+		board->FillSquare(B2, PAWN, BLACK);
+
+		assert(board->IsChecked(WHITE));
+		std::cout << "Checked by pawn white";
+
+		board = new Board_Bit();
+		board->FillSquare(A1, PAWN, WHITE);
+		board->FillSquare(B2, KING, BLACK);
+
+		assert(board->IsChecked(BLACK));
+		std::cout << "Checked by pawn black";
+
+		board = new Board_Bit();
+		board->FillSquare(A1, KING, WHITE);
 		board->FillSquare(B3, KNIGHT, BLACK);
 
 		assert(board->IsChecked(WHITE));
