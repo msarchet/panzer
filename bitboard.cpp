@@ -20,16 +20,15 @@ namespace Panzer
 		return pieceLookup->at(s);
 	}
 
-	bool Board_Bit::IsChecked(color color)
+	bool Board_Bit::IsSquareAttacked(square s, color color)
 	{
+		bitboard squareBitboard = ONE_BIT << s;
 		if (color == WHITE)
 		{
-			bitboard king = this->GetWhiteKings();
-			square kingSquare = GetLSB(king);
-			bitboard pawnMask = ((king & ~A_FILE) << NW)| ((king & ~H_FILE) << NE); // shift NW
+			bitboard pawnMask = ((squareBitboard & ~A_FILE) << NW)| ((squareBitboard & ~H_FILE) << NE); // shift NW
 			bitboard diagonals = this->GetBlackBishops() | this->GetBlackQueens() | (this->GetBlackPawns() & pawnMask);
 			bitboard occupancy = this->GetOccupancy();
-			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
+			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(s, occupancy) & diagonals;
 
 			if (attackedOnDiagonal != 0)
 			{
@@ -37,7 +36,7 @@ namespace Panzer
 			}
 
 			bitboard straights = this->GetBlackQueens() | this->GetBlackRooks();
-			bitboard attackedOnStraights = slider_attacks->GetRookAttacks(kingSquare, occupancy) & straights;
+			bitboard attackedOnStraights = slider_attacks->GetRookAttacks(s, occupancy) & straights;
 			
 			if (attackedOnStraights != 0)
 			{
@@ -48,7 +47,7 @@ namespace Panzer
 
 
 			// mask for file wraps
-			auto attackedByKnight = this->GetKnightPossible(kingSquare) & knights;
+			auto attackedByKnight = this->GetKnightPossible(s) & knights;
 
 			if (attackedByKnight != 0)
 			{
@@ -60,12 +59,10 @@ namespace Panzer
 
 		if (color == BLACK)
 		{
-			bitboard king = this->GetBlackKings();
-			square kingSquare = GetLSB(king);
-			bitboard pawnMask = ((king & ~A_FILE) >> SW)| ((king & ~H_FILE) >> SE);
+			bitboard pawnMask = ((squareBitboard & ~A_FILE) >> SW)| ((squareBitboard & ~H_FILE) >> SE);
 			bitboard diagonals = this->GetWhiteBishops() | this->GetWhiteQueens() | (this->GetWhitePawns() & pawnMask);
 			bitboard occupancy = this->GetOccupancy();
-			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(kingSquare, occupancy) & diagonals;
+			bitboard attackedOnDiagonal = slider_attacks->GetBishopAttacks(s, occupancy) & diagonals;
 
 			if (attackedOnDiagonal != 0)
 			{
@@ -73,7 +70,7 @@ namespace Panzer
 			}
 
 			bitboard straights = this->GetWhiteQueens() | this->GetWhiteRooks();
-			bitboard attackedOnStraights = slider_attacks->GetRookAttacks(kingSquare, occupancy) & straights;
+			bitboard attackedOnStraights = slider_attacks->GetRookAttacks(s, occupancy) & straights;
 			
 			if (attackedOnStraights != 0)
 			{
@@ -83,7 +80,7 @@ namespace Panzer
 			bitboard knights = this->GetWhiteKnights();
 
 			// mask for file wraps
-			auto attackedByKnight = this->GetKnightPossible(kingSquare) & knights;
+			auto attackedByKnight = this->GetKnightPossible(s) & knights;
 
 			if (attackedByKnight != 0)
 			{
@@ -92,6 +89,25 @@ namespace Panzer
 
 			return false;
 		}
+
+	}
+
+	bool Board_Bit::IsChecked(color color)
+	{
+		if (color == WHITE)
+		{
+			bitboard king = this->GetWhiteKings();
+			square kingSquare = GetLSB(king);
+			return this->IsSquareAttacked(kingSquare, WHITE);
+		}
+
+		if (color == BLACK)
+		{
+			bitboard king = this->GetBlackKings();
+			square kingSquare = GetLSB(king);
+			return this->IsSquareAttacked(kingSquare, BLACK);
+		}
+		return false;
 	}
 
 	bitboard Board_Bit::GetKnightPossible(square center)
@@ -276,10 +292,10 @@ namespace Panzer
 					this->ToggleBitBoards(H1, F1, ROOK, WHITE);
 					break;
 				case C8:
-					this->ToggleBitBoards(A8, D8, ROOK, WHITE);
+					this->ToggleBitBoards(A8, D8, ROOK, BLACK);
 					break;
 				case G8:
-					this->ToggleBitBoards(H8, F8, ROOK, WHITE);
+					this->ToggleBitBoards(H8, F8, ROOK, BLACK);
 					break;
 			}
 		}
@@ -527,6 +543,28 @@ namespace Panzer
 		auto kings = this->GetWhiteKings();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
+		// make castle moves
+		if ((castle_flags & WHITEK) != 0)
+		{
+			bool isOpen = (((ONE_BIT << F1) | (ONE_BIT << G1)) & this->GetOccupancy()) == 0;
+			if (isOpen)
+			{
+				bool notChecked = IsSquareAttacked(F1, WHITE) && IsSquareAttacked(G1, WHITE);
+				auto castleK = Move(E1, G1, EMPTY_CASTLE_FLAGS, this->castle_flags);
+				moves->push_back(castleK);
+			}
+		}
+
+		if ((castle_flags & WHITEQ) != 0)
+		{
+			bool isOpen = (((ONE_BIT << B1) | (ONE_BIT << C1) | (ONE_BIT << D1)) & this->GetOccupancy()) == 0;
+			if (isOpen)
+			{
+				bool notChecked = IsSquareAttacked(B1, WHITE) && IsSquareAttacked(C1, WHITE) && IsSquareAttacked(D1, WHITE);
+				auto castleQ = Move(E1, C1, EMPTY_CASTLE_FLAGS, this->castle_flags);
+				moves->push_back(castleQ);
+			}
+		}
 		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
 	}
 
@@ -674,6 +712,27 @@ namespace Panzer
 		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
+		if ((castle_flags & BLACKK) != 0)
+		{
+			bool isOpen = (((ONE_BIT << F8) | (ONE_BIT << G8)) & this->GetOccupancy()) == 0;
+			if (isOpen)
+			{
+				bool notChecked = IsSquareAttacked(F8, BLACK) && IsSquareAttacked(G8, BLACK);
+				auto castleK = Move(E8, G8, EMPTY_CASTLE_FLAGS, this->castle_flags);
+				moves->push_back(castleK);
+			}
+		}
+
+		if ((castle_flags & BLACKQ) != 0)
+		{
+			bool isOpen = (((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8)) & this->GetOccupancy()) == 0;
+			if (isOpen)
+			{
+				bool notChecked = IsSquareAttacked(B8, BLACK) && IsSquareAttacked(C8, BLACK) && IsSquareAttacked(D8, BLACK);
+				auto castleQ = Move(E8, C8, EMPTY_CASTLE_FLAGS, this->castle_flags);
+				moves->push_back(castleQ);
+			}
+		}
 		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
 	}
 

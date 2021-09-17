@@ -84,6 +84,7 @@ namespace Panzer
 		void UnmakeMove(const Move move);
 		void ToggleBitBoards(square from, square to, piece p, color c);
 
+		bool IsSquareAttacked(square s, color color);
 		bool IsChecked(color color);
 		void FenToBoard(const std::string& fen);
 		void PrintMoveChain();
