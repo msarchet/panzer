@@ -165,6 +165,7 @@ namespace Panzer
 	MoveVector Board_Bit::GenerateWhiteMoves()
 	{
 		auto moves = std::make_shared<std::vector<Move> >();
+		moves->reserve(256);
 		this->MakeWhitePawnMoves(moves);
 		this->MakeWhiteRooksMoves(moves);
 		this->MakeWhiteKnightMoves(moves);
@@ -177,6 +178,7 @@ namespace Panzer
 	MoveVector Board_Bit::GenerateBlackMoves()
 	{
 		auto moves = std::make_shared<std::vector<Move> >();
+		moves->reserve(256);
 		this->MakeBlackPawnMoves(moves);
 		this->MakeBlackRooksMoves(moves);
 		this->MakeBlackKnightMoves(moves);
@@ -425,15 +427,12 @@ namespace Panzer
 		{
 			square from = GetLSB(ep_captures);
 			square to = this->ep_square + N;
-			const auto move = Move
-			(
+			moves->emplace_back(
 				from,
 				to,
 				EP_CAPTURE,
 				this->castle_flags,
-				PAWN
-			);
-			moves->push_back(move);
+				PAWN);
 			ep_captures &= ep_captures - 1ULL;
 		}
 
@@ -442,7 +441,7 @@ namespace Panzer
 			int index = GetLSB(right_captures);
 			square to = index;
 			square from = to - SW;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from,
 				to,
@@ -450,7 +449,6 @@ namespace Panzer
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
-			moves->push_back(move);
 			right_captures &= right_captures - 1ULL;
 		}
 
@@ -459,7 +457,7 @@ namespace Panzer
 			int index = GetLSB(left_captures);
 			square to = index;
 			square from = to - SE;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from,
 				to,
@@ -467,7 +465,7 @@ namespace Panzer
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
-			moves->push_back(move);
+			
 			left_captures &= left_captures - 1ULL;	
 		}
 
@@ -477,14 +475,14 @@ namespace Panzer
 			int index = GetLSB(pushes);
 			square to = index;
 			square from = to - S;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from, 
 				to, 
 				NO_MOVE_FLAGS,
 				this->castle_flags
 			);
-			moves->push_back(move);
+			
 			pushes &= pushes-1ULL;
 		}
 
@@ -493,14 +491,14 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to - SS;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from,
 				to,
 				DOUBLE_PAWN_PUSH,
 				this->castle_flags
 			);
-			moves->push_back(move);
+			
 			double_push &= double_push - 1ULL;
 		}
 
@@ -550,8 +548,7 @@ namespace Panzer
 			if (isOpen)
 			{
 				bool notChecked = IsSquareAttacked(F1, WHITE) && IsSquareAttacked(G1, WHITE);
-				auto castleK = Move(E1, G1, EMPTY_CASTLE_FLAGS, this->castle_flags);
-				moves->push_back(castleK);
+				moves->emplace_back(E1, G1, EMPTY_CASTLE_FLAGS, this->castle_flags);
 			}
 		}
 
@@ -561,8 +558,7 @@ namespace Panzer
 			if (isOpen)
 			{
 				bool notChecked = IsSquareAttacked(B1, WHITE) && IsSquareAttacked(C1, WHITE) && IsSquareAttacked(D1, WHITE);
-				auto castleQ = Move(E1, C1, EMPTY_CASTLE_FLAGS, this->castle_flags);
-				moves->push_back(castleQ);
+				moves->emplace_back(E1, C1, EMPTY_CASTLE_FLAGS, this->castle_flags);
 			}
 		}
 		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
@@ -594,7 +590,7 @@ namespace Panzer
 		{
 			square from = GetLSB(ep_captures);
 			square to = this->ep_square - S;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from,
 				to,
@@ -602,7 +598,7 @@ namespace Panzer
 				this->castle_flags,
 				PAWN
 			);
-			moves->push_back(move);
+			
 			ep_captures &= ep_captures - 1ULL;
 		}
 
@@ -619,7 +615,7 @@ namespace Panzer
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
-			moves->push_back(move);
+			
 			right_captures &= right_captures - 1ULL;
 		}
 
@@ -636,7 +632,7 @@ namespace Panzer
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
-			moves->push_back(move);
+			
 			left_captures &= left_captures - 1ULL;	
 		}
 
@@ -646,14 +642,14 @@ namespace Panzer
 			int index = GetLSB(pushes);
 			square to = index;
 			square from = to + N;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from, 
 				to, 
 				NO_MOVE_FLAGS,
 				this->castle_flags
 			); 
-			moves->push_back(move);
+			
 			pushes &= pushes-1ULL;
 		}
 
@@ -662,14 +658,14 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to + NN;
-			const auto move = Move
+			moves->emplace_back
 			(
 				from,
 				to,
 				DOUBLE_PAWN_PUSH,
 				this->castle_flags
 			);
-			moves->push_back(move);
+			
 			double_push &= double_push - 1ULL;
 		}
 
@@ -718,8 +714,7 @@ namespace Panzer
 			if (isOpen)
 			{
 				bool notChecked = IsSquareAttacked(F8, BLACK) && IsSquareAttacked(G8, BLACK);
-				auto castleK = Move(E8, G8, EMPTY_CASTLE_FLAGS, this->castle_flags);
-				moves->push_back(castleK);
+				moves->emplace_back(E8, G8, EMPTY_CASTLE_FLAGS, this->castle_flags);
 			}
 		}
 
@@ -729,8 +724,7 @@ namespace Panzer
 			if (isOpen)
 			{
 				bool notChecked = IsSquareAttacked(B8, BLACK) && IsSquareAttacked(C8, BLACK) && IsSquareAttacked(D8, BLACK);
-				auto castleQ = Move(E8, C8, EMPTY_CASTLE_FLAGS, this->castle_flags);
-				moves->push_back(castleQ);
+				moves->emplace_back(E8, C8, EMPTY_CASTLE_FLAGS, this->castle_flags);
 			}
 		}
 		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
@@ -748,14 +742,14 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				const auto move = Move(
+				moves->emplace_back(
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
-				moves->push_back(move);
+				
 				captures &= captures - 1;
 			}
 
@@ -763,13 +757,13 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				const auto move = Move(
+				moves->emplace_back(
 					from,
 					to,
 					NO_MOVE_FLAGS,
 					this->castle_flags
 				);
-				moves->push_back(move);
+				
 				slides &= slides - 1ULL;
 			}
 
@@ -801,7 +795,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				int to = this->GetLSB(captures);
-				const auto move = Move
+				moves->emplace_back
 				(
 					from,
 					to,
@@ -809,14 +803,14 @@ namespace Panzer
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
-				moves->push_back(move);
+				
 				captures &= captures - 1ULL;
 			}
 
 			while (regular != 0)
 			{
 				int to = this->GetLSB(regular);
-				const auto move = Move
+				moves->emplace_back
 				(
 					from,
 					to,
@@ -824,7 +818,7 @@ namespace Panzer
 					this->castle_flags
 				);
 
-				moves->push_back(move);
+				
 				regular &= regular - 1ULL;
 			}
 			knights &= knights - 1ULL;
@@ -843,14 +837,14 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				const auto move = Move(
+				moves->emplace_back(
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
-				moves->push_back(move);
+				
 				captures &= captures - 1;
 			}
 
@@ -858,13 +852,13 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				const auto move = Move(
+				moves->emplace_back(
 					from,
 					to,
 					NO_MOVE_FLAGS,
 					this->castle_flags
 				);
-				moves->push_back(move);
+				
 				slides &= slides - 1ULL;
 			}
 
@@ -884,14 +878,14 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				const auto move = Move(
+				moves->emplace_back(
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
-				moves->push_back(move);
+				
 				captures &= captures - 1ULL;
 			}
 
@@ -899,13 +893,13 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				const auto move = Move(
+				moves->emplace_back(
 					from,
 					to,
 					NO_MOVE_FLAGS,
 					this->castle_flags
 				);
-				moves->push_back(move);
+				
 				slides &= slides - 1ULL;
 			}
 			queens &= queens - 1ULL;
@@ -935,7 +929,7 @@ namespace Panzer
 			while (captures != 0)
 			{
 				int to = this->GetLSB(captures);
-				const auto move = Move
+				moves->emplace_back
 				(
 					from,
 					to,
@@ -944,14 +938,14 @@ namespace Panzer
 					this->GetPieceAtSquare(to)
 				);
 
-				moves->push_back(move);
+				
 				captures &= captures - ONE_BIT;
 			}
 
 			while (regular_moves != 0)
 			{
 				int to = this->GetLSB(regular_moves);
-				const auto move = Move
+				moves->emplace_back
 				(
 					from,
 					to,
@@ -959,7 +953,7 @@ namespace Panzer
 					this->castle_flags
 				);
 
-				moves->push_back(move);
+				
 				regular_moves &= regular_moves - ONE_BIT;
 			}
 
