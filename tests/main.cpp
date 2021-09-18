@@ -16,6 +16,7 @@ int main()
     slider_tests->ValidateRookAttacks();
     auto check_tests = new Panzer::CheckTests();
     check_tests->ValidateCheckLogic();
+<<<<<<< HEAD
     const auto board1 = new Panzer::Board_Bit();
     board1->FenToBoard(STARTFEN);
     auto board2 = new Panzer::Board_Bit(*board1);
@@ -23,4 +24,10 @@ int main()
     board1->MakeMove(move);
     board1->PrintBoard(board1->GetOccupancy());
     board2->PrintBoard(board2->GetOccupancy());
+=======
+    auto board = Panzer::Board_Bit();
+    board.FenToBoard("rn1qkbnr/2pppppp/bp6/8/8/4PN2/PPPP1PPP/RNBQK2R w KQkq - 0 4");
+    bool isAttacked = board.IsSquareAttacked(F1, WHITE);
+    std::cout << (isAttacked ? "true" : "false");
+>>>>>>> main
 }

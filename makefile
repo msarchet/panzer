@@ -6,7 +6,7 @@ TEST=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.
 DEBUG_OPTS=-ggdb -g3
 
 main:
-	$(CC) $(STD) $(MAIN) -O3 -o panzerbb
+	$(CC) $(STD) $(MAIN) -Wall -O3 -o panzerbb
 
 main-debug:
 	$(CC) $(STD) $(MAIN) $(DEBUG_OPTS) -o panzerbb-debug
