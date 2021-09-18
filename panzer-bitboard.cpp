@@ -6,12 +6,36 @@
 #include "bitboard.h"
 #include "utils/board_utils.h"
 
-long CountMovesRecursive(Panzer::Board_Bit *board, int depth, bool isTopDepth);
+long CountMovesRecursive(Panzer::Board_Bit &board, int depth, bool isTopDepth);
+std::string OutputBoard(bitboard board);
 struct MoveCapture
 {
     Panzer::Move move;
     long count;
 };
+
+std::string OutputBoard(bitboard board)
+{
+    std::string out = "\n";
+
+    for (int row = 7; row >= 0; --row) 
+    {
+        for (int col = 0; col <= 7; ++col) 
+        {
+            if (board & (1ULL << ((row * 8) + col))) 
+            {
+                out += "1 ";
+            } else 
+            {
+                out += "0 ";
+            }
+        }
+
+        out += "\n";
+    }
+
+    return out;
+}
 
 int main (int argc, char *argv[])
 {
@@ -29,7 +53,7 @@ int main (int argc, char *argv[])
 
     std::cout << startpos << std::endl;
 
-    auto board = new Panzer::Board_Bit();
+    const auto board = new Panzer::Board_Bit();
     board->FenToBoard(startpos);
 
     //auto e2e4 = Panzer::Move(E2, E4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
@@ -55,7 +79,7 @@ int main (int argc, char *argv[])
 
     start = std::chrono::high_resolution_clock::now();
 
-    total_count = CountMovesRecursive(board, depth, true);
+    total_count = CountMovesRecursive(*board, depth, true);
     end = std::chrono::high_resolution_clock::now();
     //std::cout << "MOVES\n";
 	std::chrono::duration<double> elapsed_seconds = end - start; 
@@ -64,33 +88,34 @@ int main (int argc, char *argv[])
     std::cout << "CPS" << total_count / elapsed_seconds.count();
 }
 
-long CountMovesRecursive(Panzer::Board_Bit *board, int depth, bool isTopDepth)
+long CountMovesRecursive(Panzer::Board_Bit &board, int depth, bool isTopDepth)
 {
     if (depth == 0)
     {
         return 1;
     }
 
-    auto moves = board->GenerateMoves();
-
+    auto moves = board.GenerateMoves();
 
     if (isTopDepth)
     {
         long totalCount = 0;
         auto futures = std::make_shared<std::vector<std::shared_future<std::string> > >();
+        futures->reserve(moves->size());
         for (auto it = moves->begin(); it != moves->end(); it++)
         {
             auto captured = *it;
-            auto move = Panzer::Move(captured);
-            auto newBoard = new Panzer::Board_Bit();
-            newBoard->FenToBoard(board->BoardToFen());
+            const auto move = Panzer::Move(captured);
+            const auto newBoard = new Panzer::Board_Bit(board);
+            auto furtherDepth = depth - 1;
             futures->push_back(
-            std::async(std::launch::async, [&newBoard, move, depth, &totalCount] {
+            std::async(std::launch::async, [move, furtherDepth, &totalCount, newBoard] {
                 newBoard->MakeMove(move);
                 long legalCount = 0;
+
                 if (!newBoard->IsChecked(newBoard->GetSideToMove() == WHITE ? BLACK : WHITE))
                 {
-                    legalCount = CountMovesRecursive(newBoard, depth - 1, false);
+                    legalCount = CountMovesRecursive(*newBoard, furtherDepth, false);
                 }
                 auto output = std::string(squareToString[move.getFrom()]) + std::string(squareToString[move.getTo()]) + std::string(": ") + std::to_string(legalCount);
                 totalCount += legalCount;
@@ -108,26 +133,23 @@ long CountMovesRecursive(Panzer::Board_Bit *board, int depth, bool isTopDepth)
     }
     else
     {
+        auto legalCount = 0;
+
         for (auto it = moves->begin(); it != moves->end(); it++)
         {
-            auto legalCount = 0;
             auto move = *it;
-            board->MakeMove(move);
+            board.MakeMove(move);
 
-            if (!board->IsChecked(board->GetSideToMove() == WHITE ? BLACK : WHITE))
+            if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
             {
-                legalCount = CountMovesRecursive(board, depth - 1, false);
-            }
-            else
-            {
-                auto output = std::string(squareToString[move.getFrom()]) + std::string(squareToString[move.getTo()]) + std::string(": ") + std::to_string(legalCount);
-                std::cout << output << std::endl;
+                legalCount += CountMovesRecursive(board, depth - 1, false);
             }
 
-            board->UnmakeMove(move);
+            board.UnmakeMove(move);
 
-            return legalCount;
         }
+
+        return legalCount;
     }
 
     //std::cout << "-------" << std::endl;

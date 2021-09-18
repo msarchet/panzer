@@ -16,13 +16,11 @@ int main()
     slider_tests->ValidateRookAttacks();
     auto check_tests = new Panzer::CheckTests();
     check_tests->ValidateCheckLogic();
-    auto test_vector = new std::vector<int>();
-    test_vector->reserve(10);
-    test_vector->emplace_back(1);
-    test_vector->emplace_back(1);
-    test_vector->emplace_back(1);
-    for (auto it = test_vector->begin(); it != test_vector->end(); it++)
-    {
-        std::cout << *it << std::endl;
-    }
+    const auto board1 = new Panzer::Board_Bit();
+    board1->FenToBoard(STARTFEN);
+    auto board2 = new Panzer::Board_Bit(*board1);
+    auto move = Panzer::Move(A2, A4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
+    board1->MakeMove(move);
+    board1->PrintBoard(board1->GetOccupancy());
+    board2->PrintBoard(board2->GetOccupancy());
 }

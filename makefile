@@ -1,8 +1,8 @@
 CC=g++
 STD=-std=c++17
-MAIN=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp bitboard.cpp panzer-bitboard.cpp
+MAIN=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp bitboard.cpp panzer-bitboard.cpp -lpthread
 MAGIC=./utils/board_utils.cpp ./sliding-attacks/make-magic.cpp
-TEST=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./bitboard.cpp ./tests/main.cpp
+TEST=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./bitboard.cpp ./tests/main.cpp -lpthread
 DEBUG_OPTS=-ggdb -g3
 
 main:

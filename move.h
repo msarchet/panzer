@@ -20,6 +20,16 @@ namespace Panzer
             priorEP = epSquare;
         }
 
+        Move(const Move &move)
+        {
+            m_from = move.getFrom();
+            m_to = move.getTo();
+            move_flags = move.getFlags();
+            priorCastleFlags = move.getCastleFlags();
+            capturedPiece = move.getCapturedPiece();
+            priorEP = move.getPriorEPSquare();
+        }
+
 
         square getTo() const { return m_to; }
         square getFrom() const { return m_from; }

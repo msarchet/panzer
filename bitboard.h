@@ -31,7 +31,7 @@ namespace Panzer
 			slider_attacks->Initialize();
 		}
 
-		Board_Bit(const Board_Bit &board)
+		Board_Bit(const Board_Bit &board) : Board_Bit()
 		{
 			for (int i = 0; i< 7; i++)
 			{
