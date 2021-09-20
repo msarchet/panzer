@@ -5,7 +5,7 @@
 
 namespace Panzer
 {
-	void Board_Bit::PrintMoveChain()
+	void Board::PrintMoveChain()
 	{
     	for (auto it = moveChain->begin(); it != moveChain->end(); it++)
 		{
@@ -15,12 +15,12 @@ namespace Panzer
 
 		std::cout << std::endl;
 	}
-	piece Board_Bit::GetPieceAtSquare(square s)
+	piece Board::GetPieceAtSquare(square s)
 	{
 		return pieceLookup->at(s);
 	}
 
-	bool Board_Bit::IsSquareAttacked(square s, color color)
+	bool Board::IsSquareAttacked(square s, color color)
 	{
 		bitboard squareBitboard = ONE_BIT << s;
 		if (color == WHITE)
@@ -93,7 +93,7 @@ namespace Panzer
 		return false;
 	}
 
-	bool Board_Bit::IsChecked(color color)
+	bool Board::IsChecked(color color)
 	{
 		if (color == WHITE)
 		{
@@ -111,7 +111,7 @@ namespace Panzer
 		return false;
 	}
 
-	bitboard Board_Bit::GetKnightPossible(square center)
+	bitboard Board::GetKnightPossible(square center)
 	{
 			auto span = KNIGHT_SPAN;
 			if (center >= KNIGHT_SPAN_CENTER)
@@ -126,7 +126,7 @@ namespace Panzer
 			return span & knight_move_masks[center % 8];
 	}
 
-	void Board_Bit::ToggleBitBoards(square from, square to, piece p, color c)
+	void Board::ToggleBitBoards(square from, square to, piece p, color c)
 	{
 		bitboard fromToBB = (ONE_BIT << from) | (ONE_BIT << to);
 		this->Colors->at(c) ^= fromToBB;
@@ -135,7 +135,7 @@ namespace Panzer
 		this->pieceLookup->at(to) = p;
 	}
 
-	void Board_Bit::FillSquare(square s, piece p, color c)
+	void Board::FillSquare(square s, piece p, color c)
 	{
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
@@ -143,7 +143,7 @@ namespace Panzer
 		this->pieceLookup->at(s) = p;
 	}
 
-	void Board_Bit::ClearSquare(square s,piece p, color c)
+	void Board::ClearSquare(square s,piece p, color c)
 	{
 		bitboard bb = ONE_BIT << s;
 		this->Colors->at(c) ^= bb;
@@ -151,7 +151,7 @@ namespace Panzer
 		this->pieceLookup->at(s) = NO_PIECE;
 	}
 
-	MoveVector Board_Bit::GenerateMoves()
+	MoveVector Board::GenerateMoves()
 	{
 		switch (this->side_to_move)
 		{
@@ -163,7 +163,7 @@ namespace Panzer
 		return std::make_shared<std::vector<Move> >();
 	}
 
-	MoveVector Board_Bit::GenerateWhiteMoves()
+	MoveVector Board::GenerateWhiteMoves()
 	{
 		auto moves = std::make_shared<std::vector<Move> >();
 		moves->reserve(256);
@@ -176,7 +176,7 @@ namespace Panzer
 		return moves;
 	}
 
-	MoveVector Board_Bit::GenerateBlackMoves()
+	MoveVector Board::GenerateBlackMoves()
 	{
 		auto moves = std::make_shared<std::vector<Move> >();
 		moves->reserve(256);
@@ -189,7 +189,7 @@ namespace Panzer
 		return moves;
 	}
 
-	int Board_Bit::GetMSB(bitboard b)
+	int Board::GetMSB(bitboard b)
 	{
 #ifdef _MSC_VER
 		unsigned long leading_zero = 0;
@@ -206,7 +206,7 @@ namespace Panzer
 #endif
 	}
 
-	int Board_Bit::GetLSB(bitboard b)
+	int Board::GetLSB(bitboard b)
 	{
 #ifdef _MSC_VER
 		unsigned long trailing_zero = 0;
@@ -222,12 +222,12 @@ namespace Panzer
 #endif
 	}
 
-	void Board_Bit::PrintBoard(bitboard b)
+	void Board::PrintBoard(bitboard b)
 	{
 		Panzer::Utils::PrintBoard(b);
 	}
 
-	void Board_Bit::MakeMove(const Move move)
+	void Board::MakeMove(const Move move)
 	{
 		// remove the from piece
 		if (move.isCapture())
@@ -317,7 +317,7 @@ namespace Panzer
 		moveChain->emplace_back(move);
 	}
 
-	void Board_Bit::UnmakeMove(const Move move)
+	void Board::UnmakeMove(const Move move)
 	{
 		// intentionally ordered backwards from make move for 
 		// debugging purposes
@@ -401,7 +401,7 @@ namespace Panzer
 		}
 	}
 
-	void Board_Bit::MakeWhitePawnMoves(MoveVector moves)
+	void Board::MakeWhitePawnMoves(MoveVector moves)
 	{
 		// generate pawn moves
 		// first shift pawns up one
@@ -505,7 +505,7 @@ namespace Panzer
 
 	}
 
-	void Board_Bit::MakeWhiteRooksMoves(MoveVector moves)
+	void Board::MakeWhiteRooksMoves(MoveVector moves)
 	{
 		auto rooks = this->GetWhiteRooks();
 		auto white_pieces = this->GetWhitePieces();
@@ -513,7 +513,7 @@ namespace Panzer
 		this->MakeRookMoves(moves, rooks, white_pieces, black_pieces);
 	}
 
-	void Board_Bit::MakeWhiteKnightMoves(MoveVector moves)
+	void Board::MakeWhiteKnightMoves(MoveVector moves)
 	{
 		auto knights = this->GetWhiteKnights();
 		auto white_pieces = this->GetWhitePieces();
@@ -521,7 +521,7 @@ namespace Panzer
 		this->MakeKnightMoves(moves, knights, white_pieces, black_pieces);
 	}
 
-	void Board_Bit::MakeWhiteBishopMoves(MoveVector moves)
+	void Board::MakeWhiteBishopMoves(MoveVector moves)
 	{
 		auto bishops = this->GetWhiteBishops();
 		auto white_pieces = this->GetWhitePieces();
@@ -529,7 +529,7 @@ namespace Panzer
 		this->MakeBishopMoves(moves, bishops, white_pieces, black_pieces);
 	}
 
-	void Board_Bit::MakeWhiteQueenMoves(MoveVector moves)
+	void Board::MakeWhiteQueenMoves(MoveVector moves)
 	{
 		auto queens = this->GetWhiteQueens();
 		auto white_pieces = this->GetWhitePieces();
@@ -537,7 +537,7 @@ namespace Panzer
 		this->MakeQueenMoves(moves, queens, white_pieces, black_pieces);
 	}
 
-	void Board_Bit::MakeWhiteKingMoves(MoveVector moves)
+	void Board::MakeWhiteKingMoves(MoveVector moves)
 	{
 		auto kings = this->GetWhiteKings();
 		auto white_pieces = this->GetWhitePieces();
@@ -571,7 +571,7 @@ namespace Panzer
 		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
 	}
 
-	void Board_Bit::MakeBlackPawnMoves(MoveVector moves)
+	void Board::MakeBlackPawnMoves(MoveVector moves)
 	{
 		// generate pawn moves
 		// first shift pawns up one
@@ -678,7 +678,7 @@ namespace Panzer
 
 	}
 
-	void Board_Bit::MakeBlackRooksMoves(MoveVector moves)
+	void Board::MakeBlackRooksMoves(MoveVector moves)
 	{
 		auto rooks = this->GetBlackRooks();
 		auto white_pieces = this->GetWhitePieces();
@@ -686,7 +686,7 @@ namespace Panzer
 		this->MakeRookMoves(moves, rooks, black_pieces, white_pieces);
 	}
 
-	void Board_Bit::MakeBlackKnightMoves(MoveVector moves)
+	void Board::MakeBlackKnightMoves(MoveVector moves)
 	{
 		auto knights = this->GetBlackKnights();
 		auto white_pieces = this->GetWhitePieces();
@@ -694,7 +694,7 @@ namespace Panzer
 		this->MakeKnightMoves(moves, knights, black_pieces, white_pieces);
 	}
 
-	void Board_Bit::MakeBlackBishopMoves(MoveVector moves)
+	void Board::MakeBlackBishopMoves(MoveVector moves)
 	{
 		auto bishops = this->GetBlackBishops();
 		auto white_pieces = this->GetWhitePieces();
@@ -702,7 +702,7 @@ namespace Panzer
 		this->MakeBishopMoves(moves, bishops, black_pieces, white_pieces);
 	}
 
-	void Board_Bit::MakeBlackQueenMoves(MoveVector moves)
+	void Board::MakeBlackQueenMoves(MoveVector moves)
 	{
 		auto queens = this->GetBlackQueens();
 		auto white_pieces = this->GetWhitePieces();
@@ -710,7 +710,7 @@ namespace Panzer
 		this->MakeQueenMoves(moves, queens, black_pieces, white_pieces);
 	}
 
-	void Board_Bit::MakeBlackKingMoves(MoveVector moves)
+	void Board::MakeBlackKingMoves(MoveVector moves)
 	{
 		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
@@ -743,7 +743,7 @@ namespace Panzer
 		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
 	}
 
-	void Board_Bit::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side)
+	void Board::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side)
 	{
 		auto occupancy = same_side | other_side;
 		while (rooks != 0)
@@ -784,7 +784,7 @@ namespace Panzer
 		}
 	}
 
-	void Board_Bit::MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
+	void Board::MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
 	{
 
 		while (knights != 0)
@@ -838,7 +838,7 @@ namespace Panzer
 		}
 	}
 
-	void Board_Bit::MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side)
+	void Board::MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side)
 	{
 		auto occupancy = same_side | other_side;
 		while (bishops != 0)
@@ -879,7 +879,7 @@ namespace Panzer
 		}
 	}
 
-	void Board_Bit::MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side)
+	void Board::MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side)
 	{
 		auto occupancy = same_side | other_side;
 		while (queens != 0)
@@ -919,7 +919,7 @@ namespace Panzer
 		}
 	}
 
-	void Board_Bit::MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side)
+	void Board::MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side)
 	{
 		while (kings != 0)
 		{
@@ -974,7 +974,7 @@ namespace Panzer
 		}
 	}
 
-std::string Board_Bit::BoardToFen()
+std::string Board::BoardToFen()
 {
 	std::string fen = "";
 	int empty_squares = 0;
@@ -1079,7 +1079,7 @@ std::string Board_Bit::BoardToFen()
 	return fen;
 }
 
-	void Board_Bit::FenToBoard(const std::string& fen)
+	void Board::FenToBoard(const std::string& fen)
 	{
 		bool board_done = false;
 		this->pieceLookup = new std::array<piece, 64> { NO_PIECE };

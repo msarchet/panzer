@@ -88,6 +88,6 @@ namespace Panzer
 
     bool SlidingTests::ValidateIsChecked()
     {
-        auto board = new Board_Bit();
+        auto board = new Board();
     }
 }

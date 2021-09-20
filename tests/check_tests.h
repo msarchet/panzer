@@ -6,7 +6,7 @@ namespace Panzer
 	class CheckTests
 	{
 		private:
-			Board_Bit *board;
+			Board *board;
 		public:
 			bool ValidateCheckLogic();
 	};

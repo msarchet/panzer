@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "board_utils.h"
 
-long CountMovesRecursive(Panzer::Board_Bit &board, int depth, bool isTopDepth);
+long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
 
 int main (int argc, char *argv[])
 {
@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
 
     std::cout << startpos << std::endl;
 
-    const auto board = new Panzer::Board_Bit();
+    const auto board = new Panzer::Board();
     board->FenToBoard(startpos);
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
@@ -45,7 +45,7 @@ int main (int argc, char *argv[])
     std::cout << "CPS" << std::fixed << total_count / elapsed_seconds.count();
 }
 
-long CountMovesRecursive(Panzer::Board_Bit &board, int depth, bool isTopDepth)
+long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
 {
     if (depth == 0)
     {
@@ -63,7 +63,7 @@ long CountMovesRecursive(Panzer::Board_Bit &board, int depth, bool isTopDepth)
         {
             auto captured = *it;
             const auto move = Panzer::Move(captured);
-            const auto newBoard = new Panzer::Board_Bit(board);
+            const auto newBoard = new Panzer::Board(board);
             auto furtherDepth = depth - 1;
             futures->push_back(
             std::async(std::launch::async, [move, furtherDepth, newBoard] {

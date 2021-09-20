@@ -14,7 +14,7 @@ typedef std::shared_ptr<std::vector<Panzer::Move> > MoveVector;
 
 namespace Panzer
 {
-	class Board_Bit
+	class Board
 	{
 		std::array<bitboard, 7> *Pieces = new std::array<bitboard, 7> { 0ULL };
 		std::array<bitboard, 2> *Colors = new std::array<bitboard, 2> { 0ULL };
@@ -27,11 +27,11 @@ namespace Panzer
 		uint8_t ply = 1;
 
 	public:
-		Board_Bit() {
+		Board() {
 			slider_attacks->Initialize();
 		}
 
-		Board_Bit(const Board_Bit &board) : Board_Bit()
+		Board(const Board &board) : Board()
 		{
 			for (int i = 0; i< 7; i++)
 			{
@@ -113,6 +113,6 @@ namespace Panzer
 		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side);
 
 		bitboard GetKnightPossible(square center);
-	}; //class Board_Bit
+	}; //class Board
      
 } //namespace Panzer
