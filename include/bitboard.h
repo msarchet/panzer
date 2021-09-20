@@ -7,8 +7,8 @@
 
 #include "bitboard_constants.h"
 #include "move.h"
-#include "utils/board_utils.h"
-#include "sliding-attacks/sliders.h"
+#include "board_utils.h"
+#include "sliders.h"
 
 typedef std::shared_ptr<std::vector<Panzer::Move> > MoveVector;
 

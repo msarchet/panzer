@@ -1,5 +1,5 @@
 #pragma once
-#include "../bitboard_constants.h"
+#include "bitboard_constants.h"
 #include <fstream>
 #include <vector>
 

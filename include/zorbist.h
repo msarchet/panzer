@@ -1,6 +1,6 @@
 #pragma once
 #include "bitboard_constants.h"
-#include "utils/board_utils.h"
+#include "board_utils.h"
 #include <random>
 #include <cmath>
 #include <climits>

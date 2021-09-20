@@ -1,6 +1,6 @@
 #include "bitboard.h"
 #include "bitboard_constants.h"
-#include "utils/board_utils.h"
+#include "board_utils.h"
 #include <sstream>
 
 namespace Panzer

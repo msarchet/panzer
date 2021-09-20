@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cassert>
 #include "slider_tests.h"
-#include "../utils/board_utils.h"
+#include "board_utils.h"
 #include "../sliding-attacks/sliders.h"
-#include "../bitboard.h"
+#include "bitboard.h"
 
 namespace Panzer
 {

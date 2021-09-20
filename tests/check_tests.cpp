@@ -1,7 +1,7 @@
 #include <cassert>
 #include "check_tests.h"
-#include "../bitboard_constants.h"
-#include "../bitboard.h"
+#include "bitboard_constants.h"
+#include "bitboard.h"
 
 namespace Panzer
 {

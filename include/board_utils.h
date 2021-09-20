@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 
-#include "../bitboard_constants.h"
+#include "bitboard_constants.h"
 
 namespace Panzer
 {

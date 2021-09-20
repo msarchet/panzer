@@ -1,5 +1,5 @@
 #pragma once
-#include "../bitboard.h"
+#include "bitboard.h"
 
 namespace Panzer
 {

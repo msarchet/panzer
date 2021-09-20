@@ -4,8 +4,9 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+
 #include "bitboard.h"
-#include "utils/board_utils.h"
+#include "board_utils.h"
 
 long CountMovesRecursive(Panzer::Board_Bit &board, int depth, bool isTopDepth);
 

@@ -6,8 +6,8 @@
 #include <set>
 #include <climits>
 
-#include "../bitboard_constants.h"
-#include "../utils/board_utils.h"
+#include "bitboard_constants.h"
+#include "board_utils.h"
 
 namespace Panzer
 {
