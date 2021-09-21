@@ -495,10 +495,22 @@ namespace Panzer
 		// char to = bit_index;
 		// flag move_type = PAWN_DOUBLE_PUSH;
 		bitboard left_captures = ((pawns & ~A_FILE) << NW) & black_pieces; // shift NW
-
 		bitboard right_captures = ((pawns & ~H_FILE) << NE) & black_pieces; // shift NE
+		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]);
 
-		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]) & pawns;
+		bitboard promotions = 0ULL;
+		bitboard promotion_left_captures = 0ULL;
+		bitboard promotion_right_captures = 0ULL;
+
+		if ((pawns & SEVENTH_RANK) != 0)
+		{
+			promotions = (pushes & EIGHTH_RANK);
+			pushes &= ~promotions;
+			promotion_left_captures = (left_captures & EIGHTH_RANK);
+			left_captures &= ~promotion_left_captures;
+			promotion_right_captures = (right_captures & EIGHTH_RANK);
+			right_captures &= ~promotion_right_captures;
+		}
 
 		while (ep_captures != 0)
 		{
@@ -578,6 +590,135 @@ namespace Panzer
 			
 			double_push &= double_push - 1ULL;
 		}
+
+
+		while (promotions != 0)
+		{
+			int index = GetLSB(promotions);
+			square to = index;
+			square from = to - S;
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				QUEEN_PROMO,
+				this->castle_flags
+			);
+
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				ROOK_PROMO,
+				this->castle_flags
+			);
+
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				KNIGHT_PROMO,
+				this->castle_flags
+			);
+
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				BISHOP_PROMO,
+				this->castle_flags
+			);
+
+			promotions &= promotions - ONE_BIT;
+		}
+
+		while (promotion_right_captures != 0)
+		{
+			int index = GetLSB(right_captures);
+			square to = index;
+			square from = to - SW;
+			moves->emplace_back
+			(
+				from,
+				to,
+				QUEEN_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				ROOK_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				BISHOP_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				KNIGHT_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+			promotion_right_captures &= promotion_right_captures - 1ULL;
+		}
+
+		while(promotion_left_captures != 0)
+		{
+			int index = GetLSB(left_captures);
+			square to = index;
+			square from = to - SE;
+			moves->emplace_back
+			(
+				from,
+				to,
+				QUEEN_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				ROOK_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				BISHOP_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				KNIGHT_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			promotion_left_captures &= left_captures - 1ULL;	
+		}
+
 
 	}
 
@@ -668,7 +809,22 @@ namespace Panzer
 
 		bitboard right_captures = ((pawns & ~H_FILE) >> SE) & white_pieces; // shift NE
 
-		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]) & pawns;
+		bitboard ep_captures = (pawns & rank_EP_masks[this->ep_square]);
+
+		bitboard promotions = 0ULL;
+		bitboard promotion_left_captures = 0ULL;
+		bitboard promotion_right_captures = 0ULL;
+
+		if ((pawns & SEVENTH_RANK) != 0)
+		{
+			promotions = (pushes & EIGHTH_RANK);
+			pushes &= ~promotions;
+			promotion_left_captures = (left_captures & EIGHTH_RANK);
+			left_captures &= ~promotion_left_captures;
+			promotion_right_captures = (right_captures & EIGHTH_RANK);
+			right_captures &= ~promotion_right_captures;
+		}
+
 		while (ep_captures != 0)
 		{
 			square from = GetLSB(ep_captures);
@@ -752,6 +908,132 @@ namespace Panzer
 			double_push &= double_push - 1ULL;
 		}
 
+		while (promotions != 0)
+		{
+			int index = GetLSB(promotions);
+			square to = index;
+			square from = to + N ;
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				QUEEN_PROMO,
+				this->castle_flags
+			);
+
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				ROOK_PROMO,
+				this->castle_flags
+			);
+
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				KNIGHT_PROMO,
+				this->castle_flags
+			);
+
+			moves->emplace_back
+			(
+				from, 
+				to, 
+				BISHOP_PROMO,
+				this->castle_flags
+			);
+
+			promotions &= promotions - ONE_BIT;
+		}
+
+		while (promotion_right_captures != 0)
+		{
+			int index = GetLSB(right_captures);
+			square to = index;
+			square from = to + NW;
+			moves->emplace_back
+			(
+				from,
+				to,
+				QUEEN_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				ROOK_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				BISHOP_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				KNIGHT_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+			promotion_right_captures &= promotion_right_captures - 1ULL;
+		}
+
+		while(promotion_left_captures != 0)
+		{
+			int index = GetLSB(left_captures);
+			square to = index;
+			square from = to + NE;
+			moves->emplace_back
+			(
+				from,
+				to,
+				QUEEN_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				ROOK_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				BISHOP_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			moves->emplace_back
+			(
+				from,
+				to,
+				KNIGHT_PROMO_CAPTURE,
+				this->castle_flags,
+				this->GetPieceAtSquare(to)
+			);
+
+			promotion_left_captures &= left_captures - 1ULL;	
+		}
 	}
 
 	void Board::MakeBlackRooksMoves(MoveVector moves)

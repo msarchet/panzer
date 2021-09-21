@@ -98,6 +98,7 @@ const std::array<bitboard, 8> knight_move_masks =
     ~(A_FILE), // G_FILE
     ~(A_FILE|B_FILE), // H_FILE
 };
+
 const bitboard king_move_masks[8] = 
 {
     ~H_FILE,

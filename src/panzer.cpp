@@ -156,7 +156,7 @@ long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
     if (isTopDepth)
     {
         long totalCount = 0;
-        auto futures = std::make_shared<std::vector<std::shared_future<std::tuple<std::string, long>> > >();
+        auto futures = std::make_shared<std::vector<std::shared_future<std::tuple<std::string, long> > > >();
         futures->reserve(moves->size());
         for (auto it = moves->begin(); it != moves->end(); it++)
         {
@@ -209,8 +209,6 @@ long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
 
         return legalCount;
     }
-
-    //std::cout << "-------" << std::endl;
 
     return 0;
 }
