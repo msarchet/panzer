@@ -1,4 +1,5 @@
 #pragma once
+
 #include <array>
 #include <vector>
 #include <memory>
@@ -326,14 +327,30 @@ const std::array<std::string, 64> squareToString= {
 	"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 };
 
+inline int stringToSquare(std::string square)
+{
+    int i = 0;
+    for (auto value : squareToString)
+    {
+        if (value == square)
+        {
+            return i;
+        }
+
+        i++;
+    }
+
+    return -1;
+};
+
 const std::array<std::string, 7> pieceToString= {
     "",
     "Pawn",
-    "blkas",
-    "adsf",
-    "asdf",
-    "asdf",
-    "asdf",
+    "Rook",
+    "Knight",
+    "Bishop",
+    "King",
+    "Queen",
 };
 
 

@@ -55,7 +55,7 @@ namespace Panzer
 
 		void FillSquare(square s, piece p, color c);
 		void ClearSquare(square s,piece p, color c);
-		void PrintBoard(bitboard b);
+		void PrintBoard();
 
 		MoveVector GenerateMoves();
 		MoveVector GenerateWhiteMoves();
@@ -89,10 +89,10 @@ namespace Panzer
 		void FenToBoard(const std::string& fen);
 		void PrintMoveChain();
 		std::string BoardToFen();
+		piece GetPieceAtSquare(square s);
 	private:
 		int GetMSB(bitboard b);
 		int GetLSB(bitboard b);
-		piece GetPieceAtSquare(square s);
 		void MakeWhitePawnMoves(MoveVector moves);
 		void MakeWhiteRooksMoves(MoveVector moves);
 		void MakeWhiteKnightMoves(MoveVector moves);

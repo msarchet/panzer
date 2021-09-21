@@ -15,6 +15,7 @@ namespace Panzer
 
 		std::cout << std::endl;
 	}
+
 	piece Board::GetPieceAtSquare(square s)
 	{
 		return pieceLookup->at(s);
@@ -222,9 +223,82 @@ namespace Panzer
 #endif
 	}
 
-	void Board::PrintBoard(bitboard b)
+	void Board::PrintBoard()
 	{
-		Panzer::Utils::PrintBoard(b);
+		std::cout << std::endl;
+		bitboard white = this->GetWhitePieces();
+		bitboard black = this->GetBlackPieces();
+
+		std::cout << "-----------------" << std::endl;
+		for (int row = 7; row >= 0; --row) 
+		{
+			std::cout << "|";
+			for (int col = 0; col <= 7; ++col) 
+			{
+				square s = ((row * 8) + col);
+				piece p = this->GetPieceAtSquare(s);
+				bitboard b = (1ULL << s);
+
+				if (white & b) 
+				{
+					switch (p)
+					{
+						case PAWN:
+							std::cout << "P";
+							break;
+						case ROOK:
+							std::cout << "R";
+							break;
+						case BISHOP:
+							std::cout << "B";
+							break;
+						case KNIGHT:
+							std::cout << "N";
+							break;
+						case QUEEN:
+							std::cout << "Q";
+							break;
+						case KING:
+							std::cout << "K";
+							break;
+					}
+
+				} 
+				else if (black & b) 
+				{
+					switch (p)
+					{
+						case PAWN:
+							std::cout << "p";
+							break;
+						case ROOK:
+							std::cout << "r";
+							break;
+						case BISHOP:
+							std::cout << "b";
+							break;
+						case KNIGHT:
+							std::cout << "n";
+							break;
+						case QUEEN:
+							std::cout << "q";
+							break;
+						case KING:
+							std::cout << "k";
+							break;
+					}
+				}
+				else
+				{
+					std::cout << " ";
+				}
+				std::cout << "|";
+			}
+
+			std::cout << std::endl;
+			std::cout << "-----------------";
+			std::cout << std::endl;
+		}
 	}
 
 	void Board::MakeMove(const Move move)
@@ -551,7 +625,7 @@ namespace Panzer
 				bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE));
 				if (notChecked)
 				{
-					moves->emplace_back(E1, G1, EMPTY_CASTLE_FLAGS, this->castle_flags);
+					moves->emplace_back(E1, G1, KING_CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -561,10 +635,10 @@ namespace Panzer
 			bool isOpen = (((ONE_BIT << B1) | (ONE_BIT << C1) | (ONE_BIT << D1)) & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
-				bool notChecked = !(IsSquareAttacked(B1, WHITE) || IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE));
+				bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE));
 				if (notChecked)
 				{
-					moves->emplace_back(E1, C1, EMPTY_CASTLE_FLAGS, this->castle_flags);
+					moves->emplace_back(E1, C1, QUEEN_CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -723,7 +797,7 @@ namespace Panzer
 				bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK));
 				if (notChecked)
 				{
-					moves->emplace_back(E8, G8, EMPTY_CASTLE_FLAGS, this->castle_flags);
+					moves->emplace_back(E8, G8, KING_CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -733,10 +807,10 @@ namespace Panzer
 			bool isOpen = (((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8)) & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
-				bool notChecked = !(IsSquareAttacked(B8, BLACK) || IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK));
+				bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK));
 				if (notChecked)
 				{
-					moves->emplace_back(E8, C8, EMPTY_CASTLE_FLAGS, this->castle_flags);
+					moves->emplace_back(E8, C8, QUEEN_CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -1100,11 +1174,9 @@ std::string Board::BoardToFen()
 				{
 					case 'b':
 						this->side_to_move = BLACK;
-						std::cout << "set side to move to black" << std::endl;
 						break;
 					case 'w':
 						this->side_to_move = WHITE;
-						std::cout << "set side to move to white" << std::endl;
 						break;
 					case 'k':
 						this->castle_flags |= BLACKK;

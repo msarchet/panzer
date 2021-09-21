@@ -1,9 +1,9 @@
 CC=g++
 STD=-std=c++17
 INCLUDE=-I ./include
-MAIN=./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./src/bitboard.cpp ./src/panzer-bitboard.cpp
-MAGIC=./utils/board_utils.cpp ./sliding-attacks/make-magic.cpp
-TEST=./utils/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./bitboard.cpp ./tests/main.cpp
+MAIN=./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./src/bitboard.cpp ./src/panzer.cpp
+MAGIC=./src/board_utils.cpp ./sliding-attacks/make-magic.cpp
+TEST=./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./bitboard.cpp ./tests/main.cpp
 DEBUG_OPTS=-ggdb -g3
 
 main:
