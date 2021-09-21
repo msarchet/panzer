@@ -2,7 +2,7 @@
 #include <cassert>
 #include "slider_tests.h"
 #include "board_utils.h"
-#include "../sliding-attacks/sliders.h"
+#include "sliders.h"
 #include "bitboard.h"
 
 namespace Panzer

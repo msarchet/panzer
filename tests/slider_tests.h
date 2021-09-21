@@ -1,5 +1,5 @@
 #pragma once
-#include "../sliding-attacks/sliders.h"
+#include "sliders.h"
 
 namespace Panzer
 {

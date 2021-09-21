@@ -46,11 +46,19 @@ namespace Panzer
 
 			bitboard knights = this->GetBlackKnights();
 
-
 			// mask for file wraps
-			auto attackedByKnight = this->GetKnightPossible(s) & knights;
+			auto attackedByKnight = KNIGHT_SPANS[s] & knights;
 
 			if (attackedByKnight != 0)
+			{
+				return true;
+			}
+
+			bitboard kings = this->GetBlackKings();
+
+			auto attackedByKing = KING_SPANS[s] & kings;
+
+			if (attackedByKing != 0)
 			{
 				return true;
 			}
@@ -81,9 +89,18 @@ namespace Panzer
 			bitboard knights = this->GetWhiteKnights();
 
 			// mask for file wraps
-			auto attackedByKnight = this->GetKnightPossible(s) & knights;
+			auto attackedByKnight = KNIGHT_SPANS[s] & knights;
 
 			if (attackedByKnight != 0)
+			{
+				return true;
+			}
+
+			bitboard kings = this->GetWhiteKings();
+
+			auto attackedByKing = KING_SPANS[s] & kings;
+
+			if (attackedByKing != 0)
 			{
 				return true;
 			}
@@ -110,21 +127,6 @@ namespace Panzer
 			return this->IsSquareAttacked(kingSquare, BLACK);
 		}
 		return false;
-	}
-
-	bitboard Board::GetKnightPossible(square center)
-	{
-			auto span = KNIGHT_SPAN;
-			if (center >= KNIGHT_SPAN_CENTER)
-			{
-				span = span << (center - KNIGHT_SPAN_CENTER);
-			}
-			else
-			{
-				span = span >> (KNIGHT_SPAN_CENTER - center);
-			}
-
-			return span & knight_move_masks[center % 8];
 	}
 
 	void Board::ToggleBitBoards(square from, square to, piece p, color c)
@@ -864,18 +866,10 @@ namespace Panzer
 		while (knights != 0)
 		{
 			auto from = this->GetLSB(knights);
-			auto span = KNIGHT_SPAN;
-			if (from >= KNIGHT_SPAN_CENTER)
-			{
-				span = span << (from - KNIGHT_SPAN_CENTER);
-			}
-			else
-			{
-				span = span >> (KNIGHT_SPAN_CENTER - from);
-			}
+			auto span = KNIGHT_SPANS[from];
 
 			// mask for file wraps
-			auto all_moves = span & ~same_side & knight_move_masks[from % 8];
+			auto all_moves = span & ~same_side;
 			auto captures = all_moves & other_side;
 			auto regular = all_moves & ~captures;
 
@@ -998,17 +992,7 @@ namespace Panzer
 		while (kings != 0)
 		{
 			int from = this->GetLSB(kings);
-			auto king_span = KING_SPAN;
-
-			if (from >= KING_SPAN_CENTER)
-			{
-				king_span = king_span << (from - KING_SPAN_CENTER);
-			}
-			else
-			{
-				king_span = king_span >> (KING_SPAN_CENTER - from);
-			}
-
+			bitboard king_span = KING_SPANS[from];
 			auto all_moves = king_span & ~same_side;
 			auto captures = all_moves & other_side;
 			auto regular_moves = all_moves &~captures;

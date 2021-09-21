@@ -111,8 +111,6 @@ namespace Panzer
 		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side);
 		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side);
 		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side);
-
-		bitboard GetKnightPossible(square center);
 	}; //class Board
      
 } //namespace Panzer

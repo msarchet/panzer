@@ -97,6 +97,7 @@ void ProcessInputs()
             end = std::chrono::high_resolution_clock::now();
 
             std::chrono::duration<double> elapsed_seconds = end - start; 
+            std::cout.precision(5);
             std::cout << elapsed_seconds.count() << std::endl;
             std::cout << "total moves " << total_count << std::endl;
             std::cout.precision(0);
