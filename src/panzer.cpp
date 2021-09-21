@@ -42,6 +42,12 @@ void ProcessInputs()
                 token = GetNextToken(line, delimeter);
             }
 
+            if (token == "kiwi")
+            {
+                board->FenToBoard(KIWIPETE);
+                token = GetNextToken(line, delimeter);
+            }
+
             while (!token.empty())
             {
                 // attempt to make a move

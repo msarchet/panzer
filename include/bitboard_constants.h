@@ -26,6 +26,7 @@ const move_flag EMPTY_MOVE_FLAGS = 0;
 const castle_flag EMPTY_CASTLE_FLAGS = 0;
 
 constexpr auto STARTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - -";
+constexpr auto KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
 
 const mask FIRST_RANK    = 0xFFULL;
 const mask SECOND_RANK   = 0xFF00ULL;
