@@ -87,7 +87,7 @@ namespace Panzer
 		bool IsSquareAttacked(square s, color color);
 		bool IsChecked(color color);
 		void FenToBoard(const std::string& fen);
-		void PrintMoveChain();
+		std::string PrintMoveChain();
 		std::string BoardToFen();
 		piece GetPieceAtSquare(square s);
 	private:

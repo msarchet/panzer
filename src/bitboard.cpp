@@ -5,15 +5,16 @@
 
 namespace Panzer
 {
-	void Board::PrintMoveChain()
+	std::string Board::PrintMoveChain()
 	{
+		std::string chain = "";
     	for (auto it = moveChain->begin(); it != moveChain->end(); it++)
 		{
 			auto move = *it;
-			std::cout << squareToString[move.getFrom()] << squareToString[move.getTo()] << " ";
+			chain += squareToString[move.getFrom()] + squareToString[move.getTo()] + " ";
 		}
 
-		std::cout << std::endl;
+		return chain;
 	}
 
 	piece Board::GetPieceAtSquare(square s)
@@ -325,19 +326,19 @@ namespace Panzer
 		{
 			// get type from promotion type
 			const auto flags = move.getFlags();
-			if (flags & QUEEN_PROMO || flags & QUEEN_PROMO_CAPTURE)
+			if (flags == QUEEN_PROMO || flags == QUEEN_PROMO_CAPTURE)
 			{
 				this->FillSquare(move.getTo(), QUEEN, this->side_to_move);
 			}
-			else if (flags & KNIGHT_PROMO || flags & KNIGHT_PROMO_CAPTURE)
+			else if (flags == KNIGHT_PROMO || flags == KNIGHT_PROMO_CAPTURE)
 			{
 				this->FillSquare(move.getTo(), KNIGHT, this->side_to_move);
 			}
-			else if (flags & ROOK_PROMO || flags & ROOK_PROMO_CAPTURE)
+			else if (flags == ROOK_PROMO || flags == ROOK_PROMO_CAPTURE)
 			{
 				this->FillSquare(move.getTo(), ROOK, this->side_to_move);
 			}
-			else if (flags & BISHOP_PROMO || flags & BISHOP_PROMO_CAPTURE)
+			else if (flags == BISHOP_PROMO || flags == BISHOP_PROMO_CAPTURE)
 			{
 				this->FillSquare(move.getTo(), BISHOP, this->side_to_move);
 			}
@@ -352,12 +353,44 @@ namespace Panzer
 		if (this->castle_flags != EMPTY_CASTLE_FLAGS)
 		{
 			// toggle off castle flags
-			if ((this->castle_flags & (WHITEK|WHITEQ)) != 0 && (move.getFrom() == E1 || move.getTo() == E1)) this->castle_flags ^= (WHITEK|WHITEQ);
-			else if ((this->castle_flags & (WHITEQ)) != 0 && (move.getFrom() == A1 || move.getTo() == A1)) this->castle_flags ^= (WHITEQ);
-			else if ((this->castle_flags & (WHITEK)) != 0 && (move.getFrom() == H1 || move.getTo() == H1)) this->castle_flags ^= (WHITEK);
-			else if ((this->castle_flags & (BLACKK|BLACKQ)) != 0 && (move.getFrom() == E8 || move.getTo() == E8)) this->castle_flags ^= (BLACKK|BLACKQ);
-			else if ((this->castle_flags & (BLACKQ)) != 0 && (move.getFrom() == A8 || move.getTo() == A8)) this->castle_flags ^= (BLACKQ);
-			else if ((this->castle_flags & (BLACKK)) != 0 && (move.getFrom() == H8 || move.getTo() == H8)) this->castle_flags ^= (BLACKK);
+			if (move.getFrom() == E1 || move.getTo() == E1)
+			{
+				if ((this->castle_flags & (WHITEK|WHITEQ)) != 0)
+				{
+					this->castle_flags &= (ALL_CASTLE_FLAGS & ~(WHITEK|WHITEQ));
+				}
+			}
+			else if (move.getFrom() == E8 || move.getTo() == E8)
+			{
+				if ((this->castle_flags & (BLACKK|BLACKQ)) != 0)
+				{
+					this->castle_flags &= (ALL_CASTLE_FLAGS & ~(BLACKK|BLACKQ));
+				}
+			}
+			else if (move.isCastle() && this->side_to_move == WHITE)
+			{
+				this->castle_flags &= (ALL_CASTLE_FLAGS & ~(WHITEK|WHITEQ));
+			}
+			else if (move.isCastle() && this->side_to_move == BLACK)
+			{
+				this->castle_flags &= (ALL_CASTLE_FLAGS & ~(BLACKK|BLACKQ));
+			}
+			else if (move.getTo() == A1 || move.getFrom() == A1)
+			{
+				this->castle_flags &= (ALL_CASTLE_FLAGS & ~WHITEQ);
+			}
+			else if (move.getTo() == H1 || move.getFrom() == H1)
+			{
+				this->castle_flags &= (ALL_CASTLE_FLAGS & ~WHITEK);
+			}
+			else if (move.getTo() == A8 || move.getFrom() == A8)
+			{
+				this->castle_flags &= (ALL_CASTLE_FLAGS & ~BLACKQ);
+			}
+			else if (move.getTo() == H8 || move.getFrom() == H8)
+			{
+				this->castle_flags &= (ALL_CASTLE_FLAGS & ~BLACKK);
+			}
 		}
 
 		if (move.isCastle())
@@ -428,19 +461,19 @@ namespace Panzer
 		{
 			// get type from promotion type
 			const auto flags = move.getFlags();
-			if (flags & QUEEN_PROMO || flags & QUEEN_PROMO_CAPTURE)
+			if (flags == QUEEN_PROMO || flags == QUEEN_PROMO_CAPTURE)
 			{
 				this->ClearSquare(move.getTo(), QUEEN, this->side_to_move);
 			}
-			else if (flags & KNIGHT_PROMO || flags & KNIGHT_PROMO_CAPTURE)
+			else if (flags == KNIGHT_PROMO || flags == KNIGHT_PROMO_CAPTURE)
 			{
 				this->ClearSquare(move.getTo(), KNIGHT, this->side_to_move);
 			}
-			else if (flags & ROOK_PROMO || flags & ROOK_PROMO_CAPTURE)
+			else if (flags == ROOK_PROMO || flags == ROOK_PROMO_CAPTURE)
 			{
 				this->ClearSquare(move.getTo(), ROOK, this->side_to_move);
 			}
-			else if (flags & BISHOP_PROMO || flags & BISHOP_PROMO_CAPTURE)
+			else if (flags == BISHOP_PROMO || flags == BISHOP_PROMO_CAPTURE)
 			{
 				this->ClearSquare(move.getTo(), BISHOP, this->side_to_move);
 			}
@@ -634,7 +667,7 @@ namespace Panzer
 
 		while (promotion_right_captures != 0)
 		{
-			int index = GetLSB(right_captures);
+			int index = GetLSB(promotion_right_captures);
 			square to = index;
 			square from = to - SW;
 			moves->emplace_back
@@ -677,7 +710,7 @@ namespace Panzer
 
 		while(promotion_left_captures != 0)
 		{
-			int index = GetLSB(left_captures);
+			int index = GetLSB(promotion_left_captures);
 			square to = index;
 			square from = to - SE;
 			moves->emplace_back
@@ -716,7 +749,7 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			promotion_left_captures &= left_captures - 1ULL;	
+			promotion_left_captures &= promotion_left_captures - 1ULL;	
 		}
 
 
@@ -815,13 +848,13 @@ namespace Panzer
 		bitboard promotion_left_captures = 0ULL;
 		bitboard promotion_right_captures = 0ULL;
 
-		if ((pawns & SEVENTH_RANK) != 0)
+		if ((pawns & SECOND_RANK) != 0)
 		{
-			promotions = (pushes & EIGHTH_RANK);
+			promotions = (pushes & FIRST_RANK);
 			pushes &= ~promotions;
-			promotion_left_captures = (left_captures & EIGHTH_RANK);
+			promotion_left_captures = (left_captures & FIRST_RANK);
 			left_captures &= ~promotion_left_captures;
-			promotion_right_captures = (right_captures & EIGHTH_RANK);
+			promotion_right_captures = (right_captures & FIRST_RANK);
 			right_captures &= ~promotion_right_captures;
 		}
 
@@ -950,7 +983,7 @@ namespace Panzer
 
 		while (promotion_right_captures != 0)
 		{
-			int index = GetLSB(right_captures);
+			int index = GetLSB(promotion_right_captures);
 			square to = index;
 			square from = to + NW;
 			moves->emplace_back
@@ -993,7 +1026,7 @@ namespace Panzer
 
 		while(promotion_left_captures != 0)
 		{
-			int index = GetLSB(left_captures);
+			int index = GetLSB(promotion_left_captures);
 			square to = index;
 			square from = to + NE;
 			moves->emplace_back
@@ -1032,7 +1065,7 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			promotion_left_captures &= left_captures - 1ULL;	
+			promotion_left_captures &= promotion_left_captures - 1ULL;	
 		}
 	}
 
@@ -1330,7 +1363,7 @@ std::string Board::BoardToFen()
 		}
 		else
 		{
-			color c = (this->GetWhitePieces() & targetSquare) != 0;
+			color c = (this->GetWhitePieces() & targetSquare) != 0 ? WHITE : BLACK;
 			if (empty_squares != 0)
 			{
 				fen += std::to_string(empty_squares);
@@ -1425,6 +1458,9 @@ std::string Board::BoardToFen()
 		this->pieceLookup = new std::array<piece, 64> { NO_PIECE };
 		this->Pieces = new std::array<bitboard, 7> { 0ULL };
 		this->Colors = new std::array<bitboard, 2> { 0ULL };
+		this->castle_flags = ALL_CASTLE_FLAGS;
+		this->ep_square = NO_SQUARE;
+		this->moveChain->clear();
 
 		int index = 0;
 		for (char const& c : fen)

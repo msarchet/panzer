@@ -11,10 +11,13 @@
 uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
 void ProcessInputs();
 std::string GetNextToken(std::string &line, std::string delimeter);
+std::ofstream debug_file;
 
 int main (int argc, char *argv[])
 {
+    debug_file.open("debug.dat", std::ios_base::app);
     ProcessInputs();
+    debug_file.close();
 }
 
 void ProcessInputs()
@@ -114,6 +117,7 @@ void ProcessInputs()
         if (token == "print")
         {
             board->PrintBoard();
+            std::cout << board->BoardToFen();
         }
 
         if (token == "quit" || token == "q")
@@ -167,8 +171,8 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
             futures->push_back(
             std::async(std::launch::async, [move, furtherDepth, newBoard] {
                 newBoard->MakeMove(move);
-                uint64_t legalCount = 0;
 
+                uint64_t legalCount = 0;
                 if (!newBoard->IsChecked(newBoard->GetSideToMove() == WHITE ? BLACK : WHITE))
                 {
                     legalCount = CountMovesRecursive(*newBoard, furtherDepth, false);
@@ -202,9 +206,12 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
             auto move = *it;
             board.MakeMove(move);
 
+
+            uint64_t subCount = 0ULL;
             if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
             {
-                legalCount += CountMovesRecursive(board, depth - 1, false);
+                subCount = CountMovesRecursive(board, depth - 1, false);
+                legalCount += subCount;
             }
 
             board.UnmakeMove(move);

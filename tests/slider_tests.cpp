@@ -79,6 +79,12 @@ namespace Panzer
         assert(starting_attacks == expected_starting_attacks);
 
         std::cout << "Rook attacks passed";
+
+        const auto board = new Panzer::Board();
+        board->FenToBoard("r3k2r/p1ppqpb1/bn3np1/3NN3/1p2P3/5Q2/PPPBBPpP/1R2K2R w Kkq ");
+        auto possible = sliders->GetRookAttacks(H1, board->GetOccupancy()) & ~board->GetOccupancy();
+        Panzer::Utils::PrintBoard(possible);
+
     }
 
     bool SlidingTests::ValidateQueenAttacks()
