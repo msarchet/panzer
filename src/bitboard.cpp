@@ -1458,7 +1458,7 @@ std::string Board::BoardToFen()
 		this->pieceLookup = new std::array<piece, 64> { NO_PIECE };
 		this->Pieces = new std::array<bitboard, 7> { 0ULL };
 		this->Colors = new std::array<bitboard, 2> { 0ULL };
-		this->castle_flags = ALL_CASTLE_FLAGS;
+		this->castle_flags = EMPTY_CASTLE_FLAGS;
 		this->ep_square = NO_SQUARE;
 		this->moveChain->clear();
 
