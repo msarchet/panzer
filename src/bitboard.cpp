@@ -352,12 +352,12 @@ namespace Panzer
 		if (this->castle_flags != EMPTY_CASTLE_FLAGS)
 		{
 			// toggle off castle flags
-			if (move.getFrom() == E1 || move.getTo() == E1) this->castle_flags ^= (WHITEK|WHITEQ);
-			else if (move.getFrom() == A1 || move.getTo() == A1) this->castle_flags ^= (WHITEQ);
-			else if (move.getFrom() == H1 || move.getTo() == H1) this->castle_flags ^= (WHITEK);
-			else if (move.getFrom() == E8 || move.getTo() == E8) this->castle_flags ^= (BLACKK|BLACKQ);
-			else if (move.getFrom() == A8 || move.getTo() == A8) this->castle_flags ^= (BLACKQ);
-			else if (move.getFrom() == H8 || move.getTo() == H8) this->castle_flags ^= (BLACKK);
+			if ((this->castle_flags & (WHITEK|WHITEQ)) != 0 && (move.getFrom() == E1 || move.getTo() == E1)) this->castle_flags ^= (WHITEK|WHITEQ);
+			else if ((this->castle_flags & (WHITEQ)) != 0 && (move.getFrom() == A1 || move.getTo() == A1)) this->castle_flags ^= (WHITEQ);
+			else if ((this->castle_flags & (WHITEK)) != 0 && (move.getFrom() == H1 || move.getTo() == H1)) this->castle_flags ^= (WHITEK);
+			else if ((this->castle_flags & (BLACKK|BLACKQ)) != 0 && (move.getFrom() == E8 || move.getTo() == E8)) this->castle_flags ^= (BLACKK|BLACKQ);
+			else if ((this->castle_flags & (BLACKQ)) != 0 && (move.getFrom() == A8 || move.getTo() == A8)) this->castle_flags ^= (BLACKQ);
+			else if ((this->castle_flags & (BLACKK)) != 0 && (move.getFrom() == H8 || move.getTo() == H8)) this->castle_flags ^= (BLACKK);
 		}
 
 		if (move.isCastle())
