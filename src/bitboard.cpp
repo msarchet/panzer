@@ -765,7 +765,7 @@ namespace Panzer
 			bool isOpen = (((ONE_BIT << F1) | (ONE_BIT << G1)) & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
-				bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE));
+				bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) || IsSquareAttacked(E1, WHITE));
 				if (notChecked)
 				{
 					moves->emplace_back(E1, G1, KING_CASTLE, this->castle_flags);
@@ -778,7 +778,7 @@ namespace Panzer
 			bool isOpen = (((ONE_BIT << B1) | (ONE_BIT << C1) | (ONE_BIT << D1)) & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
-				bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE));
+				bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) || IsSquareAttacked(E1, WHITE));
 				if (notChecked)
 				{
 					moves->emplace_back(E1, C1, QUEEN_CASTLE, this->castle_flags);
@@ -1078,7 +1078,7 @@ namespace Panzer
 			bool isOpen = (((ONE_BIT << F8) | (ONE_BIT << G8)) & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
-				bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK));
+				bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) || IsSquareAttacked(E8, BLACK));
 				if (notChecked)
 				{
 					moves->emplace_back(E8, G8, KING_CASTLE, this->castle_flags);
@@ -1091,7 +1091,7 @@ namespace Panzer
 			bool isOpen = (((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8)) & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
-				bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK));
+				bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) || IsSquareAttacked(E8, BLACK));
 				if (notChecked)
 				{
 					moves->emplace_back(E8, C8, QUEEN_CASTLE, this->castle_flags);

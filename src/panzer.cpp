@@ -8,7 +8,7 @@
 #include "bitboard.h"
 #include "board_utils.h"
 
-long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
+uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
 void ProcessInputs();
 std::string GetNextToken(std::string &line, std::string delimeter);
 
@@ -85,7 +85,7 @@ void ProcessInputs()
             std::cout << "Running perft" << std::endl;
             token = GetNextToken(line, delimeter);
             auto depth = std::stoi(token);
-            long total_count = 0;
+            uint64_t total_count = 0;
             const auto perftBoard = new Panzer::Board(*board);
 
             std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
@@ -144,7 +144,7 @@ std::string GetNextToken(std::string &line, std::string delimeter)
     return token;
 }
 
-long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
+uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
 {
     if (depth == 0)
     {
@@ -155,8 +155,8 @@ long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
 
     if (isTopDepth)
     {
-        long totalCount = 0;
-        auto futures = std::make_shared<std::vector<std::shared_future<std::tuple<std::string, long> > > >();
+        uint64_t totalCount = 0;
+        auto futures = std::make_shared<std::vector<std::shared_future<std::tuple<std::string, uint64_t> > > >();
         futures->reserve(moves->size());
         for (auto it = moves->begin(); it != moves->end(); it++)
         {
@@ -167,7 +167,7 @@ long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
             futures->push_back(
             std::async(std::launch::async, [move, furtherDepth, newBoard] {
                 newBoard->MakeMove(move);
-                long legalCount = 0;
+                uint64_t legalCount = 0;
 
                 if (!newBoard->IsChecked(newBoard->GetSideToMove() == WHITE ? BLACK : WHITE))
                 {
@@ -183,15 +183,19 @@ long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
         {
             auto resolved = *f;
             auto result = f->get();
-            std::cout << std::get<std::string>(result) << std::endl;
-            totalCount += std::get<long>(result);
+            auto count = std::get<uint64_t>(result);
+            if (count != 0)
+            {
+                std::cout << std::get<std::string>(result) << std::endl;
+                totalCount += count;
+            }
         }
 
         return totalCount;
     }
     else
     {
-        auto legalCount = 0;
+        uint64_t legalCount = 0ULL;
 
         for (auto it = moves->begin(); it != moves->end(); it++)
         {
@@ -210,5 +214,5 @@ long CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
         return legalCount;
     }
 
-    return 0;
+    return 0ULL;
 }
