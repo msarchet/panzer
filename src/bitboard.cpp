@@ -1491,6 +1491,7 @@ std::string Board::BoardToFen()
 						break;
 					case 'Q':
 						this->castle_flags |= WHITEQ;
+						break;
 					case '\0':
 						return;
 				}

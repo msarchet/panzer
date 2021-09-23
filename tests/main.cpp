@@ -27,4 +27,85 @@ int main()
     board->UnmakeMove(move);
     board->PrintBoard();
     Panzer::Utils::PrintBoard(board->GetWhiteKnights());
+
+    if (QUEEN_PROMO & QUEEN_PROMO)
+    {
+        assert(true);
+    }
+
+    if (QUEEN_PROMO & NO_MOVE_FLAGS)
+    {
+        assert(false);
+    }
+
+    auto capture_move = Panzer::Move(A1, A2, CAPTURE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(capture_move.isCapture());
+    assert(!capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, QUEEN_PROMO_CAPTURE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, ROOK_PROMO_CAPTURE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, BISHOP_PROMO_CAPTURE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, KNIGHT_PROMO_CAPTURE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, NO_MOVE_FLAGS, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(!capture_move.isCapture());
+    assert(!capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, EP_CAPTURE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(capture_move.isCapture());
+    assert(!capture_move.isPromo());
+    assert(capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, QUEEN_CASTLE, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(!capture_move.isCapture());
+    assert(!capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(capture_move.isCastle());
+
+    capture_move = Panzer::Move(A1, A2, QUEEN_PROMO, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(!capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, ROOK_PROMO, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(!capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, BISHOP_PROMO, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(!capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+    capture_move = Panzer::Move(A1, A2, KNIGHT_PROMO, EMPTY_CASTLE_FLAGS, ROOK);
+    assert(!capture_move.isCapture());
+    assert(capture_move.isPromo());
+    assert(!capture_move.isEPCapture());
+    assert(!capture_move.isCastle());
+
+    castle_flag flags = EMPTY_CASTLE_FLAGS;
+    flags |= BLACKK;
+    flags |= BLACKQ;
+    flags |= WHITEK;
+    flags |= WHITEQ;
+
+    assert(flags == ALL_CASTLE_FLAGS);
+    board->FenToBoard(KIWIPETE);
 }
