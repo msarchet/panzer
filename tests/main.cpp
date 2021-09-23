@@ -73,7 +73,7 @@ int main()
     assert(!capture_move.isPromo());
     assert(capture_move.isEPCapture());
     assert(!capture_move.isCastle());
-    capture_move = Panzer::Move(A1, A2, QUEEN_CASTLE, EMPTY_CASTLE_FLAGS, ROOK);
+    capture_move = Panzer::Move(A1, A2, CASTLE, EMPTY_CASTLE_FLAGS, ROOK);
     assert(!capture_move.isCapture());
     assert(!capture_move.isPromo());
     assert(!capture_move.isEPCapture());
