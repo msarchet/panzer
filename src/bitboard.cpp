@@ -326,19 +326,19 @@ namespace Panzer
 		{
 			// get type from promotion type
 			const auto flags = move.getFlags();
-			if (flags == QUEEN_PROMO || flags == QUEEN_PROMO_CAPTURE)
+			if ((flags & QUEEN_PROMO) != 0)
 			{
 				this->FillSquare(move.getTo(), QUEEN, this->side_to_move);
 			}
-			else if (flags == KNIGHT_PROMO || flags == KNIGHT_PROMO_CAPTURE)
+			else if ((flags & KNIGHT_PROMO) != 0)
 			{
 				this->FillSquare(move.getTo(), KNIGHT, this->side_to_move);
 			}
-			else if (flags == ROOK_PROMO || flags == ROOK_PROMO_CAPTURE)
+			else if ((flags & ROOK_PROMO) != 0)
 			{
 				this->FillSquare(move.getTo(), ROOK, this->side_to_move);
 			}
-			else if (flags == BISHOP_PROMO || flags == BISHOP_PROMO_CAPTURE)
+			else if ((flags & BISHOP_PROMO) != 0)
 			{
 				this->FillSquare(move.getTo(), BISHOP, this->side_to_move);
 			}
@@ -461,19 +461,19 @@ namespace Panzer
 		{
 			// get type from promotion type
 			const auto flags = move.getFlags();
-			if (flags == QUEEN_PROMO || flags == QUEEN_PROMO_CAPTURE)
+			if (flags & QUEEN_PROMO)
 			{
 				this->ClearSquare(move.getTo(), QUEEN, this->side_to_move);
 			}
-			else if (flags == KNIGHT_PROMO || flags == KNIGHT_PROMO_CAPTURE)
+			else if (flags & KNIGHT_PROMO)
 			{
 				this->ClearSquare(move.getTo(), KNIGHT, this->side_to_move);
 			}
-			else if (flags == ROOK_PROMO || flags == ROOK_PROMO_CAPTURE)
+			else if (flags & ROOK_PROMO)
 			{
 				this->ClearSquare(move.getTo(), ROOK, this->side_to_move);
 			}
-			else if (flags == BISHOP_PROMO || flags == BISHOP_PROMO_CAPTURE)
+			else if (flags & BISHOP_PROMO)
 			{
 				this->ClearSquare(move.getTo(), BISHOP, this->side_to_move);
 			}
@@ -795,26 +795,26 @@ namespace Panzer
 		// make castle moves
 		if ((castle_flags & WHITEK) != 0)
 		{
-			bool isOpen = (((ONE_BIT << F1) | (ONE_BIT << G1)) & this->GetOccupancy()) == 0;
+			bool isOpen = (WHITEK_CASTLE_MASK & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
 				bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) || IsSquareAttacked(E1, WHITE));
 				if (notChecked)
 				{
-					moves->emplace_back(E1, G1, KING_CASTLE, this->castle_flags);
+					moves->emplace_back(E1, G1, CASTLE, this->castle_flags);
 				}
 			}
 		}
 
 		if ((castle_flags & WHITEQ) != 0)
 		{
-			bool isOpen = (((ONE_BIT << B1) | (ONE_BIT << C1) | (ONE_BIT << D1)) & this->GetOccupancy()) == 0;
+			bool isOpen = (WHITEQ_CASTLE_MASK & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
 				bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) || IsSquareAttacked(E1, WHITE));
 				if (notChecked)
 				{
-					moves->emplace_back(E1, C1, QUEEN_CASTLE, this->castle_flags);
+					moves->emplace_back(E1, C1, CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -1106,31 +1106,33 @@ namespace Panzer
 		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
+
 		if ((castle_flags & BLACKK) != 0)
 		{
-			bool isOpen = (((ONE_BIT << F8) | (ONE_BIT << G8)) & this->GetOccupancy()) == 0;
+			bool isOpen = (BLACKK_CASTLE_MASK & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
 				bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) || IsSquareAttacked(E8, BLACK));
 				if (notChecked)
 				{
-					moves->emplace_back(E8, G8, KING_CASTLE, this->castle_flags);
+					moves->emplace_back(E8, G8, CASTLE, this->castle_flags);
 				}
 			}
 		}
 
 		if ((castle_flags & BLACKQ) != 0)
 		{
-			bool isOpen = (((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8)) & this->GetOccupancy()) == 0;
+			bool isOpen = (BLACKQ_CASTLE_MASK & this->GetOccupancy()) == 0;
 			if (isOpen)
 			{
 				bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) || IsSquareAttacked(E8, BLACK));
 				if (notChecked)
 				{
-					moves->emplace_back(E8, C8, QUEEN_CASTLE, this->castle_flags);
+					moves->emplace_back(E8, C8, CASTLE, this->castle_flags);
 				}
 			}
 		}
+
 		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
 	}
 

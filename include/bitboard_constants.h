@@ -87,7 +87,7 @@ const std::array<mask, 15> NE_DIAGONALS =
 
 const bitboard FILLED_BOARD = ~0ULL;
 
-const std::array<bitboard, 8> knight_move_masks = 
+const bitboard knight_move_masks[8] = 
 { 
     ~(G_FILE|H_FILE), // A_FILE
     ~(H_FILE), // B_FILE
@@ -201,6 +201,11 @@ const castle_flag WHITEQ = 2;
 const castle_flag BLACKK = 4;
 const castle_flag BLACKQ = 8;
 const castle_flag ALL_CASTLE_FLAGS = WHITEK | WHITEQ | BLACKK | BLACKQ;
+
+const mask BLACKK_CASTLE_MASK = ((ONE_BIT << F8) | (ONE_BIT << G8));;
+const mask BLACKQ_CASTLE_MASK = ((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8));;
+const mask WHITEK_CASTLE_MASK = ((ONE_BIT << F1) | (ONE_BIT << G1));
+const mask WHITEQ_CASTLE_MASK = ((ONE_BIT << B1) | (ONE_BIT << C1) | (ONE_BIT << D1));
 
 const direction NW = 7;
 const direction N = 8;
@@ -402,20 +407,19 @@ const bitboard KNIGHT_SPANS[64] = {
 };
 
 
-const move_flag NO_MOVE_FLAGS = 0;
-const move_flag DOUBLE_PAWN_PUSH = 1;
-const move_flag KING_CASTLE = 2;
-const move_flag QUEEN_CASTLE = 3;
-const move_flag CAPTURE = 4;
-const move_flag EP_CAPTURE = 5;
-const move_flag KNIGHT_PROMO = 8;
-const move_flag BISHOP_PROMO = 9;
-const move_flag ROOK_PROMO = 10;
-const move_flag QUEEN_PROMO = 11;
-const move_flag KNIGHT_PROMO_CAPTURE = 12;
-const move_flag BISHOP_PROMO_CAPTURE = 13;
-const move_flag ROOK_PROMO_CAPTURE = 14;
-const move_flag QUEEN_PROMO_CAPTURE = 15;
+const move_flag NO_MOVE_FLAGS =         0b00000000;
+const move_flag DOUBLE_PAWN_PUSH =      0b00000001;
+const move_flag CASTLE =                0b00000010;
+const move_flag CAPTURE =               0b00000100;
+const move_flag EP_CAPTURE =            0b00001100;
+const move_flag KNIGHT_PROMO =          0b00010000;
+const move_flag BISHOP_PROMO =          0b00100000;
+const move_flag ROOK_PROMO =            0b01000000;
+const move_flag QUEEN_PROMO =           0b10000000;
+const move_flag KNIGHT_PROMO_CAPTURE =  0b00010100;
+const move_flag BISHOP_PROMO_CAPTURE =  0b00100100;
+const move_flag ROOK_PROMO_CAPTURE =    0b01000100;
+const move_flag QUEEN_PROMO_CAPTURE =   0b10000100;
 
 const bitboard rank_EP_masks[65] =
 {

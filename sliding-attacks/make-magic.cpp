@@ -321,8 +321,6 @@ void GenerateMagic(square i,
 
 void WriteToFile(std::string piece_name, const int shifts[], mask_array masks, magics_array magics, square_bitboards attacks)
 {
-
-    // write em all to files
     std::ofstream shift_file;
     std::ofstream mask_file;
     std::ofstream magics_file;

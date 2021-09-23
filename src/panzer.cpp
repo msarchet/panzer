@@ -12,6 +12,7 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
 void ProcessInputs();
 std::string GetNextToken(std::string &line, std::string delimeter);
 std::ofstream debug_file;
+std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
 int main (int argc, char *argv[])
 {
@@ -91,7 +92,6 @@ void ProcessInputs()
             uint64_t total_count = 0;
             const auto perftBoard = new Panzer::Board(*board);
 
-            std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
             start = std::chrono::high_resolution_clock::now();
 
