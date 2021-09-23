@@ -202,8 +202,8 @@ const castle_flag BLACKK = 4;
 const castle_flag BLACKQ = 8;
 const castle_flag ALL_CASTLE_FLAGS = WHITEK | WHITEQ | BLACKK | BLACKQ;
 
-const mask BLACKK_CASTLE_MASK = ((ONE_BIT << F8) | (ONE_BIT << G8));;
-const mask BLACKQ_CASTLE_MASK = ((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8));;
+const mask BLACKK_CASTLE_MASK = ((ONE_BIT << F8) | (ONE_BIT << G8));
+const mask BLACKQ_CASTLE_MASK = ((ONE_BIT << B8) | (ONE_BIT << C8) | (ONE_BIT << D8));
 const mask WHITEK_CASTLE_MASK = ((ONE_BIT << F1) | (ONE_BIT << G1));
 const mask WHITEQ_CASTLE_MASK = ((ONE_BIT << B1) | (ONE_BIT << C1) | (ONE_BIT << D1));
 
