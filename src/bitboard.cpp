@@ -1,6 +1,7 @@
 #include "bitboard.h"
 #include "bitboard_constants.h"
 #include "board_utils.h"
+#include "piece_square_scores.h"
 #include <sstream>
 
 namespace Panzer
@@ -153,6 +154,43 @@ namespace Panzer
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
 		this->pieceLookup->at(s) = NO_PIECE;
+	}
+
+	void Board::PushMove(MoveVector moves, square from, square to, move_flag flags, castle_flag castleFlags, piece captured, square epSquare)
+	{
+		int score = 0;
+
+		if (captured != NO_PIECE)
+		{
+			score += SORT_CAPTURE + CAPTURE_SCORES[captured];
+		}
+
+		if (flags & KNIGHT_PROMO)
+		{
+			score += SORT_PROMO + CAPTURE_SCORES[KNIGHT];
+		}
+		else if (flags & ROOK_PROMO)
+		{
+			score += SORT_PROMO + CAPTURE_SCORES[ROOK];
+		}
+		else if (flags & BISHOP_PROMO)
+		{
+			score += SORT_PROMO + CAPTURE_SCORES[BISHOP];
+		}
+		else if (flags & QUEEN_PROMO)
+		{
+			score += SORT_PROMO + CAPTURE_SCORES[QUEEN];
+		}
+
+		moves->emplace_back(
+			from,
+			to,
+			flags,
+			castleFlags,
+			captured,
+			ep_square == NO_SQUARE ? this->ep_square : ep_square,
+			score
+		);
 	}
 
 	MoveVector Board::GenerateMoves()
@@ -485,22 +523,13 @@ namespace Panzer
 			this->ToggleBitBoards(move.getTo(), move.getFrom(), this->GetPieceAtSquare(move.getTo()), this->side_to_move);
 		}
 		
+		this->ep_square = move.getPriorEPSquare();
+
 		// put captured piece back
 		if (move.isCapture())
 		{
 			if (move.isEPCapture())
 			{
-				square epCaptured;
-				if (this->side_to_move == BLACK)
-				{
-					epCaptured = move.getTo() + N;
-				}
-				else
-				{
-					epCaptured = move.getTo() - S;
-				}
-
-				this->ep_square = epCaptured;
 				this->FillSquare(this->ep_square, PAWN, !this->side_to_move);
 			}
 			else
@@ -549,7 +578,8 @@ namespace Panzer
 		{
 			square from = GetLSB(ep_captures);
 			square to = this->ep_square + N;
-			moves->emplace_back(
+			PushMove(
+				moves,
 				from,
 				to,
 				EP_CAPTURE,
@@ -563,8 +593,8 @@ namespace Panzer
 			int index = GetLSB(right_captures);
 			square to = index;
 			square from = to - SW;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				CAPTURE,
@@ -579,8 +609,8 @@ namespace Panzer
 			int index = GetLSB(left_captures);
 			square to = index;
 			square from = to - SE;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				CAPTURE,
@@ -597,8 +627,8 @@ namespace Panzer
 			int index = GetLSB(pushes);
 			square to = index;
 			square from = to - S;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				NO_MOVE_FLAGS,
@@ -613,8 +643,8 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to - SS;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				DOUBLE_PAWN_PUSH,
@@ -630,32 +660,32 @@ namespace Panzer
 			int index = GetLSB(promotions);
 			square to = index;
 			square from = to - S;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				QUEEN_PROMO,
 				this->castle_flags
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				ROOK_PROMO,
 				this->castle_flags
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				KNIGHT_PROMO,
 				this->castle_flags
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				BISHOP_PROMO,
@@ -670,8 +700,8 @@ namespace Panzer
 			int index = GetLSB(promotion_right_captures);
 			square to = index;
 			square from = to - SW;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
@@ -679,8 +709,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
@@ -688,8 +718,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
@@ -697,14 +727,15 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+
 			promotion_right_captures &= promotion_right_captures - 1ULL;
 		}
 
@@ -713,8 +744,8 @@ namespace Panzer
 			int index = GetLSB(promotion_left_captures);
 			square to = index;
 			square from = to - SE;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
@@ -722,8 +753,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
@@ -731,8 +762,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
@@ -740,8 +771,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
@@ -801,7 +832,7 @@ namespace Panzer
 				bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) || IsSquareAttacked(E1, WHITE));
 				if (notChecked)
 				{
-					moves->emplace_back(E1, G1, CASTLE, this->castle_flags);
+					PushMove(moves,E1, G1, CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -814,7 +845,7 @@ namespace Panzer
 				bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) || IsSquareAttacked(E1, WHITE));
 				if (notChecked)
 				{
-					moves->emplace_back(E1, C1, CASTLE, this->castle_flags);
+					PushMove(moves,E1, C1, CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -862,8 +893,8 @@ namespace Panzer
 		{
 			square from = GetLSB(ep_captures);
 			square to = this->ep_square - S;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				EP_CAPTURE,
@@ -879,8 +910,8 @@ namespace Panzer
 			int index = GetLSB(right_captures);
 			square to = index;
 			square from = to + NW;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				CAPTURE,
@@ -896,8 +927,8 @@ namespace Panzer
 			int index = GetLSB(left_captures);
 			square to = index;
 			square from = to + NE;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				CAPTURE,
@@ -914,8 +945,8 @@ namespace Panzer
 			int index = GetLSB(pushes);
 			square to = index;
 			square from = to + N;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				NO_MOVE_FLAGS,
@@ -930,8 +961,8 @@ namespace Panzer
 			int index = GetLSB(double_push);
 			square to = index;
 			square from = to + NN;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				DOUBLE_PAWN_PUSH,
@@ -946,32 +977,32 @@ namespace Panzer
 			int index = GetLSB(promotions);
 			square to = index;
 			square from = to + N ;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				QUEEN_PROMO,
 				this->castle_flags
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				ROOK_PROMO,
 				this->castle_flags
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				KNIGHT_PROMO,
 				this->castle_flags
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from, 
 				to, 
 				BISHOP_PROMO,
@@ -986,8 +1017,8 @@ namespace Panzer
 			int index = GetLSB(promotion_right_captures);
 			square to = index;
 			square from = to + NW;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
@@ -995,8 +1026,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
@@ -1004,8 +1035,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
@@ -1013,8 +1044,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
@@ -1029,8 +1060,8 @@ namespace Panzer
 			int index = GetLSB(promotion_left_captures);
 			square to = index;
 			square from = to + NE;
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
@@ -1038,8 +1069,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
@@ -1047,8 +1078,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
@@ -1056,8 +1087,8 @@ namespace Panzer
 				this->GetPieceAtSquare(to)
 			);
 
-			moves->emplace_back
-			(
+			PushMove(
+				moves,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
@@ -1115,7 +1146,7 @@ namespace Panzer
 				bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) || IsSquareAttacked(E8, BLACK));
 				if (notChecked)
 				{
-					moves->emplace_back(E8, G8, CASTLE, this->castle_flags);
+					PushMove(moves,E8, G8, CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -1128,7 +1159,7 @@ namespace Panzer
 				bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) || IsSquareAttacked(E8, BLACK));
 				if (notChecked)
 				{
-					moves->emplace_back(E8, C8, CASTLE, this->castle_flags);
+					PushMove(moves,E8, C8, CASTLE, this->castle_flags);
 				}
 			}
 		}
@@ -1148,7 +1179,8 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				moves->emplace_back(
+				PushMove(
+					moves,
 					from,
 					to,
 					CAPTURE,
@@ -1163,7 +1195,8 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				moves->emplace_back(
+				PushMove(
+					moves,
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -1193,8 +1226,8 @@ namespace Panzer
 			while (captures != 0)
 			{
 				int to = this->GetLSB(captures);
-				moves->emplace_back
-				(
+				PushMove(
+					moves,
 					from,
 					to,
 					CAPTURE,
@@ -1208,8 +1241,8 @@ namespace Panzer
 			while (regular != 0)
 			{
 				int to = this->GetLSB(regular);
-				moves->emplace_back
-				(
+				PushMove(
+					moves,
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -1235,7 +1268,8 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				moves->emplace_back(
+				PushMove(
+					moves,
 					from,
 					to,
 					CAPTURE,
@@ -1250,7 +1284,8 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				moves->emplace_back(
+				PushMove(
+					moves,
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -1276,7 +1311,8 @@ namespace Panzer
 			while (captures != 0)
 			{
 				square to = GetLSB(captures);
-				moves->emplace_back(
+				PushMove(
+					moves,
 					from,
 					to,
 					CAPTURE,
@@ -1291,7 +1327,8 @@ namespace Panzer
 			while (slides != 0)
 			{
 				square to = GetLSB(slides);
-				moves->emplace_back(
+				PushMove(
+					moves,
 					from,
 					to,
 					NO_MOVE_FLAGS,
@@ -1317,8 +1354,8 @@ namespace Panzer
 			while (captures != 0)
 			{
 				int to = this->GetLSB(captures);
-				moves->emplace_back
-				(
+				PushMove(
+					moves,
 					from,
 					to,
 					CAPTURE,
@@ -1333,8 +1370,8 @@ namespace Panzer
 			while (regular_moves != 0)
 			{
 				int to = this->GetLSB(regular_moves);
-				moves->emplace_back
-				(
+				PushMove(
+					moves,
 					from,
 					to,
 					NO_MOVE_FLAGS,

@@ -6,11 +6,9 @@
 #include <iostream>
 
 #include "bitboard_constants.h"
-#include "move.h"
 #include "board_utils.h"
 #include "sliders.h"
 
-typedef std::shared_ptr<std::vector<Panzer::Move> > MoveVector;
 
 namespace Panzer
 {
@@ -79,6 +77,7 @@ namespace Panzer
 
 		bitboard GetOccupancy() { return Colors->at(WHITE) | Colors->at(BLACK); }
 		color GetSideToMove() { return side_to_move; } 
+		square GetEpSquare() { return ep_square; }
 
 		void MakeMove(const Move move);
 		void UnmakeMove(const Move move);
@@ -111,6 +110,7 @@ namespace Panzer
 		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side);
 		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side);
 		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side);
+        void PushMove(MoveVector moves, square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE);
 	}; //class Board
      
 } //namespace Panzer

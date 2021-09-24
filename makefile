@@ -1,9 +1,9 @@
 CC=g++
 STD=-std=c++17
 INCLUDE=-I ./include
-MAIN=./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./src/bitboard.cpp ./src/panzer.cpp
+MAIN=./src/eval.cpp ./src/search.cpp ./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./src/bitboard.cpp ./src/panzer.cpp
 MAGIC=./src/board_utils.cpp ./sliding-attacks/make-magic.cpp
-TEST=./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./src/bitboard.cpp ./tests/main.cpp
+TEST=./src/eval.cpp ./src/search.cpp ./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./src/bitboard.cpp ./tests/main.cpp
 DEBUG_OPTS=-ggdb -g3
 
 main:
@@ -22,7 +22,7 @@ magic-debug:
 	$(CC) $(STD) $(INCLUDE) $(MAGIC) $(DEBUG_OPTS) -Wall -o magic-debug
 
 test:
-	$(CC) $(STD) $(INCLUDE) $(TEST) -Wall -lpthread -o test
+	$(CC) $(STD) $(INCLUDE) $(TEST) -Wall -lpthread -O3 -o test
 
 test-debug:
 	$(CC) $(STD) $(INCLUDE) $(TEST) $(DEBUG_OPTS) -Wall -lpthread -o test-debug

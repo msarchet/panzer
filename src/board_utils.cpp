@@ -1,5 +1,6 @@
+#include "bitboard_constants.h"
 #include "board_utils.h"
-
+#include <algorithm>
 namespace Panzer
 {
     void Utils::PrintBoard(bitboard board)
@@ -22,6 +23,43 @@ namespace Panzer
 			std::cout << std::endl;
 		}
     }
+
+	std::string Utils::PrintMove(Panzer::Move move)
+	{
+		auto output = squareToString[move.getFrom()] + squareToString[move.getTo()];
+
+		if (move.isPromo())
+		{
+			if (move.getFlags() && QUEEN_PROMO)
+			{
+				output += "q";
+			}
+			if (move.getFlags() && BISHOP_PROMO)
+			{
+				output += "b";
+			}
+			if (move.getFlags() && KNIGHT_PROMO)
+			{
+				output += "n";
+			}
+			if (move.getFlags() && ROOK_PROMO)
+			{
+				output += "r";
+			}
+		}
+
+		return output;
+	}
+
+	bool Utils::MoveSorter(Panzer::Move move_one, Panzer::Move move_two)
+	{
+		return move_one.m_score > move_two.m_score;
+	}
+
+	void Utils::SortMoves(MoveVector &moves)
+	{
+		std::stable_sort(moves->begin(), moves->end(), MoveSorter);
+	}
 
 	std::shared_ptr<std::array<unsigned int, 624>> Utils::GetSeedData()
 	{
