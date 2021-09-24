@@ -13,4 +13,12 @@ panzer
 panzerbb-profile
 magic
 magic-debug
+test
+test-debug
+
+*.o
+*.obj
+*.pdb
+x64/
+
 
