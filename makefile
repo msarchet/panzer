@@ -1,7 +1,7 @@
-CC=g++
-STD=-std=c++17
+CC=g++-11
+STD=-std=c++20
 INCLUDE=-I ./include
-MAIN=./src/eval.cpp ./src/search.cpp ./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./src/bitboard.cpp ./src/panzer.cpp
+MAIN=./src/com.cpp ./src/eval.cpp ./src/search.cpp ./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./src/bitboard.cpp ./src/panzer.cpp
 MAGIC=./src/board_utils.cpp ./sliding-attacks/make-magic.cpp
 TEST=./src/eval.cpp ./src/search.cpp ./src/board_utils.cpp ./sliding-attacks/sliders.cpp ./tests/slider_tests.cpp ./tests/check_tests.cpp ./src/bitboard.cpp ./tests/main.cpp
 DEBUG_OPTS=-ggdb -g3

@@ -104,7 +104,7 @@ int EvaluateBoard(Board &board)
 
 	auto score = whiteScore - blackScore;
 
-	return board.GetSideToMove() == WHITE ? score : -score;
+	return board.GetSideToMove() == WHITE ? score : -1 * score;
 };
 
 };

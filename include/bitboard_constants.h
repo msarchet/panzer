@@ -507,6 +507,7 @@ namespace Panzer
         castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS;
         square priorEP = NO_SQUARE;
         int m_score = 0;
+        int id = -1;
 
         Move(square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE, int score = 0)
         {

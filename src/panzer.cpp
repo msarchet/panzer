@@ -8,6 +8,7 @@
 #include "bitboard.h"
 #include "board_utils.h"
 #include "search.h"
+#include "com.h"
 
 uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
 void ProcessInputs();
@@ -17,9 +18,11 @@ std::ofstream debug_file;
 int main (int argc, char *argv[])
 {
     Panzer::InitEvalData();
-    debug_file.open("debug.dat", std::ios_base::app);
+    Panzer::Com::OpenDebugFile();
+
+    Panzer::Com::SendMessageToUI("Hello welcome to Panzer, created by Michael Sarchet");
     ProcessInputs();
-    debug_file.close();
+    Panzer::Com::CloseDebugFile();
 }
 
 void ProcessInputs()
@@ -125,14 +128,26 @@ void ProcessInputs()
         if (token == "search")
         {
             auto searchBoard = Panzer::Board(*board);
-            auto searchedMove = Panzer::Search::Search(searchBoard, 4);
-            std::cout << Panzer::Utils::PrintMove(searchedMove);
+            int depth = 2;
+            token = GetNextToken(line, " ");
+            if (!token.empty())
+            {
+                depth = std::stoi(token);
+            }
+
+            auto searchedMove = Panzer::Search::Search(searchBoard, depth);
+            Panzer::Com::SendMessageToUI(Panzer::Utils::PrintMove(searchedMove));
         }
 
         if (token == "quit" || token == "q")
         {
             std::cout << "Goodbye!" << std::endl;
             exit = true;
+        }
+
+        if (token == "debug")
+        {
+            Panzer::Com::SetDebug(true);
         }
     }
 

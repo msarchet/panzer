@@ -182,7 +182,7 @@ namespace Panzer
 			score += SORT_PROMO + CAPTURE_SCORES[QUEEN];
 		}
 
-		moves->emplace_back(
+		auto move = Panzer::Move(
 			from,
 			to,
 			flags,
@@ -191,43 +191,45 @@ namespace Panzer
 			ep_square == NO_SQUARE ? this->ep_square : ep_square,
 			score
 		);
+		move.id = moves->size();
+		moves->emplace_back(move);
 	}
 
-	MoveVector Board::GenerateMoves()
+	MoveVector Board::GenerateMoves(bool captures)
 	{
 		switch (this->side_to_move)
 		{
 			case WHITE:
-				return GenerateWhiteMoves();
+				return GenerateWhiteMoves(captures);
 			case BLACK:
-				return GenerateBlackMoves();
+				return GenerateBlackMoves(captures);
 		}
 		return std::make_shared<std::vector<Move> >();
 	}
 
-	MoveVector Board::GenerateWhiteMoves()
+	MoveVector Board::GenerateWhiteMoves(bool captures)
 	{
 		auto moves = std::make_shared<std::vector<Move> >();
 		moves->reserve(256);
-		this->MakeWhitePawnMoves(moves);
-		this->MakeWhiteRooksMoves(moves);
-		this->MakeWhiteKnightMoves(moves);
-		this->MakeWhiteBishopMoves(moves);
-		this->MakeWhiteQueenMoves(moves);
-		this->MakeWhiteKingMoves(moves);
+		this->MakeWhitePawnMoves(moves, captures);
+		this->MakeWhiteRooksMoves(moves, captures);
+		this->MakeWhiteKnightMoves(moves, captures);
+		this->MakeWhiteBishopMoves(moves, captures);
+		this->MakeWhiteQueenMoves(moves, captures);
+		this->MakeWhiteKingMoves(moves, captures);
 		return moves;
 	}
 
-	MoveVector Board::GenerateBlackMoves()
+	MoveVector Board::GenerateBlackMoves(bool captures)
 	{
 		auto moves = std::make_shared<std::vector<Move> >();
 		moves->reserve(256);
-		this->MakeBlackPawnMoves(moves);
-		this->MakeBlackRooksMoves(moves);
-		this->MakeBlackKnightMoves(moves);
-		this->MakeBlackBishopMoves(moves);
-		this->MakeBlackQueenMoves(moves);
-		this->MakeBlackKingMoves(moves);
+		this->MakeBlackPawnMoves(moves, captures);
+		this->MakeBlackRooksMoves(moves, captures);
+		this->MakeBlackKnightMoves(moves, captures);
+		this->MakeBlackBishopMoves(moves, captures);
+		this->MakeBlackQueenMoves(moves, captures);
+		this->MakeBlackKingMoves(moves, captures);
 		return moves;
 	}
 
@@ -539,7 +541,7 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeWhitePawnMoves(MoveVector moves)
+	void Board::MakeWhitePawnMoves(MoveVector moves, bool captures)
 	{
 		// generate pawn moves
 		// first shift pawns up one
@@ -786,39 +788,39 @@ namespace Panzer
 
 	}
 
-	void Board::MakeWhiteRooksMoves(MoveVector moves)
+	void Board::MakeWhiteRooksMoves(MoveVector moves, bool captures)
 	{
 		auto rooks = this->GetWhiteRooks();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeRookMoves(moves, rooks, white_pieces, black_pieces);
+		this->MakeRookMoves(moves, rooks, white_pieces, black_pieces, captures);
 	}
 
-	void Board::MakeWhiteKnightMoves(MoveVector moves)
+	void Board::MakeWhiteKnightMoves(MoveVector moves, bool captures)
 	{
 		auto knights = this->GetWhiteKnights();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeKnightMoves(moves, knights, white_pieces, black_pieces);
+		this->MakeKnightMoves(moves, knights, white_pieces, black_pieces, captures);
 	}
 
-	void Board::MakeWhiteBishopMoves(MoveVector moves)
+	void Board::MakeWhiteBishopMoves(MoveVector moves, bool captures)
 	{
 		auto bishops = this->GetWhiteBishops();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeBishopMoves(moves, bishops, white_pieces, black_pieces);
+		this->MakeBishopMoves(moves, bishops, white_pieces, black_pieces, captures);
 	}
 
-	void Board::MakeWhiteQueenMoves(MoveVector moves)
+	void Board::MakeWhiteQueenMoves(MoveVector moves, bool captures)
 	{
 		auto queens = this->GetWhiteQueens();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeQueenMoves(moves, queens, white_pieces, black_pieces);
+		this->MakeQueenMoves(moves, queens, white_pieces, black_pieces, captures);
 	}
 
-	void Board::MakeWhiteKingMoves(MoveVector moves)
+	void Board::MakeWhiteKingMoves(MoveVector moves, bool captures)
 	{
 		auto kings = this->GetWhiteKings();
 		auto white_pieces = this->GetWhitePieces();
@@ -852,7 +854,7 @@ namespace Panzer
 		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
 	}
 
-	void Board::MakeBlackPawnMoves(MoveVector moves)
+	void Board::MakeBlackPawnMoves(MoveVector moves, bool captures)
 	{
 		// generate pawn moves
 		// first shift pawns up one
@@ -1100,39 +1102,39 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeBlackRooksMoves(MoveVector moves)
+	void Board::MakeBlackRooksMoves(MoveVector moves, bool captures)
 	{
 		auto rooks = this->GetBlackRooks();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeRookMoves(moves, rooks, black_pieces, white_pieces);
+		this->MakeRookMoves(moves, rooks, black_pieces, white_pieces, captures);
 	}
 
-	void Board::MakeBlackKnightMoves(MoveVector moves)
+	void Board::MakeBlackKnightMoves(MoveVector moves, bool captures)
 	{
 		auto knights = this->GetBlackKnights();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeKnightMoves(moves, knights, black_pieces, white_pieces);
+		this->MakeKnightMoves(moves, knights, black_pieces, white_pieces, captures);
 	}
 
-	void Board::MakeBlackBishopMoves(MoveVector moves)
+	void Board::MakeBlackBishopMoves(MoveVector moves, bool captures)
 	{
 		auto bishops = this->GetBlackBishops();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeBishopMoves(moves, bishops, black_pieces, white_pieces);
+		this->MakeBishopMoves(moves, bishops, black_pieces, white_pieces, captures);
 	}
 
-	void Board::MakeBlackQueenMoves(MoveVector moves)
+	void Board::MakeBlackQueenMoves(MoveVector moves, bool captures)
 	{
 		auto queens = this->GetBlackQueens();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeQueenMoves(moves, queens, black_pieces, white_pieces);
+		this->MakeQueenMoves(moves, queens, black_pieces, white_pieces, captures);
 	}
 
-	void Board::MakeBlackKingMoves(MoveVector moves)
+	void Board::MakeBlackKingMoves(MoveVector moves, bool captures)
 	{
 		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
@@ -1167,7 +1169,7 @@ namespace Panzer
 		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
 	}
 
-	void Board::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side)
+	void Board::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side, bool captures)
 	{
 		auto occupancy = same_side | other_side;
 		while (rooks != 0)
@@ -1210,7 +1212,7 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side)
+	void Board::MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side, bool captures)
 	{
 
 		while (knights != 0)
@@ -1256,7 +1258,7 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side)
+	void Board::MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side, bool captures)
 	{
 		auto occupancy = same_side | other_side;
 		while (bishops != 0)
@@ -1299,7 +1301,7 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side)
+	void Board::MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side, bool captures)
 	{
 		auto occupancy = same_side | other_side;
 		while (queens != 0)
@@ -1341,7 +1343,7 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side)
+	void Board::MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side, bool captures)
 	{
 		while (kings != 0)
 		{

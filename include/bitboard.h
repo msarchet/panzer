@@ -55,9 +55,9 @@ namespace Panzer
 		void ClearSquare(square s,piece p, color c);
 		void PrintBoard();
 
-		MoveVector GenerateMoves();
-		MoveVector GenerateWhiteMoves();
-		MoveVector GenerateBlackMoves();
+		MoveVector GenerateMoves(bool captures = false);
+		MoveVector GenerateWhiteMoves(bool captures = false);
+		MoveVector GenerateBlackMoves(bool captures = false);
 
 		bitboard GetWhitePieces() { return Colors->at(WHITE); };
 		bitboard GetWhitePawns() { return Pieces->at(PAWN) & Colors->at(WHITE); };
@@ -92,24 +92,24 @@ namespace Panzer
 	private:
 		int GetMSB(bitboard b);
 		int GetLSB(bitboard b);
-		void MakeWhitePawnMoves(MoveVector moves);
-		void MakeWhiteRooksMoves(MoveVector moves);
-		void MakeWhiteKnightMoves(MoveVector moves);
-		void MakeWhiteBishopMoves(MoveVector moves);
-		void MakeWhiteQueenMoves(MoveVector moves);
-		void MakeWhiteKingMoves(MoveVector moves);
-		void MakeBlackPawnMoves(MoveVector moves);
-		void MakeBlackRooksMoves(MoveVector moves);
-		void MakeBlackKnightMoves(MoveVector moves);
-		void MakeBlackBishopMoves(MoveVector moves);
-		void MakeBlackQueenMoves(MoveVector moves);
-		void MakeBlackKingMoves(MoveVector moves);
+		void MakeWhitePawnMoves(MoveVector moves, bool captures = false);
+		void MakeWhiteRooksMoves(MoveVector moves, bool captures = false);
+		void MakeWhiteKnightMoves(MoveVector moves, bool captures = false);
+		void MakeWhiteBishopMoves(MoveVector moves, bool captures = false);
+		void MakeWhiteQueenMoves(MoveVector moves, bool captures = false);
+		void MakeWhiteKingMoves(MoveVector moves, bool captures = false);
+		void MakeBlackPawnMoves(MoveVector moves, bool captures = false);
+		void MakeBlackRooksMoves(MoveVector moves, bool captures = false);
+		void MakeBlackKnightMoves(MoveVector moves, bool captures = false);
+		void MakeBlackBishopMoves(MoveVector moves, bool captures = false);
+		void MakeBlackQueenMoves(MoveVector moves, bool captures = false);
+		void MakeBlackKingMoves(MoveVector moves, bool captures = false);
 
-		void MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side);
-		void MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side);
-		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side);
-		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side);
-		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side);
+		void MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side, bool captures = false);
+		void MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side, bool captures = false);
+		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side, bool captures = false);
+		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side, bool captures = false);
+		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side, bool captures = false);
         void PushMove(MoveVector moves, square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE);
 	}; //class Board
      

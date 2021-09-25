@@ -11,6 +11,8 @@
 
 #include "eval.h"
 #include "search.h"
+#include "com.h"
+
 bool SortMoves(Panzer::Move one, Panzer::Move two);
 
 bool SortMoves(Panzer::Move one, Panzer::Move two)
@@ -21,6 +23,7 @@ bool SortMoves(Panzer::Move one, Panzer::Move two)
 int main()
 {
     Panzer::InitEvalData();
+    Panzer::Com::OpenDebugFile();
     auto slider_tests = new Panzer::SlidingTests();
     std::cout << "Running Tests" << std::endl;
     std::cout << "DERP";
@@ -126,15 +129,13 @@ int main()
     std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
     start = std::chrono::high_resolution_clock::now();
-
+    auto best = Panzer::Search::Search(*board, 8);
+    std::cout << Panzer::Utils::PrintMove(best);
     end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout.precision(5);
     std::cout << elapsed_seconds.count() << std::endl;
 
-    auto e2e4 = Panzer::Move(E2, E4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS, NO_PIECE, E4, 0);
-    std::cout << Panzer::EvaluateBoard(*board);
-    board->MakeMove(e2e4);
-    std::cout << Panzer::EvaluateBoard(*board);
+
 }
