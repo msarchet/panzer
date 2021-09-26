@@ -24,6 +24,7 @@ int main (int argc, char *argv[])
     Panzer::Com::SendMessageToUI("Hello welcome to Panzer, created by Michael Sarchet");
     ProcessInputs();
     Panzer::Com::CloseDebugFile();
+    return 0;
 }
 
 void ProcessInputs()
@@ -59,20 +60,59 @@ void ProcessInputs()
 
             while (!token.empty())
             {
-                // attempt to make a move
+                if (token.length() < 4)
+                {
+                    std::cout << token;
+                    break;
+                }
+
                 auto from = stringToSquare(token.substr(0, 2));
                 auto to = stringToSquare(token.substr(2, 2));
-
+                std::string promotion = "";
+                if (token.length() == 5)
+                {
+                    promotion = token.substr(4, 1);
+                }
                 auto possibleMoves = board->GenerateMoves();
                 auto foundMove = Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS);
                 auto foundValidMove = false;
-                for (auto it = possibleMoves->begin(); it != possibleMoves->end(); it++)
+                for (auto it = possibleMoves->begin(); it != possibleMoves->end() && !foundValidMove; it++)
                 {
                     auto possibleMove = *it;
                     if (possibleMove.getFrom() == from && possibleMove.getTo() == to)
                     {
-                        foundMove = possibleMove; 
-                        foundValidMove = true;
+                        if (promotion.empty())
+                        {
+                            foundValidMove = true;
+                        }
+                        else
+                        {
+                            if (!possibleMove.isPromo())
+                            {
+                                continue;
+                            }
+                            if (promotion == "q" && (possibleMove.getFlags() & QUEEN_PROMO))
+                            {
+                                foundValidMove = true;
+                            }
+                            if (promotion == "b" && (possibleMove.getFlags() & BISHOP_PROMO))
+                            {
+                                foundValidMove = true;
+                            }
+                            if (promotion == "n" && (possibleMove.getFlags() & KNIGHT_PROMO))
+                            {
+                                foundValidMove = true;
+                            }
+                            if (promotion == "r" && (possibleMove.getFlags() & ROOK_PROMO))
+                            {
+                                foundValidMove = true;
+                            }
+                        }
+
+                        if (foundValidMove)
+                        {
+                            foundMove = possibleMove; 
+                        }
                     }
                 }
 

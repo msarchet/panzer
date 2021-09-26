@@ -8,14 +8,14 @@ namespace Panzer
 {
 	std::string Board::PrintMoveChain()
 	{
-		std::string chain = "";
+		std::stringstream chain;
     	for (auto it = moveChain->begin(); it != moveChain->end(); it++)
 		{
 			auto move = *it;
-			chain += squareToString[move.getFrom()] + squareToString[move.getTo()] + " ";
+			chain << Utils::PrintMove(move);
 		}
 
-		return chain;
+		return chain.str();
 	}
 
 	piece Board::GetPieceAtSquare(square s)

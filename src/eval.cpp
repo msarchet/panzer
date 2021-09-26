@@ -64,6 +64,9 @@ int EvaluateBoard(Board &board)
 	auto blackKnightCount = __builtin_popcountll(board.GetBlackKnights());
 	auto blackQueenCount = __builtin_popcountll(board.GetBlackQueens());
 
+	auto whitePieces = board.GetWhitePieces();
+	auto blackPieces = board.GetBlackPieces();
+
 	auto phase = PAWN_PHASE * (whitePawnCount + blackPawnCount)
 		+ QUEEN_PHASE * (whiteQueenCount + blackQueenCount)
 		+ ROOK_PHASE * (whiteRookCount + blackRookCount)
@@ -100,7 +103,7 @@ int EvaluateBoard(Board &board)
 		auto piece = board.GetPieceAtSquare(s);
 		if (piece != NO_PIECE)
 		{
-			auto color = ((ONE_BIT << s) & board.GetWhitePieces()) ? WHITE : BLACK;
+			auto color = ((ONE_BIT << s) & whitePieces) ? WHITE : BLACK;
 			if (color == WHITE)
 			{
 				whiteScoreMid += data.MidGamePieceSquareScore[piece][WHITE][s];

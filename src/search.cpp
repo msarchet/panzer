@@ -48,8 +48,11 @@ namespace Search
 					bestMoveIndex = moveIndex;
 				}
 
-				auto output = "Top Depth " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta) + ": Move Score: " + std::to_string(score);
-				Panzer::Com::OutputDebugFile(output);
+				if (Panzer::Com::GetDebug())
+				{
+					auto output = "Top Depth " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta) + ": Move Score: " + std::to_string(score);
+					Panzer::Com::OutputDebugFile(output);
+				}
 
 				legalMoves++;
 			}
@@ -80,8 +83,11 @@ namespace Search
 						bestMoveIndex = moveIndex;
 					}
 
-					auto output = "Top Depth Iterative :" + std::to_string(iterative_depth) + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta) + ": Move Score: " + std::to_string(score);
-					Panzer::Com::OutputDebugFile(output);
+					if (Panzer::Com::GetDebug())
+					{
+						auto output = "Top Depth Iterative :" + std::to_string(iterative_depth) + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta) + ": Move Score: " + std::to_string(score);
+						Panzer::Com::OutputDebugFile(output);
+					}
 
 					legalMoves++;
 				}
@@ -109,8 +115,11 @@ namespace Search
 		if (depth == 0)  { 
 			nodes++;
 			auto eval = Quiesence(board, alpha, beta); 
-			auto output = "\t\tEVAL MAX" + std::to_string(eval) + " " + board.PrintMoveChain();
-			Panzer::Com::OutputDebugFile(output);
+			if (Panzer::Com::GetDebug())
+			{
+				auto output = "\t\tEVAL MAX" + std::to_string(eval) + " " + board.PrintMoveChain();
+				Panzer::Com::OutputDebugFile(output);
+			}
 			return eval;
 		}
 
@@ -134,15 +143,21 @@ namespace Search
 			legalMoves++;
 
 			if (score >= beta) { 
-				auto output =  "\tMax Early Cut Off " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(score);
-				Panzer::Com::OutputDebugFile(output);
+				if (Panzer::Com::GetDebug())
+				{
+					auto output =  "\tMax Early Cut Off " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(score);
+					Panzer::Com::OutputDebugFile(output);
+				}
 				board.UnmakeMove(move);
 				return beta;
 			}
 			if (score > alpha) alpha = score;
 
-			auto output = "\tMax Score "+ board.PrintMoveChain() + std::to_string(alpha) + " " +  std::to_string(score);
-			Panzer::Com::OutputDebugFile(output);
+			if (Panzer::Com::GetDebug())
+			{
+				auto output = "\tMax Score "+ board.PrintMoveChain() + std::to_string(alpha) + " " +  std::to_string(score);
+				Panzer::Com::OutputDebugFile(output);
+			}
 
 			board.UnmakeMove(move);
 		}
@@ -151,7 +166,10 @@ namespace Search
 		{ 
 			if (board.IsChecked(board.GetSideToMove()))
 			{
-				Panzer::Com::OutputDebugFile("Checkmate at " + board.PrintMoveChain());
+				if (Panzer::Com::GetDebug())
+				{
+					Panzer::Com::OutputDebugFile("Checkmate at " + board.PrintMoveChain());
+				}
 				return -9999; 
 			}
 
@@ -167,8 +185,11 @@ namespace Search
 		if (depth == 0)  { 
 			nodes++;
 			auto eval =  -1 * Quiesence(board, alpha, beta); 
-			auto output = "\t\tEVAL MIN " + std::to_string(eval) + " "+ board.PrintMoveChain();
-			Panzer::Com::OutputDebugFile(output);
+			if (Panzer::Com::GetDebug())
+			{
+				auto output = "\t\tEVAL MIN " + std::to_string(eval) + " "+ board.PrintMoveChain();
+				Panzer::Com::OutputDebugFile(output);
+			}
 			return eval;
 		}
 
@@ -191,8 +212,11 @@ namespace Search
 			score = AlphaBetaMax(board, alpha, beta, depth - 1);
 			legalMoves++;
 			if (score <= alpha)  { 
-				auto output = "\tMin Early Cut Off "+ board.PrintMoveChain() + std::to_string(score) + " " + std::to_string(beta);
-				Panzer::Com::OutputDebugFile(output);
+				if (Panzer::Com::GetDebug())
+				{
+					auto output = "\tMin Early Cut Off " + board.PrintMoveChain() + std::to_string(score) + " " + std::to_string(beta);
+					Panzer::Com::OutputDebugFile(output);
+				}
 				board.UnmakeMove(move);
 				return alpha; 
 			}
@@ -201,9 +225,11 @@ namespace Search
  				beta = score;
 			}
 
-
-			auto output = "\tMin Scores " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta);
-			Panzer::Com::OutputDebugFile(output);
+			if (Panzer::Com::GetDebug())
+			{
+				auto output = "\tMin Scores " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta);
+				Panzer::Com::OutputDebugFile(output);
+			}
 			board.UnmakeMove(move);
 		}
 
@@ -211,7 +237,10 @@ namespace Search
 		{ 
 			if (board.IsChecked(board.GetSideToMove()))
 			{
-				Panzer::Com::OutputDebugFile("Checkmate at " + board.PrintMoveChain());
+				if (Panzer::Com::GetDebug())
+				{
+					Panzer::Com::OutputDebugFile("Checkmate at " + board.PrintMoveChain());
+				}
 				return 9999; 
 			}
 

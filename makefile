@@ -12,6 +12,9 @@ main:
 main-debug:
 	$(CC) $(STD) $(INCLUDE) $(MAIN) $(DEBUG_OPTS) -lpthread -Wall -o panzer-debug
 
+main-profile:
+	$(CC) $(STD) $(INCLUDE) $(MAIN) $(DEBUG_OPTS) -O3 -lpthread -Wall -o panzer-profile
+
 main-nonoptmized:
 	$(CC) $(STD) $(INCLUDE) $(MAIN) -Wall -lpthread -o panzer-nonoptimized
 

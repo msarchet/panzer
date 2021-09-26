@@ -23,6 +23,7 @@ namespace Panzer
 		square ep_square = NO_SQUARE;
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
 		uint8_t ply = 1;
+		hash boardHash = 0;
 
 	public:
 		Board() {
@@ -49,6 +50,7 @@ namespace Panzer
 			castle_flags = board.castle_flags;
 			ply = board.ply;
 			slider_attacks = board.slider_attacks;
+			boardHash = board.boardHash;
 		}
 
 		void FillSquare(square s, piece p, color c);
@@ -78,6 +80,8 @@ namespace Panzer
 		bitboard GetOccupancy() { return Colors->at(WHITE) | Colors->at(BLACK); }
 		color GetSideToMove() { return side_to_move; } 
 		square GetEpSquare() { return ep_square; }
+		int GetPly() { return ply; }
+		hash GetHash() { return boardHash; }
 
 		void MakeMove(const Move move);
 		void UnmakeMove(const Move move);

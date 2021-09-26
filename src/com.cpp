@@ -7,7 +7,6 @@ namespace Panzer
 {
 	namespace Com
 	{
-		bool printDebug = false;
 		std::ofstream debugFileStream;
 		bool isDebugFileOpen;
 		void OpenDebugFile() 
