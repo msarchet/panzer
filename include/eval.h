@@ -7,9 +7,19 @@
 namespace Panzer
 {
 	// adjustments from CPW-Engine
-	const piece_score KNIGHT_ADJUSTMENTS[9] = { -20, -16, -12, -8, -4, 0, 4, 8 , 12 };
-	const piece_score ROOK_ADJUSTMENTS[9] = { 15, 12, 9, 6, 3, 0, -3, -6, -9 };
+	const int TOTAL_PHASE = 256;
+	const int PAWN_PHASE = 2;
+	const int QUEEN_PHASE = 44;
+	const int ROOK_PHASE = 16;
+	const int BISHOP_PHASE = 12;
+	const int KNIGHT_PHASE = 6;
 
 	int EvaluateBoard(Board &board);
+	int EvaluateRooks(Board &board, color c);
+	int EvaluateBishops(Board &board, color c);
+	int EvaluateKnights(Board &boardd, color c);
+	int EvaluateQueens(Board &board, color c);
+	int EvaluatePawns(Board &board, color c);
+	int EvaluateKing(Board &board, color c);
 	void InitEvalData();
 }

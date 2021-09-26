@@ -61,6 +61,8 @@ namespace Panzer
 		std::stable_sort(moves->begin(), moves->end(), MoveSorter);
 	}
 
+	int Utils::GetLSB(bitboard b) { return __builtin_ctzll(b); }
+
 	std::shared_ptr<std::array<unsigned int, 624>> Utils::GetSeedData()
 	{
 		std::array<unsigned int, 624> data

@@ -118,14 +118,14 @@ namespace Panzer
 		if (color == WHITE)
 		{
 			bitboard king = this->GetWhiteKings();
-			square kingSquare = GetLSB(king);
+			square kingSquare = Utils::GetLSB(king);
 			return this->IsSquareAttacked(kingSquare, WHITE);
 		}
 
 		if (color == BLACK)
 		{
 			bitboard king = this->GetBlackKings();
-			square kingSquare = GetLSB(king);
+			square kingSquare = Utils::GetLSB(king);
 			return this->IsSquareAttacked(kingSquare, BLACK);
 		}
 		return false;
@@ -231,39 +231,6 @@ namespace Panzer
 		this->MakeBlackQueenMoves(moves, captures);
 		this->MakeBlackKingMoves(moves, captures);
 		return moves;
-	}
-
-	int Board::GetMSB(bitboard b)
-	{
-#ifdef _MSC_VER
-		unsigned long leading_zero = 0;
-
-		if (_BitScanReverse64(&leading_zero, b))
-		{
-			return 63 - leading_zero;
-		}
-
-		return 63;
-#else
-		int leading_zeros = __builtin_clzll(b);
-		return 63 - leading_zeros;
-#endif
-	}
-
-	int Board::GetLSB(bitboard b)
-	{
-#ifdef _MSC_VER
-		unsigned long trailing_zero = 0;
-
-		if (_BitScanForward64(&trailing_zero, b))
-		{
-			return  trailing_zero;
-		}
-
-		return 0;
-#else
-		return __builtin_ctzll(b);
-#endif
 	}
 
 	void Board::PrintBoard()
@@ -578,7 +545,7 @@ namespace Panzer
 
 		while (ep_captures != 0)
 		{
-			square from = GetLSB(ep_captures);
+			square from = Utils::GetLSB(ep_captures);
 			square to = this->ep_square + N;
 			PushMove(
 				moves,
@@ -592,7 +559,7 @@ namespace Panzer
 
 		while(right_captures != 0)
 		{
-			int index = GetLSB(right_captures);
+			int index = Utils::GetLSB(right_captures);
 			square to = index;
 			square from = to - SW;
 			PushMove(
@@ -608,7 +575,7 @@ namespace Panzer
 
 		while(left_captures != 0)
 		{
-			int index = GetLSB(left_captures);
+			int index = Utils::GetLSB(left_captures);
 			square to = index;
 			square from = to - SE;
 			PushMove(
@@ -625,7 +592,7 @@ namespace Panzer
 
 		while (promotion_right_captures != 0)
 		{
-			int index = GetLSB(promotion_right_captures);
+			int index = Utils::GetLSB(promotion_right_captures);
 			square to = index;
 			square from = to - SW;
 			PushMove(
@@ -669,7 +636,7 @@ namespace Panzer
 
 		while(promotion_left_captures != 0)
 		{
-			int index = GetLSB(promotion_left_captures);
+			int index = Utils::GetLSB(promotion_left_captures);
 			square to = index;
 			square from = to - SE;
 			PushMove(
@@ -715,7 +682,7 @@ namespace Panzer
 
 		while (promotions != 0)
 		{
-			int index = GetLSB(promotions);
+			int index = Utils::GetLSB(promotions);
 			square to = index;
 			square from = to - S;
 			PushMove(
@@ -756,7 +723,7 @@ namespace Panzer
 
 		while (pushes != 0)
 		{
-			int index = GetLSB(pushes);
+			int index = Utils::GetLSB(pushes);
 			square to = index;
 			square from = to - S;
 			PushMove(
@@ -772,7 +739,7 @@ namespace Panzer
 
 		while (double_push != 0)
 		{
-			int index = GetLSB(double_push);
+			int index = Utils::GetLSB(double_push);
 			square to = index;
 			square from = to - SS;
 			PushMove(
@@ -898,7 +865,7 @@ namespace Panzer
 
 		while (ep_captures != 0)
 		{
-			square from = GetLSB(ep_captures);
+			square from = Utils::GetLSB(ep_captures);
 			square to = this->ep_square - S;
 			PushMove(
 				moves,
@@ -914,7 +881,7 @@ namespace Panzer
 
 		while(right_captures != 0)
 		{
-			int index = GetLSB(right_captures);
+			int index = Utils::GetLSB(right_captures);
 			square to = index;
 			square from = to + NW;
 			PushMove(
@@ -931,7 +898,7 @@ namespace Panzer
 
 		while(left_captures != 0)
 		{
-			int index = GetLSB(left_captures);
+			int index = Utils::GetLSB(left_captures);
 			square to = index;
 			square from = to + NE;
 			PushMove(
@@ -948,7 +915,7 @@ namespace Panzer
 
 		while (promotion_right_captures != 0)
 		{
-			int index = GetLSB(promotion_right_captures);
+			int index = Utils::GetLSB(promotion_right_captures);
 			square to = index;
 			square from = to + NW;
 			PushMove(
@@ -991,7 +958,7 @@ namespace Panzer
 
 		while(promotion_left_captures != 0)
 		{
-			int index = GetLSB(promotion_left_captures);
+			int index = Utils::GetLSB(promotion_left_captures);
 			square to = index;
 			square from = to + NE;
 			PushMove(
@@ -1037,7 +1004,7 @@ namespace Panzer
 
 		while (promotions != 0)
 		{
-			int index = GetLSB(promotions);
+			int index = Utils::GetLSB(promotions);
 			square to = index;
 			square from = to + N ;
 			PushMove(
@@ -1078,7 +1045,7 @@ namespace Panzer
 
 		while (pushes != 0)
 		{
-			int index = GetLSB(pushes);
+			int index = Utils::GetLSB(pushes);
 			square to = index;
 			square from = to + N;
 			PushMove(
@@ -1094,7 +1061,7 @@ namespace Panzer
 
 		while (double_push != 0)
 		{
-			int index = GetLSB(double_push);
+			int index = Utils::GetLSB(double_push);
 			square to = index;
 			square from = to + NN;
 			PushMove(
@@ -1176,7 +1143,7 @@ namespace Panzer
 			}
 		}
 
-		this->MakeKingMoves(moves, kings, black_pieces, white_pieces);
+		this->MakeKingMoves(moves, kings, black_pieces, white_pieces, captures);
 	}
 
 	void Board::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side, bool captures)
@@ -1184,13 +1151,13 @@ namespace Panzer
 		auto occupancy = same_side | other_side;
 		while (rooks != 0)
 		{
-			square from = GetLSB(rooks);
+			square from = Utils::GetLSB(rooks);
 			auto possible = this->slider_attacks->GetRookAttacks(from, occupancy);
 			auto capture_moves = possible & other_side;
 
 			while (capture_moves != 0)
 			{
-				square to = GetLSB(capture_moves);
+				square to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1208,7 +1175,7 @@ namespace Panzer
 				auto slides = possible & ~occupancy;
 				while (slides != 0)
 				{
-					square to = GetLSB(slides);
+					square to = Utils::GetLSB(slides);
 					PushMove(
 						moves,
 						from,
@@ -1230,7 +1197,7 @@ namespace Panzer
 
 		while (knights != 0)
 		{
-			auto from = this->GetLSB(knights);
+			auto from = Utils::GetLSB(knights);
 			auto span = KNIGHT_SPANS[from];
 
 			// mask for file wraps
@@ -1240,7 +1207,7 @@ namespace Panzer
 
 			while (capture_moves != 0)
 			{
-				int to = this->GetLSB(capture_moves);
+				int to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1257,7 +1224,7 @@ namespace Panzer
 			{
 				while (regular != 0)
 				{
-					int to = this->GetLSB(regular);
+					int to = Utils::GetLSB(regular);
 					PushMove(
 						moves,
 						from,
@@ -1279,13 +1246,13 @@ namespace Panzer
 		auto occupancy = same_side | other_side;
 		while (bishops != 0)
 		{
-			square from = GetLSB(bishops);
+			square from = Utils::GetLSB(bishops);
 			auto possible = this->slider_attacks->GetBishopAttacks(from, occupancy);
 			auto capture_moves = possible & other_side;
 
 			while (capture_moves != 0)
 			{
-				square to = GetLSB(capture_moves);
+				square to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1303,7 +1270,7 @@ namespace Panzer
 				auto slides = possible & ~occupancy;
 				while (slides != 0)
 				{
-					square to = GetLSB(slides);
+					square to = Utils::GetLSB(slides);
 					PushMove(
 						moves,
 						from,
@@ -1325,13 +1292,13 @@ namespace Panzer
 		auto occupancy = same_side | other_side;
 		while (queens != 0)
 		{
-			square from = GetLSB(queens);
+			square from = Utils::GetLSB(queens);
 			auto possible = this->slider_attacks->GetQueenAttacks(from, occupancy) & ~same_side;
 			auto capture_moves = possible & other_side;
 
 			while (capture_moves != 0)
 			{
-				square to = GetLSB(capture_moves);
+				square to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1349,7 +1316,7 @@ namespace Panzer
 				auto slides = possible & ~occupancy;
 				while (slides != 0)
 				{
-					square to = GetLSB(slides);
+					square to = Utils::GetLSB(slides);
 					PushMove(
 						moves,
 						from,
@@ -1370,15 +1337,15 @@ namespace Panzer
 	{
 		while (kings != 0)
 		{
-			int from = this->GetLSB(kings);
+			int from = Utils::GetLSB(kings);
 			bitboard king_span = KING_SPANS[from];
 			auto all_moves = king_span & ~same_side;
 			auto capture_moves = all_moves & other_side;
-			auto regular_moves = all_moves &~capture_moves;
+			auto regular_moves = all_moves & ~capture_moves;
 
 			while (capture_moves != 0)
 			{
-				int to = this->GetLSB(capture_moves);
+				int to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1396,7 +1363,7 @@ namespace Panzer
 			{
 				while (regular_moves != 0)
 				{
-					int to = this->GetLSB(regular_moves);
+					int to = Utils::GetLSB(regular_moves);
 					PushMove(
 						moves,
 						from,

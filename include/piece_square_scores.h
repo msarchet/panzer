@@ -46,7 +46,7 @@ const piece_score KING_RING_FRONT = 25;
 const piece_score PAWN_RANK_SCORES[8] = 
 {
 	100, // 8
-	34,  // 7
+	50,  // 7
 	30,  // 6
 	22,  // 5
 	15,  // 4

@@ -5,6 +5,7 @@
 
 namespace Panzer
 {
+
     class Utils
     {
         public:
@@ -13,5 +14,6 @@ namespace Panzer
             static void SortMoves(MoveVector &moves);
             static bool MoveSorter(Panzer::Move move_one, Panzer::Move move_two);
             static std::string PrintMove(Panzer::Move move);
+            static int GetLSB(bitboard b);
     };
 }

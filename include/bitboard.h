@@ -90,8 +90,6 @@ namespace Panzer
 		std::string BoardToFen();
 		piece GetPieceAtSquare(square s);
 	private:
-		int GetMSB(bitboard b);
-		int GetLSB(bitboard b);
 		void MakeWhitePawnMoves(MoveVector moves, bool captures = false);
 		void MakeWhiteRooksMoves(MoveVector moves, bool captures = false);
 		void MakeWhiteKnightMoves(MoveVector moves, bool captures = false);
