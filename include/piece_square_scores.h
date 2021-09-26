@@ -102,7 +102,7 @@ const piece_score KNIGHT_SCORE_SQUARE_MID[64] = {
   -8,   0,   4,   8,   8,   4,   0,  -8,
   -8,   0,   4,   4,   4,   4,   0,  -8,
   -8,   0,   1,   2,   2,   1,   0,  -8,
-  -8, -12,  -8,  -8,  -8,  -8, -12,  -8
+  -8, -16,  -8,  -8,  -8,  -8, -16,  -8
 };
 
 const piece_score KNIGHT_SCORE_SQUARE_END[64] = {
@@ -113,7 +113,7 @@ const piece_score KNIGHT_SCORE_SQUARE_END[64] = {
   -8,   0,   4,   8,   8,   4,   0,  -8,
   -8,   0,   4,   4,   4,   4,   0,  -8,
   -8,   0,   1,   2,   2,   1,   0,  -8,
-  -8, -12,  -8,  -8,  -8,  -8, -12,  -8
+  -8, -16,  -8,  -8,  -8,  -8, -16,  -8
 };
 
 const piece_score BISHOP_SCORE_SQUARE_MID[64] = {
@@ -190,7 +190,7 @@ const piece_score KING_SCORE_SQUARE_MID[64] = {
   0,  10, -10, -30, -30, -10,  10,   0,
   10,  20,   0, -20, -20,   0,  20,  10,
   30,  40,  20,   0,   0,  20,  40,  30,
-  40,  50,  30,  10,  10,  30,  50,  40
+  40,  70,  30,  10,  10,  30,  70,  40
 };
 
 const piece_score KING_SCORE_SQUARE_END[64] = {

@@ -623,80 +623,6 @@ namespace Panzer
 			left_captures &= left_captures - 1ULL;	
 		}
 
-
-		while (pushes != 0)
-		{
-			int index = GetLSB(pushes);
-			square to = index;
-			square from = to - S;
-			PushMove(
-				moves,
-				from, 
-				to, 
-				NO_MOVE_FLAGS,
-				this->castle_flags
-			);
-			
-			pushes &= pushes-1ULL;
-		}
-
-		while (double_push != 0)
-		{
-			int index = GetLSB(double_push);
-			square to = index;
-			square from = to - SS;
-			PushMove(
-				moves,
-				from,
-				to,
-				DOUBLE_PAWN_PUSH,
-				this->castle_flags
-			);
-			
-			double_push &= double_push - 1ULL;
-		}
-
-
-		while (promotions != 0)
-		{
-			int index = GetLSB(promotions);
-			square to = index;
-			square from = to - S;
-			PushMove(
-				moves,
-				from, 
-				to, 
-				QUEEN_PROMO,
-				this->castle_flags
-			);
-
-			PushMove(
-				moves,
-				from, 
-				to, 
-				ROOK_PROMO,
-				this->castle_flags
-			);
-
-			PushMove(
-				moves,
-				from, 
-				to, 
-				KNIGHT_PROMO,
-				this->castle_flags
-			);
-
-			PushMove(
-				moves,
-				from, 
-				to, 
-				BISHOP_PROMO,
-				this->castle_flags
-			);
-
-			promotions &= promotions - ONE_BIT;
-		}
-
 		while (promotion_right_captures != 0)
 		{
 			int index = GetLSB(promotion_right_captures);
@@ -785,6 +711,81 @@ namespace Panzer
 			promotion_left_captures &= promotion_left_captures - 1ULL;	
 		}
 
+		if (captures) return;
+
+		while (promotions != 0)
+		{
+			int index = GetLSB(promotions);
+			square to = index;
+			square from = to - S;
+			PushMove(
+				moves,
+				from, 
+				to, 
+				QUEEN_PROMO,
+				this->castle_flags
+			);
+
+			PushMove(
+				moves,
+				from, 
+				to, 
+				ROOK_PROMO,
+				this->castle_flags
+			);
+
+			PushMove(
+				moves,
+				from, 
+				to, 
+				KNIGHT_PROMO,
+				this->castle_flags
+			);
+
+			PushMove(
+				moves,
+				from, 
+				to, 
+				BISHOP_PROMO,
+				this->castle_flags
+			);
+
+			promotions &= promotions - ONE_BIT;
+		}
+
+
+		while (pushes != 0)
+		{
+			int index = GetLSB(pushes);
+			square to = index;
+			square from = to - S;
+			PushMove(
+				moves,
+				from, 
+				to, 
+				NO_MOVE_FLAGS,
+				this->castle_flags
+			);
+			
+			pushes &= pushes-1ULL;
+		}
+
+		while (double_push != 0)
+		{
+			int index = GetLSB(double_push);
+			square to = index;
+			square from = to - SS;
+			PushMove(
+				moves,
+				from,
+				to,
+				DOUBLE_PAWN_PUSH,
+				this->castle_flags
+			);
+			
+			double_push &= double_push - 1ULL;
+		}
+
 
 	}
 
@@ -825,32 +826,36 @@ namespace Panzer
 		auto kings = this->GetWhiteKings();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		// make castle moves
-		if ((castle_flags & WHITEK) != 0)
+		if (!captures)
 		{
-			bool isOpen = (WHITEK_CASTLE_MASK & this->GetOccupancy()) == 0;
-			if (isOpen)
+			// make castle moves
+			if ((castle_flags & WHITEK) != 0)
 			{
-				bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) || IsSquareAttacked(E1, WHITE));
-				if (notChecked)
+				bool isOpen = (WHITEK_CASTLE_MASK & this->GetOccupancy()) == 0;
+				if (isOpen)
 				{
-					PushMove(moves,E1, G1, CASTLE, this->castle_flags);
+					bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) || IsSquareAttacked(E1, WHITE));
+					if (notChecked)
+					{
+						PushMove(moves,E1, G1, CASTLE, this->castle_flags);
+					}
+				}
+			}
+
+			if ((castle_flags & WHITEQ) != 0)
+			{
+				bool isOpen = (WHITEQ_CASTLE_MASK & this->GetOccupancy()) == 0;
+				if (isOpen)
+				{
+					bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) || IsSquareAttacked(E1, WHITE));
+					if (notChecked)
+					{
+						PushMove(moves,E1, C1, CASTLE, this->castle_flags);
+					}
 				}
 			}
 		}
 
-		if ((castle_flags & WHITEQ) != 0)
-		{
-			bool isOpen = (WHITEQ_CASTLE_MASK & this->GetOccupancy()) == 0;
-			if (isOpen)
-			{
-				bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) || IsSquareAttacked(E1, WHITE));
-				if (notChecked)
-				{
-					PushMove(moves,E1, C1, CASTLE, this->castle_flags);
-				}
-			}
-		}
 		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
 	}
 
@@ -941,79 +946,6 @@ namespace Panzer
 			left_captures &= left_captures - 1ULL;	
 		}
 
-
-		while (pushes != 0)
-		{
-			int index = GetLSB(pushes);
-			square to = index;
-			square from = to + N;
-			PushMove(
-				moves,
-				from, 
-				to, 
-				NO_MOVE_FLAGS,
-				this->castle_flags
-			); 
-			
-			pushes &= pushes-1ULL;
-		}
-
-		while (double_push != 0)
-		{
-			int index = GetLSB(double_push);
-			square to = index;
-			square from = to + NN;
-			PushMove(
-				moves,
-				from,
-				to,
-				DOUBLE_PAWN_PUSH,
-				this->castle_flags
-			);
-			
-			double_push &= double_push - 1ULL;
-		}
-
-		while (promotions != 0)
-		{
-			int index = GetLSB(promotions);
-			square to = index;
-			square from = to + N ;
-			PushMove(
-				moves,
-				from, 
-				to, 
-				QUEEN_PROMO,
-				this->castle_flags
-			);
-
-			PushMove(
-				moves,
-				from, 
-				to, 
-				ROOK_PROMO,
-				this->castle_flags
-			);
-
-			PushMove(
-				moves,
-				from, 
-				to, 
-				KNIGHT_PROMO,
-				this->castle_flags
-			);
-
-			PushMove(
-				moves,
-				from, 
-				to, 
-				BISHOP_PROMO,
-				this->castle_flags
-			);
-
-			promotions &= promotions - ONE_BIT;
-		}
-
 		while (promotion_right_captures != 0)
 		{
 			int index = GetLSB(promotion_right_captures);
@@ -1100,6 +1032,82 @@ namespace Panzer
 
 			promotion_left_captures &= promotion_left_captures - 1ULL;	
 		}
+
+		if (captures) return;
+
+		while (promotions != 0)
+		{
+			int index = GetLSB(promotions);
+			square to = index;
+			square from = to + N ;
+			PushMove(
+				moves,
+				from, 
+				to, 
+				QUEEN_PROMO,
+				this->castle_flags
+			);
+
+			PushMove(
+				moves,
+				from, 
+				to, 
+				ROOK_PROMO,
+				this->castle_flags
+			);
+
+			PushMove(
+				moves,
+				from, 
+				to, 
+				KNIGHT_PROMO,
+				this->castle_flags
+			);
+
+			PushMove(
+				moves,
+				from, 
+				to, 
+				BISHOP_PROMO,
+				this->castle_flags
+			);
+
+			promotions &= promotions - ONE_BIT;
+		}
+
+
+		while (pushes != 0)
+		{
+			int index = GetLSB(pushes);
+			square to = index;
+			square from = to + N;
+			PushMove(
+				moves,
+				from, 
+				to, 
+				NO_MOVE_FLAGS,
+				this->castle_flags
+			); 
+			
+			pushes &= pushes-1ULL;
+		}
+
+		while (double_push != 0)
+		{
+			int index = GetLSB(double_push);
+			square to = index;
+			square from = to + NN;
+			PushMove(
+				moves,
+				from,
+				to,
+				DOUBLE_PAWN_PUSH,
+				this->castle_flags
+			);
+			
+			double_push &= double_push - 1ULL;
+		}
+
 	}
 
 	void Board::MakeBlackRooksMoves(MoveVector moves, bool captures)
@@ -1139,29 +1147,31 @@ namespace Panzer
 		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-
-		if ((castle_flags & BLACKK) != 0)
+		if (!captures)
 		{
-			bool isOpen = (BLACKK_CASTLE_MASK & this->GetOccupancy()) == 0;
-			if (isOpen)
+			if ((castle_flags & BLACKK) != 0)
 			{
-				bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) || IsSquareAttacked(E8, BLACK));
-				if (notChecked)
+				bool isOpen = (BLACKK_CASTLE_MASK & this->GetOccupancy()) == 0;
+				if (isOpen)
 				{
-					PushMove(moves,E8, G8, CASTLE, this->castle_flags);
+					bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) || IsSquareAttacked(E8, BLACK));
+					if (notChecked)
+					{
+						PushMove(moves,E8, G8, CASTLE, this->castle_flags);
+					}
 				}
 			}
-		}
 
-		if ((castle_flags & BLACKQ) != 0)
-		{
-			bool isOpen = (BLACKQ_CASTLE_MASK & this->GetOccupancy()) == 0;
-			if (isOpen)
+			if ((castle_flags & BLACKQ) != 0)
 			{
-				bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) || IsSquareAttacked(E8, BLACK));
-				if (notChecked)
+				bool isOpen = (BLACKQ_CASTLE_MASK & this->GetOccupancy()) == 0;
+				if (isOpen)
 				{
-					PushMove(moves,E8, C8, CASTLE, this->castle_flags);
+					bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) || IsSquareAttacked(E8, BLACK));
+					if (notChecked)
+					{
+						PushMove(moves,E8, C8, CASTLE, this->castle_flags);
+					}
 				}
 			}
 		}
@@ -1176,11 +1186,11 @@ namespace Panzer
 		{
 			square from = GetLSB(rooks);
 			auto possible = this->slider_attacks->GetRookAttacks(from, occupancy);
-			auto captures = possible & other_side;
+			auto capture_moves = possible & other_side;
 
-			while (captures != 0)
+			while (capture_moves != 0)
 			{
-				square to = GetLSB(captures);
+				square to = GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1190,22 +1200,25 @@ namespace Panzer
 					this->GetPieceAtSquare(to)
 				);
 				
-				captures &= captures - 1;
+				capture_moves &= capture_moves - 1;
 			}
 
-			auto slides = possible & ~occupancy;
-			while (slides != 0)
+			if (!captures)
 			{
-				square to = GetLSB(slides);
-				PushMove(
-					moves,
-					from,
-					to,
-					NO_MOVE_FLAGS,
-					this->castle_flags
-				);
-				
-				slides &= slides - 1ULL;
+				auto slides = possible & ~occupancy;
+				while (slides != 0)
+				{
+					square to = GetLSB(slides);
+					PushMove(
+						moves,
+						from,
+						to,
+						NO_MOVE_FLAGS,
+						this->castle_flags
+					);
+					
+					slides &= slides - 1ULL;
+				}
 			}
 
 			rooks &= rooks - 1ULL;
@@ -1222,12 +1235,12 @@ namespace Panzer
 
 			// mask for file wraps
 			auto all_moves = span & ~same_side;
-			auto captures = all_moves & other_side;
-			auto regular = all_moves & ~captures;
+			auto capture_moves = all_moves & other_side;
+			auto regular = all_moves & ~capture_moves;
 
-			while (captures != 0)
+			while (capture_moves != 0)
 			{
-				int to = this->GetLSB(captures);
+				int to = this->GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1237,22 +1250,25 @@ namespace Panzer
 					this->GetPieceAtSquare(to)
 				);
 				
-				captures &= captures - 1ULL;
+				capture_moves &= capture_moves - 1ULL;
 			}
 
-			while (regular != 0)
+			if (!captures)
 			{
-				int to = this->GetLSB(regular);
-				PushMove(
-					moves,
-					from,
-					to,
-					NO_MOVE_FLAGS,
-					this->castle_flags
-				);
+				while (regular != 0)
+				{
+					int to = this->GetLSB(regular);
+					PushMove(
+						moves,
+						from,
+						to,
+						NO_MOVE_FLAGS,
+						this->castle_flags
+					);
 
-				
-				regular &= regular - 1ULL;
+					
+					regular &= regular - 1ULL;
+				}
 			}
 			knights &= knights - 1ULL;
 		}
@@ -1265,11 +1281,11 @@ namespace Panzer
 		{
 			square from = GetLSB(bishops);
 			auto possible = this->slider_attacks->GetBishopAttacks(from, occupancy);
-			auto captures = possible & other_side;
+			auto capture_moves = possible & other_side;
 
-			while (captures != 0)
+			while (capture_moves != 0)
 			{
-				square to = GetLSB(captures);
+				square to = GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1279,22 +1295,25 @@ namespace Panzer
 					this->GetPieceAtSquare(to)
 				);
 				
-				captures &= captures - 1;
+				capture_moves &= capture_moves - 1;
 			}
 
-			auto slides = possible & ~occupancy;
-			while (slides != 0)
+			if (!captures)
 			{
-				square to = GetLSB(slides);
-				PushMove(
-					moves,
-					from,
-					to,
-					NO_MOVE_FLAGS,
-					this->castle_flags
-				);
-				
-				slides &= slides - 1ULL;
+				auto slides = possible & ~occupancy;
+				while (slides != 0)
+				{
+					square to = GetLSB(slides);
+					PushMove(
+						moves,
+						from,
+						to,
+						NO_MOVE_FLAGS,
+						this->castle_flags
+					);
+					
+					slides &= slides - 1ULL;
+				}
 			}
 
 			bishops &= bishops - 1ULL;
@@ -1308,11 +1327,11 @@ namespace Panzer
 		{
 			square from = GetLSB(queens);
 			auto possible = this->slider_attacks->GetQueenAttacks(from, occupancy) & ~same_side;
-			auto captures = possible & other_side;
+			auto capture_moves = possible & other_side;
 
-			while (captures != 0)
+			while (capture_moves != 0)
 			{
-				square to = GetLSB(captures);
+				square to = GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1322,23 +1341,27 @@ namespace Panzer
 					this->GetPieceAtSquare(to)
 				);
 				
-				captures &= captures - 1ULL;
+				capture_moves &= capture_moves - 1ULL;
 			}
 
-			auto slides = possible & ~occupancy;
-			while (slides != 0)
+			if (!captures)
 			{
-				square to = GetLSB(slides);
-				PushMove(
-					moves,
-					from,
-					to,
-					NO_MOVE_FLAGS,
-					this->castle_flags
-				);
-				
-				slides &= slides - 1ULL;
+				auto slides = possible & ~occupancy;
+				while (slides != 0)
+				{
+					square to = GetLSB(slides);
+					PushMove(
+						moves,
+						from,
+						to,
+						NO_MOVE_FLAGS,
+						this->castle_flags
+					);
+					
+					slides &= slides - 1ULL;
+				}
 			}
+
 			queens &= queens - 1ULL;
 		}
 	}
@@ -1350,12 +1373,12 @@ namespace Panzer
 			int from = this->GetLSB(kings);
 			bitboard king_span = KING_SPANS[from];
 			auto all_moves = king_span & ~same_side;
-			auto captures = all_moves & other_side;
-			auto regular_moves = all_moves &~captures;
+			auto capture_moves = all_moves & other_side;
+			auto regular_moves = all_moves &~capture_moves;
 
-			while (captures != 0)
+			while (capture_moves != 0)
 			{
-				int to = this->GetLSB(captures);
+				int to = this->GetLSB(capture_moves);
 				PushMove(
 					moves,
 					from,
@@ -1366,22 +1389,25 @@ namespace Panzer
 				);
 
 				
-				captures &= captures - ONE_BIT;
+				capture_moves &= capture_moves - ONE_BIT;
 			}
 
-			while (regular_moves != 0)
+			if (!captures)
 			{
-				int to = this->GetLSB(regular_moves);
-				PushMove(
-					moves,
-					from,
-					to,
-					NO_MOVE_FLAGS,
-					this->castle_flags
-				);
+				while (regular_moves != 0)
+				{
+					int to = this->GetLSB(regular_moves);
+					PushMove(
+						moves,
+						from,
+						to,
+						NO_MOVE_FLAGS,
+						this->castle_flags
+					);
 
-				
-				regular_moves &= regular_moves - ONE_BIT;
+					
+					regular_moves &= regular_moves - ONE_BIT;
+				}
 			}
 
 			kings &= kings - ONE_BIT;

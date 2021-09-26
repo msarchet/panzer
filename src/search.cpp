@@ -12,9 +12,11 @@ namespace Panzer
 namespace Search
 {
 	int64_t nodes = 0;
+	int64_t qNodes = 0;
 	Panzer::Move Search(Panzer::Board &board, int depth)
 	{
 		nodes = 0;
+		qNodes = 0;
 		std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
 		start = std::chrono::high_resolution_clock::now();
@@ -92,8 +94,10 @@ namespace Search
 		end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed_seconds = end - start; 
 		auto time = elapsed_seconds.count();
-		auto nps = nodes / time;
-		Panzer::Com::SendMessageToUI("NPS: " + std::to_string(nps) + " Nodes: " + std::to_string(nodes) + " In: " + std::to_string(elapsed_seconds.count()));
+		auto totalNodes = (nodes + qNodes);
+		auto qNodePercentage = static_cast<double>(qNodes) / static_cast<double>(totalNodes);
+		auto nps = totalNodes / time;
+		Panzer::Com::SendMessageToUI("NPS: " + std::to_string(nps) + " Nodes: " + std::to_string(totalNodes) + "Root Nodes: " + std::to_string(nodes) + "Quiesence Nodes: " + std::to_string(qNodes) + " " + std::to_string(qNodePercentage)  + " In: " + std::to_string(elapsed_seconds.count()));
 		auto output = "FINAL ALPHA " + std::to_string(alpha);
 		Panzer::Com::OutputDebugFile(output);
 		return bestMove;
@@ -260,15 +264,27 @@ namespace Search
 		auto stand_pat = Panzer::EvaluateBoard(board);
 
 		if (stand_pat >= beta)
+		{
 			return beta;
-		if(alpha < stand_pat)
+		}
+
+		if(alpha < stand_pat) 
+		{
 			alpha = stand_pat;
+		}
 
 		auto moves = board.GenerateMoves(true);
 		for (auto it = moves->begin(); it != moves->end(); it++)	
 		{
 			auto move = *it;
 			board.MakeMove(move);
+		
+			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK: WHITE))
+			{
+				board.UnmakeMove(move);
+				continue;
+			}
+			qNodes++;
 			auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
 			board.UnmakeMove(move);
 
