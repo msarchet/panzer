@@ -24,17 +24,19 @@ namespace Search
 		Panzer::Move bestMove = Panzer::Move(0, 0, 0, 0);
 		bestMove.id = -1;	
 
-		auto moves = board.GenerateMoves();
-		Utils::SortMoves(moves);
+		Move moves[256];
+		auto movecount = board.GenerateMoves(moves);
+		if (movecount == 0) return bestMove;
+		Utils::SortMoves(moves, movecount);
 		auto alpha = INT16_MIN;
 		auto beta = INT16_MAX;
 
 		int bestMoveIndex = 0;
 		int moveIndex = 0;
 		// find best move at depth 1 and then use that at the start of each search
-		for (auto it = moves->begin(); it != moves->end(); it++)
+		for (auto i = 0; i < movecount; i++)
 		{
-			auto move = *it; 
+			auto move = moves[i]; 
 			board.MakeMove(move);
 
 			int legalMoves = 0;
@@ -63,13 +65,18 @@ namespace Search
 
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
-			std::iter_swap(moves->begin(), moves->begin() + bestMoveIndex);
+			auto temp = moves[0];
+			auto best = moves[bestMoveIndex];
+			moves[0] = best;
+			moves[bestMoveIndex] = temp;
+
+			//std::iter_swap(moves->begin(), moves->begin() + bestMoveIndex);
 			bestMoveIndex = 0;
 			moveIndex = 0;
 
-			for (auto it = moves->begin(); it != moves->end(); it++)
+			for (auto i = 0; i < movecount; i++)
 			{
-				auto move = *it; 
+				auto move = moves[i]; 
 				board.MakeMove(move);
 
 				int legalMoves = 0;
@@ -123,12 +130,13 @@ namespace Search
 			return eval;
 		}
 
-		auto moves = board.GenerateMoves();
-		Utils::SortMoves(moves);
+		Move moves[256];
+		auto movecount = board.GenerateMoves(moves);
+		Utils::SortMoves(moves, movecount);
 		int legalMoves = 0;
-		for (auto it = moves->begin(); it != moves->end(); it++)
+		for (auto i = 0; i < movecount; i++)
 		{
-			auto move = *it; 
+			auto move = moves[i]; 
 			board.MakeMove(move);
 
 			int16_t score = INT16_MIN;
@@ -192,14 +200,14 @@ namespace Search
 			}
 			return eval;
 		}
-
-		auto moves = board.GenerateMoves();
-		Utils::SortMoves(moves);
+		Move moves[256];
+		auto movecount = board.GenerateMoves(moves);
+		Utils::SortMoves(moves, movecount);
 
 		int legalMoves = 0;
-		for (auto it = moves->begin(); it != moves->end(); it++)
+		for (auto i = 0; i < movecount; i++)
 		{
-			auto move = *it; 
+			auto move = moves[i]; 
 			board.MakeMove(move);
 			int16_t score = INT16_MAX;
 
@@ -252,8 +260,9 @@ namespace Search
 
 	int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
 	{
-		auto moves = board.GenerateMoves();
-		Utils::SortMoves(moves);
+		Move moves[256];
+		auto movecount = board.GenerateMoves(moves);
+		Utils::SortMoves(moves, movecount);
 
 		if (depth == 0) 
 		{
@@ -261,9 +270,9 @@ namespace Search
 		}
 
 		int16_t bestScore = INT16_MIN;
-		for (auto it = moves->begin(); it != moves->end(); it++)
+		for (auto i = 0; i < movecount; i++)
 		{
-			auto move = *it; 
+			auto move = moves[i]; 
 			board.MakeMove(move);
 			int16_t score = INT16_MIN;
 
@@ -302,10 +311,12 @@ namespace Search
 			alpha = stand_pat;
 		}
 
-		auto moves = board.GenerateMoves(true);
-		for (auto it = moves->begin(); it != moves->end(); it++)	
+		Move moves[256];
+		auto movecount = board.GenerateMoves(moves, true);
+
+		for (auto i = 0; i < movecount; i++)	
 		{
-			auto move = *it;
+			auto move = moves[i];
 			board.MakeMove(move);
 		
 			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK: WHITE))

@@ -121,6 +121,24 @@ int main()
     flags |= WHITEK;
     flags |= WHITEQ;
 
+    Panzer::Move moves[10];
+    auto move1 = Panzer::Move();
+    move1.m_score = 10;
+    move1.id = 1;
+    moves[0] = move1;
+    auto move2 = Panzer::Move();
+    move2.m_score = 20;
+    move2.id = 2;
+    moves[1] = move2;
+    std::cout << (moves + 1)->id << moves[1].id << std::endl;
+    int nums[5] = { 1, 2, 3, 5, 4};
+    std::sort(moves, moves + 10, Panzer::Utils::MoveSorter);
+    for (int i = 0; i < 10; i++)
+    {
+        std::cout << moves[i].id << std::endl;
+    }
+    std::cout << move2.id << std::endl;
+    assert(moves[0].id == 2);
     assert(flags == ALL_CASTLE_FLAGS);
     board->FenToBoard(KIWIPETE);
 
@@ -129,7 +147,7 @@ int main()
     std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
     start = std::chrono::high_resolution_clock::now();
-    auto best = Panzer::Search::Search(*board, 8);
+    auto best = Panzer::Search::Search(*board, 1);
     std::cout << Panzer::Utils::PrintMove(best);
     end = std::chrono::high_resolution_clock::now();
 

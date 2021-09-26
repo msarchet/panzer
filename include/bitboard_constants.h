@@ -531,6 +531,7 @@ namespace Panzer
         int m_score = 0;
         int id = -1;
 
+        Move() {}
         Move(square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE, int score = 0)
         {
             m_from = from;
@@ -551,6 +552,7 @@ namespace Panzer
             capturedPiece = move.getCapturedPiece();
             priorEP = move.getPriorEPSquare();
             m_score = move.m_score;
+            id = move.id;
         }
 
         square getTo() const { return m_to; }
@@ -570,3 +572,8 @@ namespace Panzer
 
 
 typedef std::shared_ptr<std::vector<Panzer::Move> > MoveVector;
+
+struct TranspostionEntry {
+    int depth;
+    int score;
+};

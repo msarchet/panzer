@@ -57,9 +57,9 @@ namespace Panzer
 		void ClearSquare(square s,piece p, color c);
 		void PrintBoard();
 
-		MoveVector GenerateMoves(bool captures = false);
-		MoveVector GenerateWhiteMoves(bool captures = false);
-		MoveVector GenerateBlackMoves(bool captures = false);
+		int GenerateMoves(Move* moves, bool captures = false);
+		int GenerateWhiteMoves(Move* moves, bool captures = false);
+		int GenerateBlackMoves(Move* moves, bool captures = false);
 
 		bitboard GetWhitePieces() { return Colors->at(WHITE); };
 		bitboard GetWhitePawns() { return Pieces->at(PAWN) & Colors->at(WHITE); };
@@ -94,25 +94,25 @@ namespace Panzer
 		std::string BoardToFen();
 		piece GetPieceAtSquare(square s);
 	private:
-		void MakeWhitePawnMoves(MoveVector moves, bool captures = false);
-		void MakeWhiteRooksMoves(MoveVector moves, bool captures = false);
-		void MakeWhiteKnightMoves(MoveVector moves, bool captures = false);
-		void MakeWhiteBishopMoves(MoveVector moves, bool captures = false);
-		void MakeWhiteQueenMoves(MoveVector moves, bool captures = false);
-		void MakeWhiteKingMoves(MoveVector moves, bool captures = false);
-		void MakeBlackPawnMoves(MoveVector moves, bool captures = false);
-		void MakeBlackRooksMoves(MoveVector moves, bool captures = false);
-		void MakeBlackKnightMoves(MoveVector moves, bool captures = false);
-		void MakeBlackBishopMoves(MoveVector moves, bool captures = false);
-		void MakeBlackQueenMoves(MoveVector moves, bool captures = false);
-		void MakeBlackKingMoves(MoveVector moves, bool captures = false);
+		int MakeWhitePawnMoves(Move* moves, int movecount, bool captures = false);
+		int MakeWhiteRooksMoves(Move* moves, int movecount, bool captures = false);
+		int MakeWhiteKnightMoves(Move* moves, int movecount, bool captures = false);
+		int MakeWhiteBishopMoves(Move* moves, int movecount, bool captures = false);
+		int MakeWhiteQueenMoves(Move* moves, int movecount, bool captures = false);
+		int MakeWhiteKingMoves(Move* moves, int movecount, bool captures = false);
+		int MakeBlackPawnMoves(Move* moves, int movecount, bool captures = false);
+		int MakeBlackRooksMoves(Move* moves, int movecount, bool captures = false);
+		int MakeBlackKnightMoves(Move* moves, int movecount, bool captures = false);
+		int MakeBlackBishopMoves(Move* moves, int movecount, bool captures = false);
+		int MakeBlackQueenMoves(Move* moves, int movecount, bool captures = false);
+		int MakeBlackKingMoves(Move* moves, int movecount, bool captures = false);
 
-		void MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side, bool captures = false);
-		void MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side, bool captures = false);
-		void MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side, bool captures = false);
-		void MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side, bool captures = false);
-		void MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side, bool captures = false);
-        void PushMove(MoveVector moves, square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE);
+		int MakeRookMoves(Move* moves, int movecount, bitboard rooks, bitboard same_side, bitboard other_side, bool captures = false);
+		int MakeKnightMoves(Move* moves, int movecount, bitboard knights, bitboard same_side, bitboard other_side, bool captures = false);
+		int MakeBishopMoves(Move* moves, int movecount, bitboard bishops, bitboard same_side, bitboard other_side, bool captures = false);
+		int MakeQueenMoves(Move* moves, int movecount, bitboard queens, bitboard same_side, bitboard other_side, bool captures = false);
+		int MakeKingMoves(Move* moves, int movecount, bitboard kings, bitboard same_side, bitboard other_side, bool captures = false);
+        void PushMove(Move* moves, int movecount, square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE);
 	}; //class Board
      
 } //namespace Panzer

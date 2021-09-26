@@ -46,6 +46,7 @@ namespace Panzer
         assert(blocked_attacks == blocked_occupancy);
 
         std::cout << "bishop attacks test passed";
+        return true;
     }
 
     bool SlidingTests::ValidateRookAttacks()
@@ -85,6 +86,7 @@ namespace Panzer
         auto possible = sliders->GetRookAttacks(H1, board->GetOccupancy()) & ~board->GetOccupancy();
         Panzer::Utils::PrintBoard(possible);
 
+        return true;
     }
 
     bool SlidingTests::ValidateQueenAttacks()
@@ -95,5 +97,6 @@ namespace Panzer
     bool SlidingTests::ValidateIsChecked()
     {
         auto board = new Board();
+        return true;
     }
 }

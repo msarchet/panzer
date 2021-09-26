@@ -56,9 +56,9 @@ namespace Panzer
 		return move_one.m_score > move_two.m_score;
 	}
 
-	void Utils::SortMoves(MoveVector &moves)
+	void Utils::SortMoves(Move* moves, int movecount)
 	{
-		std::stable_sort(moves->begin(), moves->end(), MoveSorter);
+		std::sort(moves, moves + movecount, MoveSorter);
 	}
 
 	int Utils::GetLSB(bitboard b) { return __builtin_ctzll(b); }

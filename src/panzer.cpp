@@ -73,12 +73,14 @@ void ProcessInputs()
                 {
                     promotion = token.substr(4, 1);
                 }
-                auto possibleMoves = board->GenerateMoves();
+                Panzer::Move moves[256];
+                auto movecount = board->GenerateMoves(moves);
                 auto foundMove = Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS);
                 auto foundValidMove = false;
-                for (auto it = possibleMoves->begin(); it != possibleMoves->end() && !foundValidMove; it++)
+                if (movecount == 0) break;
+                for (auto i = 0; i < movecount && !foundValidMove; i++)
                 {
-                    auto possibleMove = *it;
+                    auto possibleMove = moves[i];
                     if (possibleMove.getFrom() == from && possibleMove.getTo() == to)
                     {
                         if (promotion.empty())
@@ -220,16 +222,18 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
         return 1;
     }
 
-    auto moves = board.GenerateMoves();
+    Panzer::Move moves[256];
+    auto movecount = board.GenerateMoves(moves);
 
+    if (movecount == 0) return 0;
     if (isTopDepth)
     {
         uint64_t totalCount = 0;
         auto futures = std::make_shared<std::vector<std::shared_future<std::tuple<std::string, uint64_t> > > >();
-        futures->reserve(moves->size());
-        for (auto it = moves->begin(); it != moves->end(); it++)
+        futures->reserve(movecount);
+        for (auto i = 0; i < movecount; i++)
         {
-            auto captured = *it;
+            auto captured = moves[i];
             const auto move = Panzer::Move(captured);
             const auto newBoard = new Panzer::Board(board);
             auto furtherDepth = depth - 1;
@@ -266,11 +270,10 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
     {
         uint64_t legalCount = 0ULL;
 
-        for (auto it = moves->begin(); it != moves->end(); it++)
+        for (auto i = 0; i < movecount; i++)
         {
-            auto move = *it;
+            auto move = moves[i];
             board.MakeMove(move);
-
 
             uint64_t subCount = 0ULL;
             if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))

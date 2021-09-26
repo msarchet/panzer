@@ -156,7 +156,7 @@ namespace Panzer
 		this->pieceLookup->at(s) = NO_PIECE;
 	}
 
-	void Board::PushMove(MoveVector moves, square from, square to, move_flag flags, castle_flag castleFlags, piece captured, square epSquare)
+	void Board::PushMove(Move* moves, int movecount, square from, square to, move_flag flags, castle_flag castleFlags, piece captured, square epSquare)
 	{
 		int score = 0;
 
@@ -191,46 +191,44 @@ namespace Panzer
 			ep_square == NO_SQUARE ? this->ep_square : ep_square,
 			score
 		);
-		move.id = moves->size();
-		moves->emplace_back(move);
+		move.id = movecount;
+		moves[movecount] = move;
 	}
 
-	MoveVector Board::GenerateMoves(bool captures)
+	int Board::GenerateMoves(Move* moves, bool captures)
 	{
 		switch (this->side_to_move)
 		{
 			case WHITE:
-				return GenerateWhiteMoves(captures);
+				return GenerateWhiteMoves(moves, captures);
 			case BLACK:
-				return GenerateBlackMoves(captures);
+				return GenerateBlackMoves(moves, captures);
 		}
-		return std::make_shared<std::vector<Move> >();
+		return 0;
 	}
 
-	MoveVector Board::GenerateWhiteMoves(bool captures)
+	int Board::GenerateWhiteMoves(Move* moves, bool captures)
 	{
-		auto moves = std::make_shared<std::vector<Move> >();
-		moves->reserve(256);
-		this->MakeWhitePawnMoves(moves, captures);
-		this->MakeWhiteRooksMoves(moves, captures);
-		this->MakeWhiteKnightMoves(moves, captures);
-		this->MakeWhiteBishopMoves(moves, captures);
-		this->MakeWhiteQueenMoves(moves, captures);
-		this->MakeWhiteKingMoves(moves, captures);
-		return moves;
+		int movecount = 0;
+		movecount = this->MakeWhitePawnMoves(moves, movecount, captures);
+		movecount = this->MakeWhiteRooksMoves(moves, movecount, captures);
+		movecount = this->MakeWhiteKnightMoves(moves, movecount, captures);
+		movecount = this->MakeWhiteBishopMoves(moves, movecount, captures);
+		movecount = this->MakeWhiteQueenMoves(moves, movecount, captures);
+		movecount = this->MakeWhiteKingMoves(moves, movecount, captures);
+		return movecount;
 	}
 
-	MoveVector Board::GenerateBlackMoves(bool captures)
+	int Board::GenerateBlackMoves(Move* moves, bool captures)
 	{
-		auto moves = std::make_shared<std::vector<Move> >();
-		moves->reserve(256);
-		this->MakeBlackPawnMoves(moves, captures);
-		this->MakeBlackRooksMoves(moves, captures);
-		this->MakeBlackKnightMoves(moves, captures);
-		this->MakeBlackBishopMoves(moves, captures);
-		this->MakeBlackQueenMoves(moves, captures);
-		this->MakeBlackKingMoves(moves, captures);
-		return moves;
+		int movecount = 0;
+		movecount = this->MakeBlackPawnMoves(moves, movecount, captures);
+		movecount = this->MakeBlackRooksMoves(moves, movecount, captures);
+		movecount = this->MakeBlackKnightMoves(moves, movecount, captures);
+		movecount = this->MakeBlackBishopMoves(moves, movecount, captures);
+		movecount = this->MakeBlackQueenMoves(moves, movecount, captures);
+		movecount = this->MakeBlackKingMoves(moves, movecount, captures);
+		return movecount;
 	}
 
 	void Board::PrintBoard()
@@ -508,7 +506,7 @@ namespace Panzer
 		}
 	}
 
-	void Board::MakeWhitePawnMoves(MoveVector moves, bool captures)
+	int Board::MakeWhitePawnMoves(Move* moves, int movecount, bool captures)
 	{
 		// generate pawn moves
 		// first shift pawns up one
@@ -549,11 +547,13 @@ namespace Panzer
 			square to = this->ep_square + N;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				EP_CAPTURE,
 				this->castle_flags,
 				PAWN);
+			movecount++;
 			ep_captures &= ep_captures - 1ULL;
 		}
 
@@ -564,12 +564,14 @@ namespace Panzer
 			square from = to - SW;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 			right_captures &= right_captures - 1ULL;
 		}
 
@@ -580,13 +582,14 @@ namespace Panzer
 			square from = to - SE;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
-			
+			movecount++;	
 			left_captures &= left_captures - 1ULL;	
 		}
 
@@ -597,39 +600,47 @@ namespace Panzer
 			square from = to - SW;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			promotion_right_captures &= promotion_right_captures - 1ULL;
 		}
@@ -641,44 +652,52 @@ namespace Panzer
 			square from = to - SE;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			promotion_left_captures &= promotion_left_captures - 1ULL;	
 		}
 
-		if (captures) return;
+		if (captures) return movecount;
 
 		while (promotions != 0)
 		{
@@ -687,35 +706,43 @@ namespace Panzer
 			square from = to - S;
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				QUEEN_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				ROOK_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				KNIGHT_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				BISHOP_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			promotions &= promotions - ONE_BIT;
 		}
@@ -728,11 +755,13 @@ namespace Panzer
 			square from = to - S;
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				NO_MOVE_FLAGS,
 				this->castle_flags
 			);
+			movecount++;
 			
 			pushes &= pushes-1ULL;
 		}
@@ -744,51 +773,57 @@ namespace Panzer
 			square from = to - SS;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				DOUBLE_PAWN_PUSH,
 				this->castle_flags
 			);
+			movecount++;
 			
 			double_push &= double_push - 1ULL;
 		}
 
-
+		return movecount;
 	}
 
-	void Board::MakeWhiteRooksMoves(MoveVector moves, bool captures)
+	int Board::MakeWhiteRooksMoves(Move* moves, int movecount, bool captures)
 	{
 		auto rooks = this->GetWhiteRooks();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeRookMoves(moves, rooks, white_pieces, black_pieces, captures);
+		movecount = this->MakeRookMoves(moves, movecount, rooks, white_pieces, black_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeWhiteKnightMoves(MoveVector moves, bool captures)
+	int Board::MakeWhiteKnightMoves(Move* moves, int movecount, bool captures)
 	{
 		auto knights = this->GetWhiteKnights();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeKnightMoves(moves, knights, white_pieces, black_pieces, captures);
+		movecount = this->MakeKnightMoves(moves, movecount, knights, white_pieces, black_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeWhiteBishopMoves(MoveVector moves, bool captures)
+	int Board::MakeWhiteBishopMoves(Move* moves, int movecount, bool captures)
 	{
 		auto bishops = this->GetWhiteBishops();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeBishopMoves(moves, bishops, white_pieces, black_pieces, captures);
+		movecount = this->MakeBishopMoves(moves, movecount, bishops, white_pieces, black_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeWhiteQueenMoves(MoveVector moves, bool captures)
+	int Board::MakeWhiteQueenMoves(Move* moves, int movecount, bool captures)
 	{
 		auto queens = this->GetWhiteQueens();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeQueenMoves(moves, queens, white_pieces, black_pieces, captures);
+		movecount = this->MakeQueenMoves(moves, movecount, queens, white_pieces, black_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeWhiteKingMoves(MoveVector moves, bool captures)
+	int Board::MakeWhiteKingMoves(Move* moves, int movecount, bool captures)
 	{
 		auto kings = this->GetWhiteKings();
 		auto white_pieces = this->GetWhitePieces();
@@ -804,7 +839,8 @@ namespace Panzer
 					bool notChecked = !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) || IsSquareAttacked(E1, WHITE));
 					if (notChecked)
 					{
-						PushMove(moves,E1, G1, CASTLE, this->castle_flags);
+						PushMove(moves, movecount, E1, G1, CASTLE, this->castle_flags);
+						movecount++;
 					}
 				}
 			}
@@ -817,16 +853,18 @@ namespace Panzer
 					bool notChecked = !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) || IsSquareAttacked(E1, WHITE));
 					if (notChecked)
 					{
-						PushMove(moves,E1, C1, CASTLE, this->castle_flags);
+						PushMove(moves, movecount, E1, C1, CASTLE, this->castle_flags);
+						movecount++;
 					}
 				}
 			}
 		}
 
-		this->MakeKingMoves(moves, kings, white_pieces, black_pieces);
+		movecount = this->MakeKingMoves(moves, movecount, kings, white_pieces, black_pieces);
+		return movecount;
 	}
 
-	void Board::MakeBlackPawnMoves(MoveVector moves, bool captures)
+	int Board::MakeBlackPawnMoves(Move* moves, int movecount, bool captures)
 	{
 		// generate pawn moves
 		// first shift pawns up one
@@ -869,12 +907,14 @@ namespace Panzer
 			square to = this->ep_square - S;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				EP_CAPTURE,
 				this->castle_flags,
 				PAWN
 			);
+			movecount++;
 			
 			ep_captures &= ep_captures - 1ULL;
 		}
@@ -886,12 +926,14 @@ namespace Panzer
 			square from = to + NW;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 			
 			right_captures &= right_captures - 1ULL;
 		}
@@ -903,12 +945,14 @@ namespace Panzer
 			square from = to + NE;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 			
 			left_captures &= left_captures - 1ULL;	
 		}
@@ -920,39 +964,46 @@ namespace Panzer
 			square from = to + NW;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
-
+			movecount++;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 			promotion_right_captures &= promotion_right_captures - 1ULL;
 		}
 
@@ -963,44 +1014,52 @@ namespace Panzer
 			square from = to + NE;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				QUEEN_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				ROOK_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				BISHOP_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				KNIGHT_PROMO_CAPTURE,
 				this->castle_flags,
 				this->GetPieceAtSquare(to)
 			);
+			movecount++;
 
 			promotion_left_captures &= promotion_left_captures - 1ULL;	
 		}
 
-		if (captures) return;
+		if (captures) return movecount;
 
 		while (promotions != 0)
 		{
@@ -1009,35 +1068,43 @@ namespace Panzer
 			square from = to + N ;
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				QUEEN_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				ROOK_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				KNIGHT_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				BISHOP_PROMO,
 				this->castle_flags
 			);
+			movecount++;
 
 			promotions &= promotions - ONE_BIT;
 		}
@@ -1050,11 +1117,13 @@ namespace Panzer
 			square from = to + N;
 			PushMove(
 				moves,
+				movecount,
 				from, 
 				to, 
 				NO_MOVE_FLAGS,
 				this->castle_flags
 			); 
+			movecount++;
 			
 			pushes &= pushes-1ULL;
 		}
@@ -1066,50 +1135,57 @@ namespace Panzer
 			square from = to + NN;
 			PushMove(
 				moves,
+				movecount,
 				from,
 				to,
 				DOUBLE_PAWN_PUSH,
 				this->castle_flags
 			);
+			movecount++;
 			
 			double_push &= double_push - 1ULL;
 		}
 
+		return movecount;
 	}
 
-	void Board::MakeBlackRooksMoves(MoveVector moves, bool captures)
+	int Board::MakeBlackRooksMoves(Move* moves, int movecount, bool captures)
 	{
 		auto rooks = this->GetBlackRooks();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeRookMoves(moves, rooks, black_pieces, white_pieces, captures);
+		movecount = this->MakeRookMoves(moves, movecount, rooks, black_pieces, white_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeBlackKnightMoves(MoveVector moves, bool captures)
+	int Board::MakeBlackKnightMoves(Move* moves, int movecount, bool captures)
 	{
 		auto knights = this->GetBlackKnights();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeKnightMoves(moves, knights, black_pieces, white_pieces, captures);
+		movecount = this->MakeKnightMoves(moves, movecount, knights, black_pieces, white_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeBlackBishopMoves(MoveVector moves, bool captures)
+	int Board::MakeBlackBishopMoves(Move* moves, int movecount, bool captures)
 	{
 		auto bishops = this->GetBlackBishops();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeBishopMoves(moves, bishops, black_pieces, white_pieces, captures);
+		movecount = this->MakeBishopMoves(moves, movecount, bishops, black_pieces, white_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeBlackQueenMoves(MoveVector moves, bool captures)
+	int Board::MakeBlackQueenMoves(Move* moves, int movecount, bool captures)
 	{
 		auto queens = this->GetBlackQueens();
 		auto white_pieces = this->GetWhitePieces();
 		auto black_pieces = this->GetBlackPieces();
-		this->MakeQueenMoves(moves, queens, black_pieces, white_pieces, captures);
+		movecount = this->MakeQueenMoves(moves, movecount, queens, black_pieces, white_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeBlackKingMoves(MoveVector moves, bool captures)
+	int Board::MakeBlackKingMoves(Move* moves, int movecount, bool captures)
 	{
 		auto kings = this->GetBlackKings();
 		auto white_pieces = this->GetWhitePieces();
@@ -1124,7 +1200,8 @@ namespace Panzer
 					bool notChecked = !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) || IsSquareAttacked(E8, BLACK));
 					if (notChecked)
 					{
-						PushMove(moves,E8, G8, CASTLE, this->castle_flags);
+						PushMove(moves, movecount, E8, G8, CASTLE, this->castle_flags);
+						movecount++;
 					}
 				}
 			}
@@ -1137,16 +1214,18 @@ namespace Panzer
 					bool notChecked = !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) || IsSquareAttacked(E8, BLACK));
 					if (notChecked)
 					{
-						PushMove(moves,E8, C8, CASTLE, this->castle_flags);
+						PushMove(moves, movecount, E8, C8, CASTLE, this->castle_flags);
+						movecount++;
 					}
 				}
 			}
 		}
 
-		this->MakeKingMoves(moves, kings, black_pieces, white_pieces, captures);
+		movecount = this->MakeKingMoves(moves, movecount, kings, black_pieces, white_pieces, captures);
+		return movecount;
 	}
 
-	void Board::MakeRookMoves(MoveVector moves, bitboard rooks, bitboard same_side, bitboard other_side, bool captures)
+	int Board::MakeRookMoves(Move* moves, int movecount, bitboard rooks, bitboard same_side, bitboard other_side, bool captures)
 	{
 		auto occupancy = same_side | other_side;
 		while (rooks != 0)
@@ -1160,12 +1239,14 @@ namespace Panzer
 				square to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
+					movecount,
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
+				movecount++;
 				
 				capture_moves &= capture_moves - 1;
 			}
@@ -1178,11 +1259,13 @@ namespace Panzer
 					square to = Utils::GetLSB(slides);
 					PushMove(
 						moves,
+						movecount,
 						from,
 						to,
 						NO_MOVE_FLAGS,
 						this->castle_flags
 					);
+					movecount++;
 					
 					slides &= slides - 1ULL;
 				}
@@ -1190,9 +1273,11 @@ namespace Panzer
 
 			rooks &= rooks - 1ULL;
 		}
+
+		return movecount;
 	}
 
-	void Board::MakeKnightMoves(MoveVector moves, bitboard knights, bitboard same_side, bitboard other_side, bool captures)
+	int Board::MakeKnightMoves(Move* moves, int movecount, bitboard knights, bitboard same_side, bitboard other_side, bool captures)
 	{
 
 		while (knights != 0)
@@ -1210,12 +1295,14 @@ namespace Panzer
 				int to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
+					movecount,
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
+				movecount++;
 				
 				capture_moves &= capture_moves - 1ULL;
 			}
@@ -1227,11 +1314,13 @@ namespace Panzer
 					int to = Utils::GetLSB(regular);
 					PushMove(
 						moves,
+						movecount,
 						from,
 						to,
 						NO_MOVE_FLAGS,
 						this->castle_flags
 					);
+					movecount++;
 
 					
 					regular &= regular - 1ULL;
@@ -1239,9 +1328,11 @@ namespace Panzer
 			}
 			knights &= knights - 1ULL;
 		}
+
+		return movecount;
 	}
 
-	void Board::MakeBishopMoves(MoveVector moves, bitboard bishops, bitboard same_side, bitboard other_side, bool captures)
+	int Board::MakeBishopMoves(Move* moves, int movecount, bitboard bishops, bitboard same_side, bitboard other_side, bool captures)
 	{
 		auto occupancy = same_side | other_side;
 		while (bishops != 0)
@@ -1255,12 +1346,14 @@ namespace Panzer
 				square to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
+					movecount,
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
+				movecount++;
 				
 				capture_moves &= capture_moves - 1;
 			}
@@ -1273,11 +1366,13 @@ namespace Panzer
 					square to = Utils::GetLSB(slides);
 					PushMove(
 						moves,
+						movecount,
 						from,
 						to,
 						NO_MOVE_FLAGS,
 						this->castle_flags
 					);
+					movecount++;
 					
 					slides &= slides - 1ULL;
 				}
@@ -1285,9 +1380,11 @@ namespace Panzer
 
 			bishops &= bishops - 1ULL;
 		}
+
+		return movecount;
 	}
 
-	void Board::MakeQueenMoves(MoveVector moves, bitboard queens, bitboard same_side, bitboard other_side, bool captures)
+	int Board::MakeQueenMoves(Move* moves, int movecount, bitboard queens, bitboard same_side, bitboard other_side, bool captures)
 	{
 		auto occupancy = same_side | other_side;
 		while (queens != 0)
@@ -1301,12 +1398,14 @@ namespace Panzer
 				square to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
+					movecount,
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
+				movecount++;
 				
 				capture_moves &= capture_moves - 1ULL;
 			}
@@ -1319,11 +1418,13 @@ namespace Panzer
 					square to = Utils::GetLSB(slides);
 					PushMove(
 						moves,
+						movecount,
 						from,
 						to,
 						NO_MOVE_FLAGS,
 						this->castle_flags
 					);
+					movecount++;
 					
 					slides &= slides - 1ULL;
 				}
@@ -1331,9 +1432,10 @@ namespace Panzer
 
 			queens &= queens - 1ULL;
 		}
+		return movecount;
 	}
 
-	void Board::MakeKingMoves(MoveVector moves, bitboard kings, bitboard same_side, bitboard other_side, bool captures)
+	int Board::MakeKingMoves(Move* moves, int movecount, bitboard kings, bitboard same_side, bitboard other_side, bool captures)
 	{
 		while (kings != 0)
 		{
@@ -1348,12 +1450,14 @@ namespace Panzer
 				int to = Utils::GetLSB(capture_moves);
 				PushMove(
 					moves,
+					movecount,
 					from,
 					to,
 					CAPTURE,
 					this->castle_flags,
 					this->GetPieceAtSquare(to)
 				);
+				movecount++;
 
 				
 				capture_moves &= capture_moves - ONE_BIT;
@@ -1366,12 +1470,13 @@ namespace Panzer
 					int to = Utils::GetLSB(regular_moves);
 					PushMove(
 						moves,
+						movecount,
 						from,
 						to,
 						NO_MOVE_FLAGS,
 						this->castle_flags
 					);
-
+					movecount++;
 					
 					regular_moves &= regular_moves - ONE_BIT;
 				}
@@ -1379,6 +1484,8 @@ namespace Panzer
 
 			kings &= kings - ONE_BIT;
 		}
+
+		return movecount;
 	}
 
 std::string Board::BoardToFen()
