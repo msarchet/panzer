@@ -30,19 +30,19 @@ namespace Panzer
 
 		if (move.isPromo())
 		{
-			if (move.getFlags() && QUEEN_PROMO)
+			if (move.getFlags() & QUEEN_PROMO)
 			{
 				output += "q";
 			}
-			if (move.getFlags() && BISHOP_PROMO)
+			if (move.getFlags() & BISHOP_PROMO)
 			{
 				output += "b";
 			}
-			if (move.getFlags() && KNIGHT_PROMO)
+			if (move.getFlags() & KNIGHT_PROMO)
 			{
 				output += "n";
 			}
-			if (move.getFlags() && ROOK_PROMO)
+			if (move.getFlags() & ROOK_PROMO)
 			{
 				output += "r";
 			}

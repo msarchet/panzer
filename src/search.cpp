@@ -254,5 +254,28 @@ namespace Search
 
 		return bestScore;
 	}
+
+	int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta)
+	{
+		auto stand_pat = Panzer::EvaluateBoard(board);
+
+		if (stand_pat >= beta)
+			return beta;
+		if(alpha < stand_pat)
+			alpha = stand_pat;
+
+		auto moves = board.GenerateMoves(true);
+		for (auto it = moves->begin(); it != moves->end(); it++)	
+		{
+			auto move = *it;
+			board.MakeMove(move);
+			auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
+			board.UnmakeMove(move);
+
+			if(score >= beta) return beta;
+			if(score > alpha) alpha = score;
+		}
+		return alpha;
+	}
 }
 }
