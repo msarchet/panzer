@@ -104,7 +104,7 @@ namespace Search
 		if (board.IsChecked(board.GetSideToMove())) depth++;
 		if (depth == 0)  { 
 			nodes++;
-			auto eval = Panzer::EvaluateBoard(board); 
+			auto eval = Quiesence(board, alpha, beta); 
 			auto output = "\t\tEVAL MAX" + std::to_string(eval) + " " + board.PrintMoveChain();
 			Panzer::Com::OutputDebugFile(output);
 			return eval;
@@ -162,7 +162,7 @@ namespace Search
 
 		if (depth == 0)  { 
 			nodes++;
-			auto eval =  -1 * Panzer::EvaluateBoard(board); 
+			auto eval =  -1 * Quiesence(board, alpha, beta); 
 			auto output = "\t\tEVAL MIN " + std::to_string(eval) + " "+ board.PrintMoveChain();
 			Panzer::Com::OutputDebugFile(output);
 			return eval;

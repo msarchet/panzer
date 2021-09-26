@@ -9,6 +9,7 @@
 #include "board_utils.h"
 #include "search.h"
 #include "com.h"
+#include "eval.h"
 
 uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth);
 void ProcessInputs();
