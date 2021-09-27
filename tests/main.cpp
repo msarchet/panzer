@@ -155,5 +155,17 @@ int main()
     std::cout.precision(5);
     std::cout << elapsed_seconds.count() << std::endl;
 
+    board = new Panzer::Board();
+    board->FillSquare(G1, KING, WHITE);
+    board->FillSquare(F1, ROOK, WHITE);
+    board->FillSquare(B1, KNIGHT, WHITE);
 
+    std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
+
+    board = new Panzer::Board();
+    board->FillSquare(E1, KING, WHITE);
+    board->FillSquare(H1, ROOK, WHITE);
+    board->FillSquare(C3, KNIGHT, WHITE);
+
+    std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
 }

@@ -13,6 +13,7 @@ namespace Search
 {
 	int64_t nodes = 0;
 	int64_t qNodes = 0;
+
 	Panzer::Move Search(Panzer::Board &board, int depth)
 	{
 		nodes = 0;
@@ -65,8 +66,8 @@ namespace Search
 
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
-			alpha = INT16_MIN;
-			beta = INT16_MAX;
+			alpha += -50;
+			beta += 50;
 
 			std::swap(moves[0], moves[bestMoveIndex]);
 

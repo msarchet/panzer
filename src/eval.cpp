@@ -226,6 +226,11 @@ int EvaluateBoard(Board &board)
 			square s = Utils::GetLSB(queens);
 			// are the queens blocked by lots of pawns on the same colors
 			auto allowed = sliders->GetBishopAttacks(s, board.GetOccupancy());
+			if ((allowed & pawns) == 0)
+			{
+				score += 60;
+			}
+
 			mask diagonals = (NW_DIAGONALS[s] | NE_DIAGONALS[s] | SQUARE_TO_FILE[s] | SQUARE_TO_RANK[s]);
 			score += __builtin_popcount(allowed) * 2;
 

@@ -21,7 +21,7 @@ namespace Panzer
 					return;
 				}
 
-				debugFileStream.open("log.txt", std::ios_base::app); 
+				debugFileStream.open("./debugging-output/log.txt", std::ios_base::app); 
 				isDebugFileOpen = true;
 			}
 		}

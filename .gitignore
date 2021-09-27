@@ -7,6 +7,8 @@
 *.dat
 .DS_Store
 
+debugging-output/
+
 panzerbb
 panzerbb-debug
 panzer
