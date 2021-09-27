@@ -182,6 +182,11 @@ namespace Panzer
 			score += SORT_PROMO + CAPTURE_SCORES[QUEEN];
 		}
 
+		if (flags & CASTLE)
+		{
+			score += 500;
+		}
+
 		auto move = Panzer::Move(
 			from,
 			to,

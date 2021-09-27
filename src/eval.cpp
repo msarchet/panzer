@@ -145,7 +145,7 @@ int EvaluateBoard(Board &board)
 	auto score = whiteScore - blackScore;
 
 	// equivalent to WHITE ? score : -1 * score
-	return (0 - board.GetSideToMove()) * score;
+	return board.GetSideToMove() == WHITE ? score : -1 * score;
 };
 	int EvaluateRooks(Board &board, color c) 
 	{

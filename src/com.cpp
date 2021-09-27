@@ -9,6 +9,7 @@ namespace Panzer
 	{
 		std::ofstream debugFileStream;
 		bool isDebugFileOpen;
+		bool printDebug;
 		void OpenDebugFile() 
 		{ 
 			if (!isDebugFileOpen)
@@ -28,6 +29,8 @@ namespace Panzer
 		{
 			printDebug = debug;
 		}
+
+		bool GetDebug() { return printDebug; }
 
 		void OutputDebugFile(std::string output)
 		{

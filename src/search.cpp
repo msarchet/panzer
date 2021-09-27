@@ -65,10 +65,10 @@ namespace Search
 
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
-			auto temp = moves[0];
-			auto best = moves[bestMoveIndex];
-			moves[0] = best;
-			moves[bestMoveIndex] = temp;
+			alpha = INT16_MIN;
+			beta = INT16_MAX;
+
+			std::swap(moves[0], moves[bestMoveIndex]);
 
 			//std::iter_swap(moves->begin(), moves->begin() + bestMoveIndex);
 			bestMoveIndex = 0;
@@ -313,7 +313,8 @@ namespace Search
 
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);
-
+		Utils::SortMoves(moves, movecount);
+		int legalMoves = 0;
 		for (auto i = 0; i < movecount; i++)	
 		{
 			auto move = moves[i];
@@ -324,6 +325,7 @@ namespace Search
 				board.UnmakeMove(move);
 				continue;
 			}
+			legalMoves++;
 			qNodes++;
 			auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
 			board.UnmakeMove(move);
@@ -331,6 +333,17 @@ namespace Search
 			if(score >= beta) return beta;
 			if(score > alpha) alpha = score;
 		}
+
+		if (legalMoves == 0)
+		{
+			if (board.IsChecked(board.GetSideToMove()))
+			{
+				return -9999;
+			}
+
+			return -9000;
+		}
+
 		return alpha;
 	}
 }
