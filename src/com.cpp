@@ -1,4 +1,5 @@
 #include "com.h"
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <syncstream>
@@ -14,6 +15,12 @@ namespace Panzer
 		{ 
 			if (!isDebugFileOpen)
 			{
+				if (!std::filesystem::exists("./debugging-output") && !std::filesystem::create_directory("./debugging-output"))
+				{
+					Panzer::Com::SendMessageToUI("DEBUG: failed to create debug output directory");
+					return;
+				}
+
 				debugFileStream.open("log.txt", std::ios_base::app); 
 				isDebugFileOpen = true;
 			}
