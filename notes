@@ -1,1 +1,11 @@
 break std::out_of_range::out_of_range
+
+
+building a profile image
+
+valgrind --tool=callgrind ./panzer-profile
+
+# run search 6
+
+python3 gprof2dot.py -f callgrind callgrind.out.5683 | d
+ot -Tpng -o 5683.png

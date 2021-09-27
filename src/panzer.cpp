@@ -178,8 +178,7 @@ void ProcessInputs()
                 depth = std::stoi(token);
             }
 
-            auto searchedMove = Panzer::Search::Search(searchBoard, depth);
-            Panzer::Com::SendMessageToUI(Panzer::Utils::PrintMove(searchedMove));
+            Panzer::Search::Search(searchBoard, depth);
         }
 
         if (token == "quit" || token == "q")
