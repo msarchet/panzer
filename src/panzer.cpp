@@ -42,7 +42,7 @@ void ProcessInputs()
         std::getline(std::cin, line);
         token = GetNextToken(line, delimeter);
 
-        if (token == "moves")
+        if (token == "position")
         {
             token = GetNextToken(line, delimeter);
 
@@ -58,127 +58,143 @@ void ProcessInputs()
                 token = GetNextToken(line, delimeter);
             }
 
-            while (!token.empty())
+            if (token == "fen")
             {
-                if (token.length() < 4)
-                {
-                    std::cout << token;
-                    break;
-                }
+                std::string fen = "";
 
-                auto from = stringToSquare(token.substr(0, 2));
-                auto to = stringToSquare(token.substr(2, 2));
-                std::string promotion = "";
-                if (token.length() == 5)
+                if (line.find("moves"))
                 {
-                    promotion = token.substr(4, 1);
-                }
-                Panzer::Move moves[256];
-                auto movecount = board->GenerateMoves(moves);
-                auto foundMove = Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS);
-                auto foundValidMove = false;
-                if (movecount == 0) break;
-                for (auto i = 0; i < movecount && !foundValidMove; i++)
-                {
-                    auto possibleMove = moves[i];
-                    if (possibleMove.getFrom() == from && possibleMove.getTo() == to)
-                    {
-                        if (promotion.empty())
-                        {
-                            foundValidMove = true;
-                        }
-                        else
-                        {
-                            if (!possibleMove.isPromo())
-                            {
-                                continue;
-                            }
-                            if (promotion == "q" && (possibleMove.getFlags() & QUEEN_PROMO))
-                            {
-                                foundValidMove = true;
-                            }
-                            if (promotion == "b" && (possibleMove.getFlags() & BISHOP_PROMO))
-                            {
-                                foundValidMove = true;
-                            }
-                            if (promotion == "n" && (possibleMove.getFlags() & KNIGHT_PROMO))
-                            {
-                                foundValidMove = true;
-                            }
-                            if (promotion == "r" && (possibleMove.getFlags() & ROOK_PROMO))
-                            {
-                                foundValidMove = true;
-                            }
-                        }
-
-                        if (foundValidMove)
-                        {
-                            foundMove = possibleMove; 
-                        }
-                    }
-                }
-
-                if (foundValidMove)
-                {
-                    board->MakeMove(foundMove);
+                    fen = GetNextToken(line, "moves");
+                    line = line + "moves";
                 }
                 else
                 {
-                    break;
+                    fen = GetNextToken(line, delimeter);
                 }
 
-                token = GetNextToken(line, delimeter);
+                board->FenToBoard(fen);
+            }
+
+            token = GetNextToken(line, delimeter);
+            if (token == "moves")
+            {
+                while (!token.empty())
+                {
+                    if (token.length() < 4)
+                    {
+                        break;
+                    }
+
+                    auto from = stringToSquare(token.substr(0, 2));
+                    auto to = stringToSquare(token.substr(2, 2));
+                    std::string promotion = "";
+                    if (token.length() == 5)
+                    {
+                        promotion = token.substr(4, 1);
+                    }
+                    Panzer::Move moves[256];
+                    auto movecount = board->GenerateMoves(moves);
+                    auto foundMove = Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS);
+                    auto foundValidMove = false;
+                    if (movecount == 0) break;
+                    for (auto i = 0; i < movecount && !foundValidMove; i++)
+                    {
+                        auto possibleMove = moves[i];
+                        if (possibleMove.getFrom() == from && possibleMove.getTo() == to)
+                        {
+                            if (promotion.empty())
+                            {
+                                foundValidMove = true;
+                            }
+                            else
+                            {
+                                if (!possibleMove.isPromo())
+                                {
+                                    continue;
+                                }
+                                if (promotion == "q" && (possibleMove.getFlags() & QUEEN_PROMO))
+                                {
+                                    foundValidMove = true;
+                                }
+                                if (promotion == "b" && (possibleMove.getFlags() & BISHOP_PROMO))
+                                {
+                                    foundValidMove = true;
+                                }
+                                if (promotion == "n" && (possibleMove.getFlags() & KNIGHT_PROMO))
+                                {
+                                    foundValidMove = true;
+                                }
+                                if (promotion == "r" && (possibleMove.getFlags() & ROOK_PROMO))
+                                {
+                                    foundValidMove = true;
+                                }
+                            }
+
+                            if (foundValidMove)
+                            {
+                                foundMove = possibleMove; 
+                            }
+                        }
+                    }
+
+                    if (foundValidMove)
+                    {
+                        board->MakeMove(foundMove);
+                    }
+                    else
+                    {
+                        break;
+                    }
+
+                    token = GetNextToken(line, delimeter);
+                }
             }
         }
 
-        if (token == "perft")
+        if (token == "go")
         {
-            std::cout << "Running perft" << std::endl;
             token = GetNextToken(line, delimeter);
-            auto depth = std::stoi(token);
-            uint64_t total_count = 0;
-            const auto perftBoard = new Panzer::Board(*board);
 
-            std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
+            if (token == "search")
+            {
+                auto searchBoard = Panzer::Board(*board);
+                int depth = 6;
+                token = GetNextToken(line, " ");
 
-            start = std::chrono::high_resolution_clock::now();
+                if (!token.empty())
+                {
+                    depth = std::stoi(token);
+                }
 
-            total_count = CountMovesRecursive(*perftBoard, depth, true);
+                Panzer::Search::Search(searchBoard, depth);
+            }
 
-            end = std::chrono::high_resolution_clock::now();
+            if (token == "perft")
+            {
+                token = GetNextToken(line, delimeter);
+                auto depth = std::stoi(token);
+                uint64_t total_count = 0;
+                const auto perftBoard = new Panzer::Board(*board);
 
-            std::chrono::duration<double> elapsed_seconds = end - start; 
-            std::cout.precision(5);
-            std::cout << elapsed_seconds.count() << std::endl;
-            std::cout << "total moves " << total_count << std::endl;
-            std::cout.precision(0);
-            std::cout << "NPS: " << std::fixed << total_count / elapsed_seconds.count() << std::endl;
+                std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
-        }
+                start = std::chrono::high_resolution_clock::now();
 
-        if (token == "fen")
-        {
-            auto fen = line;
-            board->FenToBoard(fen);
+                total_count = CountMovesRecursive(*perftBoard, depth, true);
+
+                end = std::chrono::high_resolution_clock::now();
+
+                std::chrono::duration<double> elapsed_seconds = end - start; 
+                Panzer::Com::OutputDebugFile("Perft Time");
+                Panzer::Com::OutputDebugFile(std::to_string(elapsed_seconds.count()));
+                Panzer::Com::SendMessageToUI("Nodes searched: " + std::to_string(total_count));
+            }
         }
 
         if (token == "print")
         {
             board->PrintBoard();
-            std::cout << board->BoardToFen();
-        }
-
-        if (token == "search")
-        {
-            auto searchBoard = Panzer::Board(*board);
-            int depth = 2;
-            token = GetNextToken(line, " ");
-            if (!token.empty())
-            {
-                depth = std::stoi(token);
-            }
-
-            Panzer::Search::Search(searchBoard, depth);
+            std::cout << board->BoardToFen() << std::endl;
         }
 
         if (token == "quit" || token == "q")
@@ -246,7 +262,6 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
                     legalCount = CountMovesRecursive(*newBoard, furtherDepth, false);
                 }
                 auto output = std::string(squareToString[move.getFrom()]) + std::string(squareToString[move.getTo()]) + std::string(": ") + std::to_string(legalCount);
-
                 return std::tuple(output, legalCount);
             }));
         }
@@ -258,7 +273,7 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
             auto count = std::get<uint64_t>(result);
             if (count != 0)
             {
-                std::cout << std::get<std::string>(result) << std::endl;
+                Panzer::Com::SendMessageToUI(std::get<std::string>(result));
                 totalCount += count;
             }
         }

@@ -2,6 +2,8 @@
 #include "bitboard_constants.h"
 #include "board_utils.h"
 #include "piece_square_scores.h"
+#include "com.h"
+
 #include <sstream>
 
 namespace Panzer
@@ -1853,6 +1855,11 @@ std::string Board::BoardToFen()
 					break;
 				}
 			}
+		}
+
+		if (!board_done)
+		{
+			Panzer::Com::SendMessageToUI("info Failed to parse fen");
 		}
 
 		// hash the board

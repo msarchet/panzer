@@ -146,9 +146,8 @@ int main()
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
-    std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout.precision(5);
-    std::cout << elapsed_seconds.count() << std::endl;
+    //std::cout << elapsed_seconds.count() << std::endl;
 
     board = new Panzer::Board();
     board->FillSquare(G1, KING, WHITE);
@@ -187,4 +186,18 @@ int main()
     entry = Panzer::TTTable.Find(beforeHash, A1, A2);
     assert(entry.score == 25);
     assert(entry.depth == 2);
+
+    start = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i<10e6; i++)
+    {
+        board->FenToBoard(STARTFEN);
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start; 
+
+    std::cout.precision(6);
+
+    std::cout << elapsed_seconds.count() / 10e6;
 }

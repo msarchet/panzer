@@ -28,7 +28,7 @@ namespace Search
 		auto totalNodes = (nodes + qNodes);
 		auto qNodePercentage = static_cast<double>(qNodes) / static_cast<double>(totalNodes);
 		auto nps = totalNodes / time;
-		Panzer::Com::SendMessageToUI("NPS: " + std::to_string(nps) + " Nodes: " + std::to_string(totalNodes) + "Root Nodes: " + std::to_string(nodes) + "Quiesence Nodes: " + std::to_string(qNodes) + " " + std::to_string(qNodePercentage)  + " In: " + std::to_string(elapsed_seconds.count()));
+		Panzer::Com::SendMessageToUI("info  nps" + std::to_string(nps) + " nodes " + std::to_string(totalNodes) + "Root Nodes " + std::to_string(nodes) + "Quiesence Nodes " + std::to_string(qNodes) + " " + std::to_string(qNodePercentage)  + " time " + std::to_string(elapsed_seconds.count()));
 	}
 
 	void SearchIterate(Panzer::Board &board, int depth) {
@@ -77,10 +77,15 @@ namespace Search
 			moveIndex++;
 		}
 
+		Panzer::Com::SendMessageToUI("info depth 1 score " + std::to_string(alpha) + " " + Panzer::Utils::PrintMove(bestMove));
+
 
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
 			std::swap(moves[0], moves[bestMoveIndex]);
+
+			alpha = INT16_MIN;
+			beta = INT16_MAX;
 
 			bestMoveIndex = 0;
 			moveIndex = 0;
@@ -114,9 +119,12 @@ namespace Search
 				board.UnmakeMove(move);
 				moveIndex++;
 			}
+
+			Panzer::Com::SendMessageToUI("info depth " + std::to_string(iterative_depth) +" score " + std::to_string(alpha) + " " + Panzer::Utils::PrintMove(bestMove));
 		}
 
-		Panzer::Com::SendMessageToUI(Panzer::Utils::PrintMove(bestMove));
+		Panzer::Com::SendMessageToUI("bestmove " + Panzer::Utils::PrintMove(bestMove));
+
 		auto output = "FINAL ALPHA " + std::to_string(alpha);
 		Panzer::Com::OutputDebugFile(output);
 	}
