@@ -1,6 +1,7 @@
 #include "bitboard_constants.h"
 #include "board_utils.h"
 #include <algorithm>
+
 namespace Panzer
 {
     void Utils::PrintBoard(bitboard board)
@@ -67,7 +68,7 @@ namespace Panzer
 	{
 		std::array<unsigned int, 624> data
 		{
-			1807997966,
+			1807997967,
 			514589821,
 			1959766121,
 			853312699,

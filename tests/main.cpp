@@ -146,11 +146,6 @@ int main()
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
-    start = std::chrono::high_resolution_clock::now();
-    auto best = Panzer::Search::Search(*board, 1);
-    std::cout << Panzer::Utils::PrintMove(best);
-    end = std::chrono::high_resolution_clock::now();
-
     std::chrono::duration<double> elapsed_seconds = end - start; 
     std::cout.precision(5);
     std::cout << elapsed_seconds.count() << std::endl;
@@ -168,4 +163,28 @@ int main()
     board->FillSquare(C3, KNIGHT, WHITE);
 
     std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
+
+    board = new Panzer::Board();
+    std::cout << "hash test" << std::endl;
+    board->FenToBoard(STARTFEN);
+    auto beforeHash = board->GetHash();
+    std::cout << beforeHash << std::endl;
+    auto e2e4 = Panzer::Move(A2, A4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
+    board->MakeMove(e2e4);
+    std::cout << board->GetHash() << std::endl;
+    board->UnmakeMove(e2e4);
+    assert(beforeHash == board->GetHash());
+
+    auto entry = Panzer::TTTable.Find(beforeHash, A1, A2);
+    assert(entry.score == Panzer::TT_INVALID);
+
+    Panzer::TTTable.Insert(beforeHash, A1, A2, 2, 25);
+    entry = Panzer::TTTable.Find(beforeHash, A1, A2);
+    assert(entry.score == 25);
+    assert(entry.depth == 2);
+
+    Panzer::TTTable.Insert(beforeHash, A1, A2, 1, 40);
+    entry = Panzer::TTTable.Find(beforeHash, A1, A2);
+    assert(entry.score == 25);
+    assert(entry.depth == 2);
 }

@@ -11,7 +11,10 @@ namespace Panzer
 	{
 		public:
 			hash color_hash = 0;
-			std::uniform_int_distribution<unsigned long long> dist;
+			hash zorbist_castle_hash[ALL_CASTLE_FLAGS + 1] = {0};
+			hash zorbist_ep_hash[65] = {0};
+
+			std::uniform_int_distribution<hash> dist;
 			std::mt19937 engine;
 
 			zorbist_lookup()
@@ -51,9 +54,18 @@ namespace Panzer
 							zorbist_hash_lookup[s][p][c] = dist(engine);
 						}
 					}
+
+					zorbist_ep_hash[s] = dist(engine);
 				}
 
+				zorbist_ep_hash[NO_SQUARE] = dist(engine);
+
 				color_hash = dist(engine);
+
+				for (castle_flag c = 0; c <= ALL_CASTLE_FLAGS; c++)
+				{
+					zorbist_castle_hash[c] = dist(engine);
+				}
 			}
 	};
 

@@ -8,7 +8,7 @@
 #include "bitboard_constants.h"
 #include "board_utils.h"
 #include "sliders.h"
-
+#include "zorbist.h"
 
 namespace Panzer
 {
@@ -24,7 +24,7 @@ namespace Panzer
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
 		uint8_t ply = 1;
 		hash boardHash = 0;
-
+		zorbist_lookup* zorbist = new zorbist_lookup();
 	public:
 		Board() {
 			slider_attacks->Initialize();

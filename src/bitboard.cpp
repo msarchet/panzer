@@ -138,6 +138,8 @@ namespace Panzer
 		this->Pieces->at(p) ^= fromToBB;
 		this->pieceLookup->at(from) = NO_PIECE;
 		this->pieceLookup->at(to) = p;
+		this->boardHash ^= zorbist->Get_Hash_Value(from, p, c);
+		this->boardHash ^= zorbist->Get_Hash_Value(to, p, c);
 	}
 
 	void Board::FillSquare(square s, piece p, color c)
@@ -146,6 +148,7 @@ namespace Panzer
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
 		this->pieceLookup->at(s) = p;
+		this->boardHash ^= zorbist->Get_Hash_Value(s, p, c);
 	}
 
 	void Board::ClearSquare(square s,piece p, color c)
@@ -154,6 +157,7 @@ namespace Panzer
 		this->Colors->at(c) ^= bb;
 		this->Pieces->at(p) ^= bb;
 		this->pieceLookup->at(s) = NO_PIECE;
+		this->boardHash ^= zorbist->Get_Hash_Value(s, p, c);
 	}
 
 	void Board::PushMove(Move* moves, int movecount, square from, square to, move_flag flags, castle_flag castleFlags, piece captured, square epSquare)
@@ -360,6 +364,7 @@ namespace Panzer
 		}
 		
 
+		boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
 		if (this->castle_flags != EMPTY_CASTLE_FLAGS)
 		{
 			// toggle off castle flags
@@ -403,6 +408,8 @@ namespace Panzer
 			}
 		}
 
+		boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+
 		if (move.isCastle())
 		{
 			switch (move.getTo())
@@ -422,6 +429,8 @@ namespace Panzer
 			}
 		}
 
+		this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+
 		if (move.getFlags() == DOUBLE_PAWN_PUSH)
 		{
 			this->ep_square = move.getTo();
@@ -431,7 +440,9 @@ namespace Panzer
 			this->ep_square = NO_SQUARE;
 		}
 
+		this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
 		this->side_to_move = !this->side_to_move;
+		this->boardHash ^= zorbist->color_hash;
 		this->ply++;
 		moveChain->emplace_back(move);
 	}
@@ -443,6 +454,11 @@ namespace Panzer
 		moveChain->pop_back();
 		this->ply--;
 		this->side_to_move = !this->side_to_move;
+		this->boardHash ^= zorbist->color_hash;
+
+		boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+		this->ep_square = move.getPriorEPSquare();
+		boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
 
 		if (move.isCastle())
 		{
@@ -463,7 +479,9 @@ namespace Panzer
 			}
 		}
 
+		boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
 		this->castle_flags = move.getCastleFlags();
+		boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
 
 		// clear the to square
 		// fill the from square
@@ -495,7 +513,6 @@ namespace Panzer
 			this->ToggleBitBoards(move.getTo(), move.getFrom(), this->GetPieceAtSquare(move.getTo()), this->side_to_move);
 		}
 		
-		this->ep_square = move.getPriorEPSquare();
 
 		// put captured piece back
 		if (move.isCapture())
@@ -1595,12 +1612,28 @@ std::string Board::BoardToFen()
 	}
 
 	// TODO: implement move clocks
+
+	fen += " ";
+
+	// half move clock
+	fen +="-";
+
+	fen += " ";
+
+	fen += std::to_string(this->ply/2 - this->side_to_move);
 	return fen;
 }
 
 	void Board::FenToBoard(const std::string& fen)
 	{
 		bool board_done = false;
+		bool sideToMoveDone = false;
+		bool castleFlagsDone = false;
+		bool epSquareDone = false;
+		bool halfClockDone = false;
+		bool fullMoveNumberDone = false;
+		this->boardHash = 0;
+		std::vector<char> buffer = {};
 		this->pieceLookup = new std::array<piece, 64> { NO_PIECE };
 		this->Pieces = new std::array<bitboard, 7> { 0ULL };
 		this->Colors = new std::array<bitboard, 2> { 0ULL };
@@ -1614,32 +1647,128 @@ std::string Board::BoardToFen()
 			auto s = fenIndexToSquare[index];
 			if (board_done)
 			{
+				if (!sideToMoveDone)
+				{
+					switch (c)
+					{
+						case 'b':
+							this->side_to_move = BLACK;
+							break;
+						case 'w':
+							this->side_to_move = WHITE;
+							break;
+						case ' ':
+							sideToMoveDone = true;
+							continue;
+							break;
+					}
+				}
+
 				// first space is side
 				// second spacce is castle flags
 				// third space is ep
 				// last two digits are moves and plys
-				switch (c)
+				if (sideToMoveDone && !castleFlagsDone)
 				{
-					case 'b':
-						this->side_to_move = BLACK;
-						break;
-					case 'w':
-						this->side_to_move = WHITE;
-						break;
-					case 'k':
-						this->castle_flags |= BLACKK;
-						break;
-					case 'q':
-						this->castle_flags |= BLACKQ;
-						break;
-					case 'K':
-						this->castle_flags |= WHITEK;
-						break;
-					case 'Q':
-						this->castle_flags |= WHITEQ;
-						break;
-					case '\0':
-						return;
+					switch (c)
+					{
+						case 'k':
+							this->castle_flags |= BLACKK;
+							break;
+						case 'q':
+							this->castle_flags |= BLACKQ;
+							break;
+						case 'K':
+							this->castle_flags |= WHITEK;
+							break;
+						case 'Q':
+							this->castle_flags |= WHITEQ;
+							break;
+						case '-':
+						case ' ':
+						case '\0':
+							castleFlagsDone = true;
+							continue;
+							break;
+					}
+				}
+
+				if (castleFlagsDone && !epSquareDone)
+				{
+					if (c == '-' || c == '\0')  
+					{ 
+						epSquareDone = true; 
+						continue;
+					}
+
+					if (c == ' ' || c == '\0')
+					{
+						std::string square = "";
+						for (auto b : buffer)
+						{
+							square.push_back(b);
+						}
+						buffer.clear();
+
+						if (!square.empty())
+						{
+							this->ep_square = stringToSquare(square);
+						}
+
+						epSquareDone = true;
+					}
+
+					buffer.push_back(c);
+				}
+
+				if (epSquareDone && !halfClockDone)
+				{
+					// set half clock from numbers
+					if (c == '-' || c == '\0')
+					{
+						halfClockDone = true;
+						continue;
+					}
+
+					if (c == ' ' && !halfClockDone)
+					{
+						std::string halfClock = "";
+						for (auto b: buffer)
+						{
+							halfClock.push_back(b);
+						}
+
+						buffer.clear();
+						// set half clock
+
+						halfClockDone = true;
+					}
+
+					buffer.push_back(c);
+				}
+
+				if (halfClockDone && !fullMoveNumberDone)
+				{
+					// set half clock from numbers
+					if (c == '-')
+					{
+						fullMoveNumberDone = true;
+						continue;
+					}
+
+					buffer.push_back(c);
+
+					if (c == '\0')
+					{
+						std::string full ="";
+						for (auto b: buffer)
+						{
+							full.push_back(b);
+						}
+
+						int moves = std::stoi(full);
+						this->ply = moves * 2 + this->side_to_move;
+					}
 				}
 			}
 			else 
@@ -1725,5 +1854,14 @@ std::string Board::BoardToFen()
 				}
 			}
 		}
+
+		// hash the board
+		if (this->side_to_move == BLACK)
+		{
+			this->boardHash ^= zorbist->color_hash;
+		}
+
+		this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+		this->boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
 	}
 }

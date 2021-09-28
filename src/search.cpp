@@ -84,7 +84,6 @@ namespace Search
 
 			bestMoveIndex = 0;
 			moveIndex = 0;
-			int16_t score = alpha;
 
 			for (auto i = 0; i < movecount; i++)
 			{
@@ -94,14 +93,7 @@ namespace Search
 				int legalMoves = 0;
 				if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 				{
-					auto temp = AlphaBetaMin(board, score - 50, score + 50, iterative_depth - 1);
-
-					if (temp <= score - 50 || temp >= score + 50)
-					{
-						temp = AlphaBetaMin(board, INT16_MIN, INT16_MAX, iterative_depth - 1);
-					}
-
-					score = temp;
+					auto score = AlphaBetaMin(board, alpha, beta, iterative_depth - 1);
 
 					if (score > alpha)
 					{
@@ -131,6 +123,7 @@ namespace Search
 
 	int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
 	{
+		// if out of time return
 		if (board.IsChecked(board.GetSideToMove())) depth++;
 		if (depth == 0)  { 
 			nodes++;
@@ -201,6 +194,7 @@ namespace Search
 
 	int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
 	{
+		// if out of time return 
 		if (board.IsChecked(board.GetSideToMove())) depth++;
 
 		if (depth == 0)  { 
@@ -273,6 +267,7 @@ namespace Search
 
 	int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
 	{
+		// if out of time return
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves);
 		Utils::SortMoves(moves, movecount);
@@ -312,6 +307,8 @@ namespace Search
 
 	int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta)
 	{
+		// if out of time return alpha
+		// return alpha
 		auto stand_pat = Panzer::EvaluateBoard(board);
 
 		if (stand_pat >= beta)
