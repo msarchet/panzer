@@ -36,12 +36,19 @@ namespace Search
 		auto alpha = INT16_MIN;
 		auto beta = INT16_MAX;
 
-		Panzer::Move bestMove = Panzer::Move(0, 0, 0, 0);
+		Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
 		bestMove.id = -1;	
 
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves);
-		if (movecount == 0) Panzer::Com::SendMessageToUI(Panzer::Utils::PrintMove(bestMove));
+		if (movecount == 0)  { 
+			if (!board.IsChecked(board.GetSideToMove()))
+			{
+				bestMove.m_to = A1;
+			}
+			Panzer::Com::OutputDebugFile("no moves"); 
+			Panzer::Com::SendMessageToUI(Panzer::Utils::PrintMove(bestMove)); 
+		}
 
 		Utils::SortMoves(moves, movecount);
 
@@ -83,9 +90,6 @@ namespace Search
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
 			std::swap(moves[0], moves[bestMoveIndex]);
-
-			alpha = INT16_MIN;
-			beta = INT16_MAX;
 
 			bestMoveIndex = 0;
 			moveIndex = 0;
@@ -324,10 +328,10 @@ namespace Search
 			return beta;
 		}
 
-		if(alpha < stand_pat) 
-		{
-			alpha = stand_pat;
-		}
+		//if(alpha < stand_pat) 
+		//{
+		//	alpha = stand_pat;
+		//}
 
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);
