@@ -187,17 +187,6 @@ int main()
     assert(entry.score == 25);
     assert(entry.depth == 2);
 
-    start = std::chrono::high_resolution_clock::now();
-
-    for (int i = 0; i<10e6; i++)
-    {
-        board->FenToBoard(STARTFEN);
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end - start; 
-
-    std::cout.precision(6);
-
-    std::cout << elapsed_seconds.count() / 10e6;
+    board->FenToBoard("2rqk3/1p3pp1/p1p1p1p1/3nQ2r/3P4/1P3N1P/PbPBKPP1/1R5R w - - - 35");
+    std::cout << Panzer::Search::SEE(*board, H5);
 }

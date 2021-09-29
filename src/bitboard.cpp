@@ -168,7 +168,7 @@ namespace Panzer
 
 		if (captured != NO_PIECE)
 		{
-			score += SORT_CAPTURE + CAPTURE_SCORES[captured];
+			score += SORT_CAPTURE + CAPTURE_SCORES[captured] + CAPTURE_SCORES_AGGRESSOR[this->GetPieceAtSquare(from)];
 		}
 
 		if (flags & KNIGHT_PROMO)

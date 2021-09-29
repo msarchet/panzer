@@ -42,6 +42,12 @@ void ProcessInputs()
         std::getline(std::cin, line);
         token = GetNextToken(line, delimeter);
 
+        if (token == "isready")
+        {
+            Panzer::Com::SendMessageToUI("readyok");
+            continue;
+        }
+
         if (token == "position")
         {
             token = GetNextToken(line, delimeter);
@@ -155,7 +161,7 @@ void ProcessInputs()
         {
             token = GetNextToken(line, delimeter);
 
-            if (token == "search")
+            if (token == "depth")
             {
                 auto searchBoard = Panzer::Board(*board);
                 int depth = 6;

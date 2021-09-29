@@ -36,12 +36,11 @@ namespace Search
 		auto alpha = INT16_MIN;
 		auto beta = INT16_MAX;
 
-		Panzer::Move bestMove = Panzer::Move(0, 0, 0, 0);
+		Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
 		bestMove.id = -1;	
 
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves);
-		if (movecount == 0) Panzer::Com::SendMessageToUI(Panzer::Utils::PrintMove(bestMove));
 
 		Utils::SortMoves(moves, movecount);
 
@@ -121,6 +120,17 @@ namespace Search
 			}
 
 			Panzer::Com::SendMessageToUI("info depth " + std::to_string(iterative_depth) +" score " + std::to_string(alpha) + " " + Panzer::Utils::PrintMove(bestMove));
+		}
+
+		if (movecount == 0)  
+		{
+			// draw
+			if (!board.IsChecked(board.GetSideToMove()))
+			{
+					bestMove.m_to = A1;
+			}
+
+			Panzer::Com::OutputDebugFile("no moves");
 		}
 
 		Panzer::Com::SendMessageToUI("bestmove " + Panzer::Utils::PrintMove(bestMove));
@@ -317,6 +327,7 @@ namespace Search
 	{
 		// if out of time return alpha
 		// return alpha
+
 		auto stand_pat = Panzer::EvaluateBoard(board);
 
 		if (stand_pat >= beta)
@@ -332,6 +343,7 @@ namespace Search
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);
 		Utils::SortMoves(moves, movecount);
+
 		int legalMoves = 0;
 		for (auto i = 0; i < movecount; i++)	
 		{
@@ -343,13 +355,24 @@ namespace Search
 				board.UnmakeMove(move);
 				continue;
 			}
+
 			legalMoves++;
 			qNodes++;
-			auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
-			board.UnmakeMove(move);
 
-			if(score >= beta) return beta;
-			if(score > alpha) alpha = score;
+			// if this capture
+			if (SEE(board, move.getTo()) + stand_pat > alpha)
+			{
+				auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
+				board.UnmakeMove(move);
+
+				if(score >= beta) return beta;
+				if(score > alpha) alpha = score;
+
+			}
+			else
+			{
+				board.UnmakeMove(move);
+			}
 		}
 
 		if (movecount != 0 && legalMoves == 0)
@@ -363,6 +386,38 @@ namespace Search
 		}
 
 		return alpha;
+	}
+
+	int16_t SEE(Panzer::Board &board, square to)
+	{
+		int16_t value = 0;
+		Move moves[256];
+		auto movecount = board.GenerateMoves(moves, true);
+		Move filtered[256];
+		auto filteredCount = 0;
+		for (int i = 0; i < movecount; i++)
+		{
+			auto move = moves[i];
+			if (move.getTo() == to)
+			{
+				filtered[filteredCount] = move;
+				filteredCount++;
+			}
+		}
+
+		std::sort(filtered, filtered + filteredCount, [&board](Panzer::Move one, Panzer::Move two){
+			return board.GetPieceAtSquare(one.getFrom()) < board.GetPieceAtSquare(two.getFrom());
+		});
+
+		for (int i = 0; i < filteredCount; i++)
+		{
+			auto move = filtered[i];
+			board.MakeMove(move);
+			value = std::max(0, CAPTURE_SCORES[move.capturedPiece] - SEE(board, to));
+			board.UnmakeMove(move);
+		}
+
+		return value;
 	}
 }
 }

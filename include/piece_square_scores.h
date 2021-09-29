@@ -33,6 +33,16 @@ const piece_score CAPTURE_SCORES[7] = {
 	KING_SCORE
 };
 
+const piece_score CAPTURE_SCORES_AGGRESSOR[7] = {
+	0,
+	7,
+	6,
+	5,
+	4,
+	3,
+  2
+};
+
 const piece_score SORT_PROMO = 500;
 const piece_score SORT_CAPTURE = 250;
 
