@@ -49,13 +49,11 @@ void ProcessInputs()
             if (token == "startpos")
             {
                 board->FenToBoard(STARTFEN);
-                token = GetNextToken(line, delimeter);
             }
 
             if (token == "kiwi")
             {
                 board->FenToBoard(KIWIPETE);
-                token = GetNextToken(line, delimeter);
             }
 
             if (token == "fen")
@@ -65,19 +63,21 @@ void ProcessInputs()
                 if (line.find("moves"))
                 {
                     fen = GetNextToken(line, "moves");
-                    line = line + "moves";
+                    line = "moves" + line;
                 }
                 else
                 {
-                    fen = GetNextToken(line, delimeter);
+                    fen = line;
                 }
 
                 board->FenToBoard(fen);
             }
 
             token = GetNextToken(line, delimeter);
+
             if (token == "moves")
             {
+                token = GetNextToken(line, delimeter);
                 while (!token.empty())
                 {
                     if (token.length() < 4)
@@ -206,6 +206,12 @@ void ProcessInputs()
         if (token == "debug")
         {
             Panzer::Com::SetDebug(true);
+        }
+
+        if (token == "fen")
+        {
+            Panzer::Com::SendMessageToUI("fen " + board->BoardToFen());
+            //std::cout << "fen " << board->BoardToFen() << std::endl;
         }
     }
 

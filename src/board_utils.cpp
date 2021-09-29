@@ -27,7 +27,21 @@ namespace Panzer
 
 	std::string Utils::PrintMove(Panzer::Move move)
 	{
-		auto output = squareToString[move.getFrom()] + squareToString[move.getTo()];
+		std::string output = "";
+		if (move.getFrom() == NO_SQUARE) {
+			if (move.getTo() == NO_SQUARE)
+			{
+				output = "checkmate";
+			}
+			else if (move.getTo() == A1)
+			{
+				output = "draw";
+			}
+
+			return output;
+		}
+
+		output = squareToString[move.getFrom()] + squareToString[move.getTo()];
 
 		if (move.isPromo())
 		{

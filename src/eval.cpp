@@ -165,7 +165,7 @@ int EvaluateBoard(Board &board)
 
 			if ((allowed & pawns) == 0)
 			{
-				score += 50;
+				score += 5;
 			}
 
 			mask rank = SQUARE_TO_RANK[s];
@@ -202,7 +202,7 @@ int EvaluateBoard(Board &board)
 
 			if (pawnCount < 3)
 			{
-				score += 10;
+				score += 5;
 			}
 			bishops &= bishops - ONE_BIT; 
 		}
@@ -228,7 +228,7 @@ int EvaluateBoard(Board &board)
 			auto allowed = sliders->GetBishopAttacks(s, board.GetOccupancy());
 			if ((allowed & pawns) == 0)
 			{
-				score += 60;
+				score += 10;
 			}
 
 			mask diagonals = (NW_DIAGONALS[s] | NE_DIAGONALS[s] | SQUARE_TO_FILE[s] | SQUARE_TO_RANK[s]);
