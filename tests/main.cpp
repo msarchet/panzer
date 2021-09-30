@@ -171,22 +171,14 @@ int main()
     auto e2e4 = Panzer::Move(A2, A4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
     board->MakeMove(e2e4);
     std::cout << board->GetHash() << std::endl;
+    auto e5e7 = Panzer::Move(E5, E7, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
+    board->MakeMove(e5e7);
+    board->UnmakeMove(e5e7);
     board->UnmakeMove(e2e4);
     assert(beforeHash == board->GetHash());
 
-    auto entry = Panzer::TTTable.Find(beforeHash, A1, A2);
-    assert(entry.score == Panzer::TT_INVALID);
-
-    Panzer::TTTable.Insert(beforeHash, A1, A2, 2, 25);
-    entry = Panzer::TTTable.Find(beforeHash, A1, A2);
-    assert(entry.score == 25);
-    assert(entry.depth == 2);
-
-    Panzer::TTTable.Insert(beforeHash, A1, A2, 1, 40);
-    entry = Panzer::TTTable.Find(beforeHash, A1, A2);
-    assert(entry.score == 25);
-    assert(entry.depth == 2);
-
-    board->FenToBoard("2rqk3/1p3pp1/p1p1p1p1/3nQ2r/3P4/1P3N1P/PbPBKPP1/1R5R w - - - 35");
-    std::cout << Panzer::Search::SEE(*board, H5);
+    std::map<int, int> test;
+    test[1] += 1;
+    test[1] -= 1;
+    std::cout << test[1] << std::endl;
 }

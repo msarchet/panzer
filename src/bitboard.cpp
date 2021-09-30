@@ -322,6 +322,8 @@ namespace Panzer
 
 	void Board::MakeMove(const Move move)
 	{
+		this->priorHalfMoveClock = halfMoveClock;
+		if (this->GetPieceAtSquare(move.getFrom()) == PAWN) halfMoveClock = 0;
 		// remove the from piece
 		if (move.isCapture())
 		{
@@ -334,7 +336,8 @@ namespace Panzer
 			{
 				this->ClearSquare(move.getTo(), this->GetPieceAtSquare(move.getTo()), !this->side_to_move);
 			}
-			
+
+			halfMoveClock = 0;	
 		}
 
 		// fill the to square
@@ -454,6 +457,7 @@ namespace Panzer
 		// intentionally ordered backwards from make move for 
 		// debugging purposes
 		moveChain->pop_back();
+		this->halfMoveClock = priorHalfMoveClock;
 		this->ply--;
 		this->side_to_move = !this->side_to_move;
 		this->boardHash ^= zorbist->color_hash;
@@ -1618,7 +1622,14 @@ std::string Board::BoardToFen()
 	fen += " ";
 
 	// half move clock
-	fen +="-";
+	if (halfMoveClock != 0)
+	{
+		fen += std::to_string(halfMoveClock);
+	}
+	else
+	{
+		fen += "-";
+	}
 
 	fen += " ";
 
@@ -1644,8 +1655,9 @@ std::string Board::BoardToFen()
 		this->moveChain->clear();
 
 		int index = 0;
-		for (char const& c : fen)
+		for (size_t cIndex = 0; cIndex < fen.length(); cIndex++)
 		{
+			auto c = fen[cIndex];
 			auto s = fenIndexToSquare[index];
 			if (board_done)
 			{
@@ -1687,8 +1699,8 @@ std::string Board::BoardToFen()
 							this->castle_flags |= WHITEQ;
 							break;
 						case '-':
+							break;
 						case ' ':
-						case '\0':
 							castleFlagsDone = true;
 							continue;
 							break;
@@ -1697,13 +1709,14 @@ std::string Board::BoardToFen()
 
 				if (castleFlagsDone && !epSquareDone)
 				{
-					if (c == '-' || c == '\0')  
-					{ 
-						epSquareDone = true; 
+					if (c == '-')
+					{
+						epSquareDone = true;
+						cIndex++;
 						continue;
 					}
 
-					if (c == ' ' || c == '\0')
+					if (c == ' ')
 					{
 						std::string square = "";
 						for (auto b : buffer)
@@ -1718,6 +1731,7 @@ std::string Board::BoardToFen()
 						}
 
 						epSquareDone = true;
+						continue;
 					}
 
 					buffer.push_back(c);
@@ -1726,15 +1740,18 @@ std::string Board::BoardToFen()
 				if (epSquareDone && !halfClockDone)
 				{
 					// set half clock from numbers
-					if (c == '-' || c == '\0')
+					if (c == '-')
 					{
+						buffer.clear();
 						halfClockDone = true;
+						cIndex++;
 						continue;
 					}
 
 					if (c == ' ' && !halfClockDone)
 					{
 						std::string halfClock = "";
+
 						for (auto b: buffer)
 						{
 							halfClock.push_back(b);
@@ -1742,8 +1759,9 @@ std::string Board::BoardToFen()
 
 						buffer.clear();
 						// set half clock
-
+						this->halfMoveClock = std::stoi(halfClock);
 						halfClockDone = true;
+						continue;
 					}
 
 					buffer.push_back(c);
@@ -1751,7 +1769,7 @@ std::string Board::BoardToFen()
 
 				if (halfClockDone && !fullMoveNumberDone)
 				{
-					// set half clock from numbers
+					// set turn clock from numbers
 					if (c == '-')
 					{
 						fullMoveNumberDone = true;
@@ -1760,7 +1778,7 @@ std::string Board::BoardToFen()
 
 					buffer.push_back(c);
 
-					if (c == '\0')
+					if (cIndex == fen.length() - 1)
 					{
 						std::string full ="";
 						for (auto b: buffer)
@@ -1769,7 +1787,7 @@ std::string Board::BoardToFen()
 						}
 
 						int moves = std::stoi(full);
-						this->ply = moves * 2 + this->side_to_move;
+						this->ply = moves * 2 + (int)this->side_to_move;
 					}
 				}
 			}

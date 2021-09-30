@@ -42,6 +42,11 @@ void ProcessInputs()
         std::getline(std::cin, line);
         token = GetNextToken(line, delimeter);
 
+        if (token == "ucinewgame")
+        {
+            Panzer::Search::ClearRepitionHash();
+        }
+
         if (token == "isready")
         {
             Panzer::Com::SendMessageToUI("readyok");

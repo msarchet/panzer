@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <map>
 
 #include "bitboard_constants.h"
 #include "board_utils.h"
@@ -23,6 +24,8 @@ namespace Panzer
 		square ep_square = NO_SQUARE;
 		castle_flag castle_flags = (WHITEK|WHITEQ|BLACKK|BLACKQ);
 		uint8_t ply = 1;
+		uint8_t halfMoveClock = 0;
+		uint8_t priorHalfMoveClock = 0;
 		hash boardHash = 0;
 		zorbist_lookup* zorbist = new zorbist_lookup();
 	public:
@@ -51,6 +54,8 @@ namespace Panzer
 			ply = board.ply;
 			slider_attacks = board.slider_attacks;
 			boardHash = board.boardHash;
+			halfMoveClock = board.halfMoveClock;
+			priorHalfMoveClock = board.priorHalfMoveClock;
 		}
 
 		void FillSquare(square s, piece p, color c);
@@ -81,6 +86,8 @@ namespace Panzer
 		color GetSideToMove() { return side_to_move; } 
 		square GetEpSquare() { return ep_square; }
 		int GetPly() { return ply; }
+		int GetHalfClock() { return halfMoveClock; }
+		bool isDrawBy50MoveRule() {return halfMoveClock == 100; }
 		hash GetHash() { return boardHash; }
 
 		void MakeMove(const Move move);

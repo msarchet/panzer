@@ -306,3 +306,9 @@ const mask SQUARES_IN_FRONT_OF_KING_RING[64] = {
 	(IN_FRONT_OF_RING_KING >> (H8 - RING_CENTER)) & king_move_masks[H8 % 8],
 };
 
+const bitboard CENTER_PAWN_MASKS[2] = {
+  (ONE_BIT << C3) | (ONE_BIT << D3) | (ONE_BIT << E3) | (ONE_BIT << F3) | (ONE_BIT << C4) | (ONE_BIT << D4) | (ONE_BIT << E4) | (ONE_BIT << F4) | (ONE_BIT << D5) | (ONE_BIT << E5),
+  (ONE_BIT << C6) | (ONE_BIT << D6) | (ONE_BIT << E6) | (ONE_BIT << F6) | (ONE_BIT << C5) | (ONE_BIT << D5) | (ONE_BIT << E5) | (ONE_BIT << F5) | (ONE_BIT << D4) | (ONE_BIT << E4),
+
+};
+

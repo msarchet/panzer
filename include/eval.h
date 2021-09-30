@@ -21,5 +21,6 @@ namespace Panzer
 	int EvaluateQueens(Board &board, color c);
 	int EvaluatePawns(Board &board, color c);
 	int EvaluateKing(Board &board, color c);
+	int EvaluateControl(Board &board, color c);
 	void InitEvalData();
 }

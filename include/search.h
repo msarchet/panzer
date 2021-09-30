@@ -17,6 +17,9 @@ namespace Panzer
 		int16_t SEE(Panzer::Board &board, square to);
 		void Search(Panzer::Board &board, int depth);
 		void SearchIterate(Panzer::Board &board, int depth);
+		bool IsDrawByRepition(hash key);
+		void AddHashToRepition(hash key);
+		void ClearRepitionHash();
 	}
 
 	static const int16_t TT_INVALID = INT16_MIN;

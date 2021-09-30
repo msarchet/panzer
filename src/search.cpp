@@ -6,6 +6,7 @@
 #include <climits>
 #include <algorithm>
 #include <chrono>
+#include <unordered_map>
 
 namespace Panzer
 {
@@ -13,6 +14,22 @@ namespace Search
 {
 	int64_t nodes = 0;
 	int64_t qNodes = 0;
+	std::unordered_map<hash, int> repitionHash = std::unordered_map<hash, int>();
+	void AddHashToRepition(hash key) 
+	{
+		repitionHash[key] += 1;
+	}
+
+	void ClearRepitionHash() 
+	{
+		repitionHash.clear();
+	}
+
+	bool IsDrawByRepition(hash key) 
+	{
+		return repitionHash[key] == 3;
+	}
+
 
 	void Search(Panzer::Board &board, int depth)
 	{
@@ -51,7 +68,7 @@ namespace Search
 		{
 			auto move = moves[i]; 
 			board.MakeMove(move);
-
+			repitionHash[board.GetHash()] += 1;
 			int legalMoves = 0;
 			if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 			{
@@ -72,6 +89,7 @@ namespace Search
 				legalMoves++;
 			}
 
+			repitionHash[board.GetHash()] -= 1;
 			board.UnmakeMove(move);
 			moveIndex++;
 		}
@@ -93,6 +111,7 @@ namespace Search
 			{
 				auto move = moves[i]; 
 				board.MakeMove(move);
+				repitionHash[board.GetHash()] += 1;
 
 				int legalMoves = 0;
 				if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
@@ -115,6 +134,7 @@ namespace Search
 					legalMoves++;
 				}
 
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 				moveIndex++;
 			}
@@ -162,11 +182,19 @@ namespace Search
 		{
 			auto move = moves[i]; 
 			board.MakeMove(move);
+			repitionHash[board.GetHash()] += 1;
+			if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) 
+			{ 
+				repitionHash[board.GetHash()] -= 1;
+				board.UnmakeMove(move);
+				return -9000; 
+			}
 
 			int16_t score = INT16_MIN;
 
 			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 			{
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 				continue;
 			}
@@ -180,6 +208,7 @@ namespace Search
 					auto output =  "\tMax Early Cut Off " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(score);
 					Panzer::Com::OutputDebugFile(output);
 				}
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 				return beta;
 			}
@@ -191,7 +220,9 @@ namespace Search
 				Panzer::Com::OutputDebugFile(output);
 			}
 
+			repitionHash[board.GetHash()] -= 1;
 			board.UnmakeMove(move);
+
 		}
 
 		if (legalMoves == 0)  
@@ -207,6 +238,8 @@ namespace Search
 
 			return -9000;
 		}
+
+
 		return alpha;
 	}
 
@@ -234,10 +267,20 @@ namespace Search
 		{
 			auto move = moves[i]; 
 			board.MakeMove(move);
+			repitionHash[board.GetHash()] += 1;
+			if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) 
+			{ 
+				repitionHash[board.GetHash()] -= 1;
+				board.UnmakeMove(move);
+				return 9000; 
+			}
+
+
 			int16_t score = INT16_MAX;
 
 			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 			{
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 				continue;
 			}
@@ -250,6 +293,7 @@ namespace Search
 					auto output = "\tMin Early Cut Off " + board.PrintMoveChain() + std::to_string(score) + " " + std::to_string(beta);
 					Panzer::Com::OutputDebugFile(output);
 				}
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 				return alpha; 
 			}
@@ -263,6 +307,7 @@ namespace Search
 				auto output = "\tMin Scores " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta);
 				Panzer::Com::OutputDebugFile(output);
 			}
+			repitionHash[board.GetHash()] -= 1;
 			board.UnmakeMove(move);
 		}
 
@@ -327,6 +372,8 @@ namespace Search
 	{
 		// if out of time return alpha
 		// return alpha
+		if (board.isDrawBy50MoveRule()) return -9000;
+		if (IsDrawByRepition(board.GetHash())) return -9000;
 
 		auto stand_pat = Panzer::EvaluateBoard(board);
 
@@ -349,10 +396,13 @@ namespace Search
 		{
 			auto move = moves[i];
 			board.MakeMove(move);
+			repitionHash[board.GetHash()] += 1;
 		
 			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK: WHITE))
 			{
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
+
 				continue;
 			}
 
@@ -363,6 +413,7 @@ namespace Search
 			if (SEE(board, move.getTo()) + stand_pat > alpha)
 			{
 				auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 
 				if(score >= beta) return beta;
@@ -371,6 +422,7 @@ namespace Search
 			}
 			else
 			{
+				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 			}
 		}
