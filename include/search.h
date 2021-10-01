@@ -23,15 +23,17 @@ namespace Panzer
 	}
 
 	static const int16_t TT_INVALID = INT16_MIN;
-	const int NUM_TT_ENTRIES = 10000;
+	const int NUM_TT_ENTRIES = 100;
 	static const int MIN = 0;
 	static const int MAX = 1;
+
 	struct TTEntry
 	{
 		int16_t score = TT_INVALID;
 		int depth;
 		int type = 0;
 	};
+
 
 	struct TT
 	{

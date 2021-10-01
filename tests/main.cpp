@@ -154,31 +154,31 @@ int main()
     board->FillSquare(F1, ROOK, WHITE);
     board->FillSquare(B1, KNIGHT, WHITE);
 
-    std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
+    //std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
 
     board = new Panzer::Board();
     board->FillSquare(E1, KING, WHITE);
     board->FillSquare(H1, ROOK, WHITE);
     board->FillSquare(C3, KNIGHT, WHITE);
 
-    std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
+    //std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
+
+    //board = new Panzer::Board();
+    //std::cout << "hash test" << std::endl;
+    //board->FenToBoard(STARTFEN);
+    //auto beforeHash = board->GetHash();
+    //std::cout << beforeHash << std::endl;
+    //auto e2e4 = Panzer::Move(A2, A4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
+    //board->MakeMove(e2e4);
+    //std::cout << board->GetHash() << std::endl;
+    //auto e5e7 = Panzer::Move(E5, E7, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
+    //board->MakeMove(e5e7);
+    //board->UnmakeMove(e5e7);
+    //board->UnmakeMove(e2e4);
+    //assert(beforeHash == board->GetHash());
 
     board = new Panzer::Board();
-    std::cout << "hash test" << std::endl;
-    board->FenToBoard(STARTFEN);
-    auto beforeHash = board->GetHash();
-    std::cout << beforeHash << std::endl;
-    auto e2e4 = Panzer::Move(A2, A4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
-    board->MakeMove(e2e4);
-    std::cout << board->GetHash() << std::endl;
-    auto e5e7 = Panzer::Move(E5, E7, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
-    board->MakeMove(e5e7);
-    board->UnmakeMove(e5e7);
-    board->UnmakeMove(e2e4);
-    assert(beforeHash == board->GetHash());
-
-    std::map<int, int> test;
-    test[1] += 1;
-    test[1] -= 1;
-    std::cout << test[1] << std::endl;
+    board->FenToBoard("rnbqkb1r/pppppppp/5n2/8/8/4PQ2/PPPP1PPP/RNB1KBNR b KQkq - - 0");
+    std::cout << "before eval" <<std::endl;
+    std::cout << Panzer::EvaluateBoard(*board) << std::endl;
 }

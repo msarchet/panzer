@@ -34,7 +34,7 @@ void ProcessInputs()
     std::string delimeter = " ";
     bool exit = false;
 
-    const auto board = new Panzer::Board();
+    const auto board = std::make_shared<Panzer::Board>();
     board->FenToBoard(STARTFEN);
 
     while (!exit)
@@ -45,6 +45,7 @@ void ProcessInputs()
         if (token == "ucinewgame")
         {
             Panzer::Search::ClearRepitionHash();
+            continue;
         }
 
         if (token == "isready")
@@ -185,7 +186,7 @@ void ProcessInputs()
                 token = GetNextToken(line, delimeter);
                 auto depth = std::stoi(token);
                 uint64_t total_count = 0;
-                const auto perftBoard = new Panzer::Board(*board);
+                const auto perftBoard = std::make_shared<Panzer::Board>(*board);
 
                 std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
@@ -267,7 +268,7 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
         {
             auto captured = moves[i];
             const auto move = Panzer::Move(captured);
-            const auto newBoard = new Panzer::Board(board);
+            const auto newBoard = std::make_shared<Panzer::Board>(board);
             auto furtherDepth = depth - 1;
             futures->push_back(
             std::async(std::launch::async, [move, furtherDepth, newBoard] {

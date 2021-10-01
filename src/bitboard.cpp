@@ -3,6 +3,7 @@
 #include "board_utils.h"
 #include "piece_square_scores.h"
 #include "com.h"
+#include "search.h"
 
 #include <sstream>
 
@@ -18,11 +19,6 @@ namespace Panzer
 		}
 
 		return chain.str();
-	}
-
-	piece Board::GetPieceAtSquare(square s)
-	{
-		return pieceLookup->at(s);
 	}
 
 	bool Board::IsSquareAttacked(square s, color color)
@@ -888,7 +884,7 @@ namespace Panzer
 			}
 		}
 
-		movecount = this->MakeKingMoves(moves, movecount, kings, white_pieces, black_pieces);
+		movecount = this->MakeKingMoves(moves, movecount, kings, white_pieces, black_pieces, captures);
 		return movecount;
 	}
 
@@ -1647,9 +1643,9 @@ std::string Board::BoardToFen()
 		bool fullMoveNumberDone = false;
 		this->boardHash = 0;
 		std::vector<char> buffer = {};
-		this->pieceLookup = new std::array<piece, 64> { NO_PIECE };
-		this->Pieces = new std::array<bitboard, 7> { 0ULL };
-		this->Colors = new std::array<bitboard, 2> { 0ULL };
+		this->pieceLookup->fill(NO_PIECE);
+		this->Pieces->fill(0ULL);
+		this->Colors->fill(0ULL);
 		this->castle_flags = EMPTY_CASTLE_FLAGS;
 		this->ep_square = NO_SQUARE;
 		this->moveChain->clear();
@@ -1888,5 +1884,6 @@ std::string Board::BoardToFen()
 
 		this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
 		this->boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+		Panzer::Search::AddHashToRepition(this->boardHash);
 	}
 }

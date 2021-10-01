@@ -66,12 +66,13 @@ int EvaluateBoard(Board &board)
 
 	auto whitePieces = board.GetWhitePieces();
 	//auto blackPieces = board.GetBlackPieces();
-
 	auto phase = PAWN_PHASE * (whitePawnCount + blackPawnCount)
 		+ QUEEN_PHASE * (whiteQueenCount + blackQueenCount)
 		+ ROOK_PHASE * (whiteRookCount + blackRookCount)
 		+ BISHOP_PHASE * (whiteBishopCount + blackBishopCount)
 		+ KNIGHT_PHASE * (whiteKnightCount + blackKnightCount);
+	
+	phase = ((TOTAL_PHASE - phase) * 256 + (TOTAL_PHASE / 2)) / TOTAL_PHASE;
 
 	auto whiteScore = whitePawnCount * PAWN_SCORE 
 		+ whiteRookCount * ROOK_SCORE
@@ -121,39 +122,54 @@ int EvaluateBoard(Board &board)
 	auto blackPhaseScore = (blackScoreMid + (TOTAL_PHASE - phase) + (phase * blackScoreEnd)) / TOTAL_PHASE;
 
 	whiteScore += whitePhaseScore;
-	blackScore += blackPhaseScore;
-	whiteScore += EvaluateRooks(board, WHITE);
-	whiteScore += EvaluateKnights(board, WHITE);
-	whiteScore += EvaluateBishops(board, WHITE);
-	whiteScore += EvaluateQueens(board, WHITE);
-	whiteScore += EvaluatePawns(board, WHITE);
-	whiteScore += EvaluateKing(board, WHITE);
-	whiteScore += EvaluateControl(board, WHITE);
 
+	blackScore += blackPhaseScore;
+
+	auto whiteScoreRooks = EvaluateRooks<WHITE>(board);
+	auto whiteScoreKnights = EvaluateKnights<WHITE>(board);
+	auto whiteScoreBishops = EvaluateBishops<WHITE>(board);
+	auto whiteScoreQueens = EvaluateQueens<WHITE>(board);
+	auto whiteScorePawns = EvaluatePawns<WHITE>(board);
+	auto whiteScoreKing = EvaluateKing<WHITE>(board);
+	auto whiteScoreControl = EvaluateControl<WHITE>(board);
+
+	//std::cout << "Rooks" << whiteScoreRooks << std::endl;
+	//std::cout << "Knights" << whiteScoreKnights << std::endl;
+	//std::cout << "Bishops" << whiteScoreBishops << std::endl;
+	//std::cout << "Queens" << whiteScoreQueens << std::endl;
+	//std::cout << "Pawns" << whiteScorePawns << std::endl;
+	//std::cout << "King" << whiteScoreKing << std::endl;
+	//std::cout << "Control" << whiteScoreControl << std::endl;
+
+	whiteScore += whiteScoreRooks + whiteScoreKnights + whiteScoreBishops + whiteScoreQueens + whiteScorePawns + whiteScoreKing + whiteScoreControl;
 	whiteScore += KNIGHT_ADJUSTMENTS[whitePawnCount];
 	whiteScore += ROOK_ADJUSTMENTS[whitePawnCount];
 
-	blackScore += EvaluateRooks(board, BLACK);
-	blackScore += EvaluateKnights(board, BLACK);
-	blackScore += EvaluateBishops(board, BLACK);
-	blackScore += EvaluateQueens(board, BLACK);
-	blackScore += EvaluatePawns(board, BLACK);
-	blackScore += EvaluateKing(board, BLACK);
-	blackScore += EvaluateControl(board, BLACK);
+	blackScore += EvaluateRooks<BLACK>(board);
+	blackScore += EvaluateKnights<BLACK>(board);
+	blackScore += EvaluateBishops<BLACK>(board);
+	blackScore += EvaluateQueens<BLACK>(board);
+	blackScore += EvaluatePawns<BLACK>(board);
+	blackScore += EvaluateKing<BLACK>(board);
+	blackScore += EvaluateControl<BLACK>(board);
 
 	blackScore += KNIGHT_ADJUSTMENTS[blackPawnCount];
 	blackScore += ROOK_ADJUSTMENTS[blackPawnCount];
 
 	auto score = whiteScore - blackScore;
-
+	if (score == 0)  { 
+		score = 1; 
+	}
+	//std::cout << "done eval" << std::endl;
 	// equivalent to WHITE ? score : -1 * score
 	return board.GetSideToMove() == WHITE ? score : -1 * score;
 };
-	int EvaluateRooks(Board &board, color c) 
+	template <color c>
+	int EvaluateRooks(const Board &board)
 	{
 		int score = 0;
-		bitboard rooks = c == WHITE ? board.GetWhiteRooks() : board.GetBlackRooks();
-		bitboard pawns = c == WHITE ? board.GetWhitePawns() : board.GetBlackPawns();
+		bitboard rooks = Rooks<c>(board);
+		bitboard pawns = Pawns<c>(board);
 		//bitboard occupancy = c == WHITE ? board.GetWhitePieces() : board.GetBlackPieces();
 		// are the rooks paired
 		bitboard rooks_saved = rooks;
@@ -163,7 +179,7 @@ int EvaluateBoard(Board &board)
 			// how many squares do the rooks have to moved
 			auto allowed = sliders->GetRookAttacks(s, board.GetOccupancy());
 
-			score += __builtin_popcount(allowed) * 2;
+			score += __builtin_popcount(allowed);
 
 			if ((allowed & pawns) == 0)
 			{
@@ -174,7 +190,7 @@ int EvaluateBoard(Board &board)
 			mask file = SQUARE_TO_FILE[s];
 
 			// are the rooks paired
-			if ((rooks_saved) & (rank|file)) score += 20;
+			if ((rooks_saved & (rank|file)) != 0 && (pawns & (rank|file)) == 0) score += 10;
 
 			rooks &= rooks - ONE_BIT;
 		}
@@ -182,11 +198,12 @@ int EvaluateBoard(Board &board)
 		return score;
 	};
 
-	int EvaluateBishops(Board &board, color c)
+	template <color c>
+	int EvaluateBishops(const Board &board)
 	{
 		int score = 0;
-		bitboard bishops = c == WHITE ? board.GetWhiteBishops() : board.GetBlackBishops();
-		bitboard pawns = c == WHITE ? board.GetWhitePawns() : board.GetBlackPawns();
+		bitboard bishops = Bishops<c>(board);
+		bitboard pawns = Pawns<c>(board);
 		//bitboard occupancy = c == WHITE ? board.GetWhitePieces() : board.GetBlackPieces();
 		// are the rooks paired
 		//bitboard bishops_saved = bishops;
@@ -212,14 +229,14 @@ int EvaluateBoard(Board &board)
 		return score;
 	};
 
-	int EvaluateQueens(Board &board, color c)
+	template <color c>
+	int EvaluateQueens(const Board &board)
 	{
 		int score = 0;
-		bitboard queens = c == WHITE ? board.GetWhiteQueens() : board.GetBlackQueens();
+		bitboard queens = Queens<c>(board);
 		// how many squares do the queens have to move
-		//bitboard occupancy = c == WHITE ? board.GetWhitePieces() : board.GetBlackPieces();
-		bitboard pawns = c == WHITE ? board.GetWhitePawns() : board.GetBlackPawns();
-		// are the rooks paired
+		bitboard occupancy = Pieces<c>(board);
+		bitboard pawns = Pawns<c>(board);
 		//bitboard queens_saved = queens;
 
 		while (queens != 0)
@@ -227,33 +244,54 @@ int EvaluateBoard(Board &board)
 			// how many square do the queens have to move
 			square s = Utils::GetLSB(queens);
 			// are the queens blocked by lots of pawns on the same colors
+			if (c == WHITE)
+			{
+				if ((s & (FIRST_RANK | SECOND_RANK)) != 0)
+				{
+					if (board.GetPieceAtSquare(B1) == KNIGHT) score -= 2;
+					if (board.GetPieceAtSquare(C1) == BISHOP) score -= 2; 
+					if (board.GetPieceAtSquare(F1) == BISHOP) score -= 2; 
+					if (board.GetPieceAtSquare(G1) == KNIGHT) score -= 2; 
+				}
+
+			}
+			else
+			{
+				if (!(s & (SEVENTH_RANK | SEVENTH_RANK)))
+				{
+					if (board.GetPieceAtSquare(B8) == KNIGHT) score -= 2;
+					if (board.GetPieceAtSquare(C8) == BISHOP) score -= 2;
+					if (board.GetPieceAtSquare(F8) == BISHOP) score -= 2;
+					if (board.GetPieceAtSquare(G8) == KNIGHT) score -= 2;
+				}
+			}
+
 			auto allowed = sliders->GetQueenAttacks(s, board.GetOccupancy());
 			if ((allowed & pawns) == 0)
 			{
-				score += 10;
+				score += 1;
 			}
 
 			mask diagonals = (NW_DIAGONALS[s] | NE_DIAGONALS[s] | SQUARE_TO_FILE[s] | SQUARE_TO_RANK[s]);
-			score += __builtin_popcount(allowed) * 2;
-
+			auto mob = __builtin_popcount(allowed & ~occupancy);
+			score += mob - 14;
 			auto pawnCount = __builtin_popcount(diagonals & pawns);
 
 			if (pawnCount < 3)
 			{
-				score += 10;
+				score += 1;
 			}
 			queens &= queens - ONE_BIT; 
 		}
 
 		return score;
-
-		// are the queens blocked by pawns
 	};
 
-	int EvaluatePawns(Board &board, color c)
+	template <color c>
+	int EvaluatePawns(const Board &board)
 	{
 		int score = 0;
-		bitboard pawns = c == WHITE ? board.GetWhitePawns() : board.GetBlackPawns();
+		bitboard pawns = Pawns<c>(board);
 		//bitboard saved_pawns = pawns;
 		while (pawns != 0)
 		{
@@ -270,28 +308,31 @@ int EvaluateBoard(Board &board)
 		return score;
 	};
 
-	int EvaluateKnights(Board &board, color c)
+	template <color c>
+	int EvaluateKnights(const Board &board)
 	{
 		return 0;
 	}
 
-	int EvaluateKing(Board &board, color c)
+	template <color c>
+	int EvaluateKing(const Board &board)
 	{
 		return 0;
 	}
 
-	int EvaluateControl(Board &board, color c)
+	template <color c>
+	int EvaluateControl(const Board &board)
 	{
 		int score = 0;
 		// does this color control the center of the board at all?
 		bitboard occupancy = board.GetOccupancy();
 
 		// any pawns?
-		bitboard pawns = c == WHITE ? board.GetWhitePawns() : board.GetBlackPawns();
-		bitboard rooks = c == WHITE ? board.GetWhiteRooks() : board.GetBlackRooks();
-		bitboard queens = c == WHITE ? board.GetWhiteQueens() : board.GetBlackQueens();
-		bitboard bishops = c == WHITE ? board.GetWhiteBishops() : board.GetBlackBishops();
-		bitboard knights = c == WHITE ? board.GetWhiteKnights() : board.GetBlackKnights();
+		bitboard pawns = Pawns<c>(board);
+		bitboard rooks = Rooks<c>(board);
+		bitboard queens = Queens<c>(board);
+		bitboard bishops = Bishops<c>(board);
+		bitboard knights = Knights<c>(board);
 
 		if (pawns & CENTER_PAWN_MASKS[c])
 		{
@@ -303,25 +344,26 @@ int EvaluateBoard(Board &board)
 			// any rooks or queens attacking center
 			auto lineAttacks = sliders->GetRookAttacks(square, occupancy);
 			if (lineAttacks & (rooks)) {
-				score += 10;
+				score += 2;
 			}
 			// any bishops or queens attacking center
 			auto diagonalAttacks = sliders->GetBishopAttacks(square, occupancy);
 			if (diagonalAttacks & (bishops)) {
-				score += 10;
+				score += 2;
 			}
 
 			if ((lineAttacks | diagonalAttacks) & queens)
 			{
-				score += 5;
+				score += 2;
 			}
 
 			// any knights attacking center
 			if (KNIGHT_SPANS[square] & knights)
 			{
-				score += 15;
+				score += 10;
 			}
 		}
+
 
 		return score;
 	}

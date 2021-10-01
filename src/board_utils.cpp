@@ -73,7 +73,7 @@ namespace Panzer
 
 	void Utils::SortMoves(Move* moves, int movecount)
 	{
-		std::sort(moves, moves + movecount, MoveSorter);
+		std::stable_sort(moves, moves + movecount, MoveSorter);
 	}
 
 	int Utils::GetLSB(bitboard b) { return __builtin_ctzll(b); }
