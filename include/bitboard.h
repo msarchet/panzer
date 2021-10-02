@@ -31,9 +31,7 @@ namespace Panzer
 		zorbist_lookup* zorbist = new zorbist_lookup();
 	public:
 		Board() {
-			std::cout << "constructing board" << std::endl;
 			slider_attacks->Initialize();
-			std::cout << "done constructing board" << std::endl;
 		}
 
 		Board(const Board &board) : Board()

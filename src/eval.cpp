@@ -4,11 +4,15 @@
 #include "board_utils.h"
 #include "sliders.h"
 
+#include <unordered_map>
+
 namespace Panzer
 {
 
 EvalData data;
 Panzer::Sliders *sliders;
+std::unordered_map<bitboard, int> pawnHash;
+
 void InitEvalData()
 {
 
@@ -16,31 +20,37 @@ void InitEvalData()
 	{
 		data.EndGamePieceSquareScore[PAWN][WHITE][index_white[s]] = PAWN_SCORE_SQUARE_END[s];
 		data.EndGamePieceSquareScore[PAWN][BLACK][index_black[s]] = PAWN_SCORE_SQUARE_END[s];
+
 		data.MidGamePieceSquareScore[PAWN][WHITE][index_white[s]] = PAWN_SCORE_SQUARE_MID[s];
 		data.MidGamePieceSquareScore[PAWN][BLACK][index_black[s]] = PAWN_SCORE_SQUARE_MID[s];
 
 		data.EndGamePieceSquareScore[ROOK][WHITE][index_white[s]] = ROOK_SCORE_SQUARE_END[s];
 		data.EndGamePieceSquareScore[ROOK][BLACK][index_black[s]] = ROOK_SCORE_SQUARE_END[s];
+
 		data.MidGamePieceSquareScore[ROOK][WHITE][index_white[s]] = ROOK_SCORE_SQUARE_MID[s];
 		data.MidGamePieceSquareScore[ROOK][BLACK][index_black[s]] = ROOK_SCORE_SQUARE_MID[s];
 
 		data.EndGamePieceSquareScore[BISHOP][WHITE][index_white[s]] = BISHOP_SCORE_SQUARE_END[s];
 		data.EndGamePieceSquareScore[BISHOP][BLACK][index_black[s]] = BISHOP_SCORE_SQUARE_END[s];
+
 		data.MidGamePieceSquareScore[BISHOP][WHITE][index_white[s]] = BISHOP_SCORE_SQUARE_MID[s];
 		data.MidGamePieceSquareScore[BISHOP][BLACK][index_black[s]] = BISHOP_SCORE_SQUARE_MID[s];
 
 		data.EndGamePieceSquareScore[KNIGHT][WHITE][index_white[s]] = KNIGHT_SCORE_SQUARE_END[s];
 		data.EndGamePieceSquareScore[KNIGHT][BLACK][index_black[s]] = KNIGHT_SCORE_SQUARE_END[s];
+
 		data.MidGamePieceSquareScore[KNIGHT][WHITE][index_white[s]] = KNIGHT_SCORE_SQUARE_MID[s];
 		data.MidGamePieceSquareScore[KNIGHT][BLACK][index_black[s]] = KNIGHT_SCORE_SQUARE_MID[s];
 
 		data.EndGamePieceSquareScore[QUEEN][WHITE][index_white[s]] = QUEEN_SCORE_SQUARE_END[s];
 		data.EndGamePieceSquareScore[QUEEN][BLACK][index_black[s]] = QUEEN_SCORE_SQUARE_END[s];
+
 		data.MidGamePieceSquareScore[QUEEN][WHITE][index_white[s]] = QUEEN_SCORE_SQUARE_MID[s];
 		data.MidGamePieceSquareScore[QUEEN][BLACK][index_black[s]] = QUEEN_SCORE_SQUARE_MID[s];
 
 		data.EndGamePieceSquareScore[KING][WHITE][index_white[s]] = KING_SCORE_SQUARE_END[s];
 		data.EndGamePieceSquareScore[KING][BLACK][index_black[s]] = KING_SCORE_SQUARE_END[s];
+
 		data.MidGamePieceSquareScore[KING][WHITE][index_white[s]] = KING_SCORE_SQUARE_MID[s];
 		data.MidGamePieceSquareScore[KING][BLACK][index_black[s]] = KING_SCORE_SQUARE_MID[s];
 	}
@@ -132,14 +142,6 @@ int EvaluateBoard(Board &board)
 	auto whiteScorePawns = EvaluatePawns<WHITE>(board);
 	auto whiteScoreKing = EvaluateKing<WHITE>(board);
 	auto whiteScoreControl = EvaluateControl<WHITE>(board);
-
-	//std::cout << "Rooks" << whiteScoreRooks << std::endl;
-	//std::cout << "Knights" << whiteScoreKnights << std::endl;
-	//std::cout << "Bishops" << whiteScoreBishops << std::endl;
-	//std::cout << "Queens" << whiteScoreQueens << std::endl;
-	//std::cout << "Pawns" << whiteScorePawns << std::endl;
-	//std::cout << "King" << whiteScoreKing << std::endl;
-	//std::cout << "Control" << whiteScoreControl << std::endl;
 
 	whiteScore += whiteScoreRooks + whiteScoreKnights + whiteScoreBishops + whiteScoreQueens + whiteScorePawns + whiteScoreKing + whiteScoreControl;
 	whiteScore += KNIGHT_ADJUSTMENTS[whitePawnCount];
@@ -292,7 +294,12 @@ int EvaluateBoard(Board &board)
 	{
 		int score = 0;
 		bitboard pawns = Pawns<c>(board);
-		//bitboard saved_pawns = pawns;
+
+		if (pawnHash.contains(pawns)) {
+			return pawnHash[pawns];
+		}
+
+		bitboard saved_pawns = pawns;
 		while (pawns != 0)
 		{
 			square s = Utils::GetLSB(pawns);
@@ -305,6 +312,7 @@ int EvaluateBoard(Board &board)
 		}
 
 		// second loop to check for pawns guarding pieces
+		pawnHash[pawns] = score;
 		return score;
 	};
 
