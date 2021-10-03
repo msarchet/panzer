@@ -116,9 +116,9 @@ const color BLACK = 1;
 const color NO_COLOR = 2;
 
 const piece PAWN = 1;
-const piece ROOK = 2;
-const piece KNIGHT = 3;
-const piece BISHOP = 4;
+const piece KNIGHT = 2;
+const piece BISHOP = 3;
+const piece ROOK = 4;
 const piece QUEEN = 5;
 const piece KING = 6;
 

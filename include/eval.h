@@ -15,12 +15,18 @@ namespace Panzer
 	const int KNIGHT_PHASE = 6;
 
 	int EvaluateBoard(Board &board);
-	template <color c> int EvaluateRooks(const Board &board);
-	template <color c> int EvaluateBishops(const Board &board);
-	template <color c> int EvaluateKnights(const Board &board);
-	template <color c> int EvaluateQueens(const Board &board);
-	template <color c> int EvaluatePawns(const Board &board);
-	template <color c> int EvaluateKing(const Board &board);
-	template <color c> int EvaluateControl(const Board &board);
+	template <color c> void EvaluatePawns(const Board &board, EvalScores &scores);
+	template <color c> void MinorBehindPawns(const Board& board, EvalScores &scores);
+	template <color c> void EvaluateOutposts(const Board &board, EvalScores &scores);
+
+	template <color c> void EvaluateControl(const Board &board, EvalScores &scores);
+
+	template <color us, color them> void BishopXRayPawns(const Board &board, EvalScores &scores);
+	template <color us, color them> void RookScores(const Board &board, EvalScores &scores);
+	template <color us, color them> void WeakQueen(const Board &board, EvalScores &scores);
+	template <color c> void Mobility(const Board &board, EvalScores &scores);
+	template <color c> void Attacks(const Board& board, int* attacks);
+	template <color c> int SpaceArea(const Board& board, int* AttackLookup);
+	template <color c> void Space(const Board& board, EvalScores &scores);
 	void InitEvalData();
 }

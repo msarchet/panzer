@@ -168,8 +168,6 @@ int main()
     //board->FenToBoard(STARTFEN);
     //auto beforeHash = board->GetHash();
     //std::cout << beforeHash << std::endl;
-    //auto e2e4 = Panzer::Move(A2, A4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
-    //board->MakeMove(e2e4);
     //std::cout << board->GetHash() << std::endl;
     //auto e5e7 = Panzer::Move(E5, E7, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
     //board->MakeMove(e5e7);
@@ -178,7 +176,10 @@ int main()
     //assert(beforeHash == board->GetHash());
 
     board = new Panzer::Board();
-    board->FenToBoard("rnbqkb1r/pppppppp/5n2/8/8/4PQ2/PPPP1PPP/RNB1KBNR b KQkq - - 0");
+    board->FenToBoard(STARTFEN);
     std::cout << "before eval" <<std::endl;
+    auto e2e4 = Panzer::Move(E2, E4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
+    board->MakeMove(e2e4);
+
     std::cout << Panzer::EvaluateBoard(*board) << std::endl;
 }

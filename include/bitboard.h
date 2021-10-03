@@ -93,6 +93,7 @@ namespace Panzer
 		int GetHalfClock() { return halfMoveClock; }
 		bool isDrawBy50MoveRule() {return halfMoveClock == 100; }
 		hash GetHash() { return boardHash; }
+		castle_flag GetCastleFlags() const { return castle_flags; }
 
 		void MakeMove(const Move move);
 		void UnmakeMove(const Move move);
@@ -172,6 +173,13 @@ namespace Panzer
 	{
 		if constexpr (c == WHITE) return board.GetWhitePieces();
 		return board.GetBlackPieces();
+	}
+
+	template <color c>
+	static constexpr castle_flag GetCastleFlags(const Board& board)
+	{
+		if (c == WHITE) return (board.GetCastleFlags() & (WHITEK | WHITEQ));
+		return (board.GetCastleFlags() & (BLACKK | BLACKQ));
 	}
 
 } //namespace Panzer
