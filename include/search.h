@@ -23,41 +23,43 @@ namespace Panzer
 	}
 
 	static const int16_t TT_INVALID = INT16_MIN;
-	const int NUM_TT_ENTRIES = 100;
-	static const int MIN = 0;
-	static const int MAX = 1;
+	const int NUM_TT_ENTRIES = 10000;
+	static const unsigned char MIN = 0;
+	static const unsigned char MAX = 1;
+	static const unsigned char EXACT = 2;
 
 	struct TTEntry
 	{
 		int16_t score = TT_INVALID;
-		int depth;
-		int type = 0;
+		unsigned char depth = 0;
+		unsigned char type = 0;
 	};
 
 
 	struct TT
 	{
-		TTEntry entries[NUM_TT_ENTRIES][64][64] = { TTEntry() };
+		TTEntry entries[NUM_TT_ENTRIES] = { TTEntry() };
 
-		void Insert(hash boardHash, square from, square to, int depth, int16_t score)
+		void Insert(hash boardHash, unsigned char depth, int16_t score, unsigned char type)
 		{
-			int key = static_cast<int>(boardHash % NUM_TT_ENTRIES);
-			auto entry = entries[key][from][to];
+			int key = static_cast<int16_t>(boardHash % NUM_TT_ENTRIES);
+			auto entry = entries[key];
 			if (depth < entry.depth) return;
 			entry.depth = depth;
 			entry.score = score;
-			entries[key][from][to] = entry;
+			entry.type = type;
+			entries[key] = entry;
 		}
 
 		void Clear()
 		{
-			entries[NUM_TT_ENTRIES][64][64] = { TTEntry() };
+			std::fill_n(entries, NUM_TT_ENTRIES, TTEntry());
 		}
 
-		TTEntry Find(hash boardHash, square from, square to) 
+		TTEntry Find(hash boardHash) 
 		{
-			int key = static_cast<int>(boardHash % NUM_TT_ENTRIES);
-			return entries[key][from][to];
+			int key = static_cast<int16_t>(boardHash % NUM_TT_ENTRIES);
+			return entries[key];
 		}
 	};
 

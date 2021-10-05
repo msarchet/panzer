@@ -1,6 +1,5 @@
 #include "eval.h"
 #include "bitboard.h"
-#include "piece_square_scores.h"
 #include "board_utils.h"
 #include "sliders.h"
 
@@ -152,8 +151,9 @@ int EvaluateBoard(Board &board)
 	int blackAttackLookup[64] = {0};
 	Attacks<WHITE>(board, whiteAttackLookup);
 	Attacks<BLACK>(board, blackAttackLookup);
-	// TODO: Trapped rook
 
+	Space<WHITE>(board, whiteScores, SpaceArea<WHITE>(board, whiteAttackLookup));
+	Space<BLACK>(board, blackScores, SpaceArea<BLACK>(board, blackAttackLookup));
 	int whiteScore = 0;
 	int blackScore = 0;
 
@@ -428,6 +428,7 @@ int EvaluateBoard(Board &board)
 		bitboard otherRooks = Rooks<them>(board);
 
 		bitboard occupancy = board.GetOccupancy();
+		mask bishopRooks = (bishops | rooks);
 
 		while (queens != 0)
 		{
@@ -437,9 +438,10 @@ int EvaluateBoard(Board &board)
 			mask queenAttacks = sliders->GetQueenAttacks(s, occupancy);
 
 			// are we running into our own bishops or rooks
-			if (queenAttacks & (bishops | rooks))
+			if (queenAttacks & bishopRooks)
 			{
-				queenAttacks ^= (bishops | rooks);
+				queenAttacks = sliders->GetQueenAttacks(s, occupancy ^ bishopRooks);
+
 				bitboard xrayoccupancy = (occupancy ^ queenAttacks);
 
 				mask rookDirections = sliders->GetRookAttacks(s, xrayoccupancy);
@@ -468,7 +470,7 @@ int EvaluateBoard(Board &board)
 	}
 
 	template<color c>
-	void Mobility(const Board &board, const EvalScores &scores)
+	void Mobility(const Board &board, EvalScores &scores)
 	{
 		int mobility = 0;
 		bitboard queens = Queens<c>(board);
@@ -533,7 +535,7 @@ int EvaluateBoard(Board &board)
 		while (rooks != 0)
 		{
 			square s = Utils::GetLSB(rooks);
-			mask attacks = sliders->GetRooksAttacks(s, occupancy ^ queens);
+			mask attacks = sliders->GetRookAttacks(s, occupancy ^ queens);
 			while (attacks != 0)
 			{
 				square a = Utils::GetLSB(attacks);
@@ -556,6 +558,8 @@ int EvaluateBoard(Board &board)
 				attackLookup[a] |= 0b00001000;
 				attacks &= attacks - 1;
 			}
+
+			bishops &= bishops - 1;
 		}
 
 		while (knights != 0)
@@ -569,13 +573,15 @@ int EvaluateBoard(Board &board)
 				attackLookup[a] |= 0b00001000;
 				attacks &= attacks - 1;
 			}
+
+			knights &= knights - 1;
 		}
 
-		mask* pawnsAttacks = PAWN_ATTACKS[c];
+		const mask *pawnAttacks = PAWN_ATTACKS[c];
 		while (pawns != 0)
 		{
 			square s = Utils::GetLSB(pawns);
-			mask attacks = PAWN_ATTACKS[s];
+			mask attacks = pawnAttacks[s];
 			while (attacks != 0)
 			{
 				square a = Utils::GetLSB(attacks);
@@ -622,24 +628,68 @@ int EvaluateBoard(Board &board)
 	int SpaceArea(const Board& board, int* attackLookup)
 	{
 		int sum = 0;
-		const pawns = Pawns<c>(board);
-		square *area = SPACE[c];
+		auto pawns = Pawns<c>(board);
+		const auto occupancy = Pieces<c>(board);
+
+		const square *area = SPACE[c];
 		for (int i = 0; i < 12; i++)
 		{
 			square s = area[i];
-			// not attacked and not filled with a apwn
-			if ((attackLookup[s] & 0b111) == 0 && (pawns & (ONE_BIT << s)) == 0)	
+			mask m = ONE_BIT << s;
+			bool isAttacked = (attackLookup[s] & 0b111) == 0;
+			bool isAttackedByPawn = isAttacked && (attackLookup[s] & 0b0001);
+
+			if (!isAttackedByPawn && (pawns & m) == 0)	
 			{
 				sum++;
+				// not attacked gets a bonus for protected by a forward pawn
+				if (!isAttacked && i > 4)
+				{
+					// TODO: file behind pawn (need to flip for black)
+					mask fileahead = SQUARE_TO_FILE[s] & (~ONE_BIT << s);
+					if (fileahead & pawns)
+					{
+						sum++;
+					}
+				}
 			}
+
 		}
 
 		return sum;
 	}
 
 	template<color c>
-	void Space(const Board& board, EvalScores &scores)
+	void Space(const Board& board, EvalScores &scores, int spaceArea)
 	{
+		const bitboard pieces = Pieces<c>(board);
+		int pieceCount = __builtin_popcount(pieces);
 		
+		// blocked count is pawns we are stopping from advancing
+		// and pawns they are stopping from advancing
+		// stopped is pawn directly in front or a pawn on an adjacent file
+		// and two squares back, where that pawn can't move into the square ahead of 
+		// it due to being able to be captured by our pawn
+		int blockedCount = 0;
+		int weight = pieceCount - 3 + std::min(blockedCount, 9);
+		scores.mid = weight * weight * spaceArea / 16;
+	}
+
+	template<color c>
+	void WeakAndHanging(const Board &board, int *attacksUs, int *attacksThem, int *weakLookup)
+	{
+		const auto pieces = Pieces<c>(board);
+		while (pieces != 0)	
+		{
+			const auto s = Utils::GetLSB(pieces);
+			if ((attacksThem[s] & 0b111) != 0 & (attacksUs[s] & 0b0001) != 0)
+			{
+				//weak
+				weakLookup[s] = 0b1;
+				// hanging
+				weakLookup[s] = 0b01 && ((attacksThem[s] & 0b111) > 1);
+			}
+			pieces &= pieces - 1;
+		}
 	}
 };

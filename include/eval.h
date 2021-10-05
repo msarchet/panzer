@@ -27,6 +27,7 @@ namespace Panzer
 	template <color c> void Mobility(const Board &board, EvalScores &scores);
 	template <color c> void Attacks(const Board& board, int* attacks);
 	template <color c> int SpaceArea(const Board& board, int* AttackLookup);
-	template <color c> void Space(const Board& board, EvalScores &scores);
+	template <color c> void Space(const Board& board, EvalScores &scores, int spaceArea);
+	template <color c> void WeakAndHanging(int *attacksUs, int *attacksThem, int *weakLookup);
 	void InitEvalData();
 }

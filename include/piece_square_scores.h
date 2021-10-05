@@ -230,8 +230,8 @@ const mask PAWN_SUPPORT_MASK[64] = {
   0, 0, 0 ,0 ,0 ,0 ,0 ,0
 };
 
-const mask WHITE_PAWN_ATTACKS[64] {
-  0, 0, 0, 0, 0, 0, 0, 0,
+const mask PAWN_ATTACKS[2][64] = {
+  { 0, 0, 0, 0, 0, 0, 0, 0,
   (ONE_BIT << B3),
   (ONE_BIT << A3) | (ONE_BIT << C3),
   (ONE_BIT << B3) | (ONE_BIT << D3),
@@ -279,11 +279,8 @@ const mask WHITE_PAWN_ATTACKS[64] {
   (ONE_BIT << E8) | (ONE_BIT << G8),
   (ONE_BIT << F8) | (ONE_BIT << H8),
   (ONE_BIT << G8),
-  0, 0, 0, 0, 0, 0, 0, 0
-};
-
-const mask BLACK_PAWN_ATTACKS[64] {
-  0, 0, 0, 0, 0, 0, 0, 0,
+  0, 0, 0, 0, 0, 0, 0, 0  },
+  { 0, 0, 0, 0, 0, 0, 0, 0,
   (ONE_BIT << B6),
   (ONE_BIT << A6) | (ONE_BIT << C6),
   (ONE_BIT << B6) | (ONE_BIT << D6),
@@ -331,17 +328,12 @@ const mask BLACK_PAWN_ATTACKS[64] {
   (ONE_BIT << E1) | (ONE_BIT << G1),
   (ONE_BIT << F1) | (ONE_BIT << H1),
   (ONE_BIT << G1),
-  0, 0, 0, 0, 0, 0, 0, 0
+  0, 0, 0, 0, 0, 0, 0, 0 }
 };
 
 const square SPACE[2][12] {
   { C4, D4, E4, F4, C3, D3, E3, F3, C2, D2, E2, F2  },
   { C5, D5, E5, F5, C6, D6, E6, F6, C7, D7, E7, F7  }
-};
-
-const mask* PAWN_ATTACKS[2] = {
-  WHITE_PAWN_ATTACKS ,
-   BLACK_PAWN_ATTACKS 
 };
 
 const mask ADJACENT_FILE_MASKS[8] {

@@ -59,6 +59,7 @@ namespace Search
 		auto alpha = INT16_MIN;
 		auto beta = INT16_MAX;
 
+		TTTable.Clear();
 		Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
 		bestMove.id = -1;	
 
@@ -122,11 +123,21 @@ namespace Search
 				int legalMoves = 0;
 				if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 				{
-					auto score = AlphaBetaMin(board, alpha, beta, iterative_depth - 1);
+					int16_t score = 0;
+					auto ttEntry = TTTable.Find(board.GetHash());
+					if (!(ttEntry.score != TT_INVALID && ttEntry.type == EXACT && ttEntry.depth >= iterative_depth))
+					{
+						score = AlphaBetaMin(board, alpha, beta, iterative_depth - 1);
+					}
+					else
+					{
+						score = ttEntry.score;
+					}
 
 					if (score > alpha)
 					{
 						alpha = score;
+						TTTable.Insert(board.GetHash(), iterative_depth, score, EXACT);
 						bestMove = Panzer::Move(move);
 						bestMoveIndex = moveIndex;
 					}
@@ -179,7 +190,10 @@ namespace Search
 		}
 		if (depth == 0)  { 
 			nodes++;
-			auto eval = Quiesence(board, alpha, beta); 
+			int16_t eval = 0;
+
+			eval = Quiesence(board, alpha, beta); 
+
 			if (Panzer::Com::GetDebug())
 			{
 				auto output = "\t\tEVAL MAX" + std::to_string(eval) + " " + board.PrintMoveChain();
@@ -213,7 +227,17 @@ namespace Search
 				continue;
 			}
 
-			score = AlphaBetaMin(board, alpha, beta, depth - 1);
+			auto ttEntry = TTTable.Find(board.GetHash());
+			// did this score cause a beta cut off when we searched it before?
+			if (!(ttEntry.score != TT_INVALID && ttEntry.type == MIN && ttEntry.depth >= depth && score >= beta))
+			{
+				score = AlphaBetaMin(board, alpha, beta, depth - 1);
+			}
+			else
+			{
+				score = ttEntry.score;
+			}
+
 			legalMoves++;
 
 			if (score >= beta) { 
@@ -222,6 +246,9 @@ namespace Search
 					auto output =  "\tMax Early Cut Off " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(score);
 					Panzer::Com::OutputDebugFile(output);
 				}
+
+				// score caused a beta cutoff
+				TTTable.Insert(board.GetHash(), depth, score, MIN);
 				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
 				return beta;
@@ -267,13 +294,16 @@ namespace Search
 
 		if (depth == 0)  { 
 			nodes++;
-			auto eval =  -1 * Quiesence(board, alpha, beta); 
+			int16_t eval = 0;
+
+			eval = Quiesence(board, alpha, beta); 
+
 			if (Panzer::Com::GetDebug())
 			{
 				auto output = "\t\tEVAL MIN " + std::to_string(eval) + " "+ board.PrintMoveChain();
 				Panzer::Com::OutputDebugFile(output);
 			}
-			return eval;
+			return -1 * eval;
 		}
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves);
@@ -303,7 +333,18 @@ namespace Search
 				continue;
 			}
 
-			score = AlphaBetaMax(board, alpha, beta, depth - 1);
+			auto ttEntry = TTTable.Find(board.GetHash());
+
+			// did this sccore cause a cutoff?
+			if (!(ttEntry.score != TT_INVALID && ttEntry.type == MAX && ttEntry.depth >= depth && score <= alpha))
+			{
+				score = AlphaBetaMax(board, alpha, beta, depth - 1);
+			}
+			else
+			{
+				score = ttEntry.score;
+			}
+
 			legalMoves++;
 			if (score <= alpha)  { 
 				if (Panzer::Com::GetDebug())
@@ -313,6 +354,8 @@ namespace Search
 				}
 				repitionHash[board.GetHash()] -= 1;
 				board.UnmakeMove(move);
+				TTTable.Insert(board.GetHash(), depth, beta, MAX);
+
 				return alpha; 
 			}
 			if (score < beta)
@@ -342,6 +385,7 @@ namespace Search
 
 			return 0;
 		}
+
 
 		return beta;
 	}
