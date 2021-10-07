@@ -121,7 +121,8 @@ int main()
     flags |= WHITEK;
     flags |= WHITEQ;
 
-    Panzer::Move moves[10];
+    std::cout << "Move sort test" << std::endl;
+    Panzer::Move moves[256];
     auto move1 = Panzer::Move();
     move1.m_score = 10;
     move1.id = 1;
@@ -130,56 +131,20 @@ int main()
     move2.m_score = 20;
     move2.id = 2;
     moves[1] = move2;
-    std::cout << (moves + 1)->id << moves[1].id << std::endl;
-    int nums[5] = { 1, 2, 3, 5, 4};
     std::sort(moves, moves + 10, Panzer::Utils::MoveSorter);
-    for (int i = 0; i < 10; i++)
-    {
-        std::cout << moves[i].id << std::endl;
-    }
-    std::cout << move2.id << std::endl;
     assert(moves[0].id == 2);
-    assert(flags == ALL_CASTLE_FLAGS);
-    board->FenToBoard(KIWIPETE);
-
-    board->FenToBoard(STARTFEN);
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
-
-    std::cout.precision(5);
-    //std::cout << elapsed_seconds.count() << std::endl;
+    std::cout << "Move sort test end" << std::endl;
 
     board = new Panzer::Board();
-    board->FillSquare(G1, KING, WHITE);
-    board->FillSquare(F1, ROOK, WHITE);
-    board->FillSquare(B1, KNIGHT, WHITE);
-
-    //std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
-
-    board = new Panzer::Board();
-    board->FillSquare(E1, KING, WHITE);
-    board->FillSquare(H1, ROOK, WHITE);
-    board->FillSquare(C3, KNIGHT, WHITE);
-
-    //std::cout << Panzer::EvaluateBoard(*board) <<std::endl;
-
-    //board = new Panzer::Board();
-    //std::cout << "hash test" << std::endl;
-    //board->FenToBoard(STARTFEN);
-    //auto beforeHash = board->GetHash();
-    //std::cout << beforeHash << std::endl;
-    //std::cout << board->GetHash() << std::endl;
-    //auto e5e7 = Panzer::Move(E5, E7, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
-    //board->MakeMove(e5e7);
-    //board->UnmakeMove(e5e7);
-    //board->UnmakeMove(e2e4);
-    //assert(beforeHash == board->GetHash());
-
-    board = new Panzer::Board();
-    board->FenToBoard(STARTFEN);
-    std::cout << "before eval" <<std::endl;
-    auto e2e4 = Panzer::Move(E2, E4, DOUBLE_PAWN_PUSH, ALL_CASTLE_FLAGS);
-    board->MakeMove(e2e4);
-
+    board->FenToBoard("rnbqkbnr/pppp1ppp/4p3/8/8/4P3/PPPP1PPP/RNBQKBNR w KQkq - - 1");
     std::cout << Panzer::EvaluateBoard(*board) << std::endl;
+
+    std::cout << "c6d5" << std::endl;
+    board->FenToBoard("3r4/6k1/8/3p1R2/8/3Q2N1/8/5K2 w - - - 1");
+    std::cout << Panzer::EvaluateBoard(*board) << std::endl;
+
+    std::cout << "d8d5" << std::endl;
+    board->FenToBoard("8/6k1/2p5/3r1R2/8/3Q2N1/8/5K2 w - - - 1");
+    std::cout << Panzer::EvaluateBoard(*board) << std::endl;
+
 }

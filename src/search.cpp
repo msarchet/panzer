@@ -8,6 +8,10 @@
 #include <chrono>
 #include <unordered_map>
 
+//#define USE_TT
+//#define SCORES
+#define USE_SEE
+
 namespace Panzer
 {
 namespace Search
@@ -33,7 +37,6 @@ namespace Search
 	{
 		return repitionHash[key] == 3;
 	}
-
 
 	void Search(Panzer::Board &board, int depth)
 	{
@@ -79,7 +82,7 @@ namespace Search
 			int legalMoves = 0;
 			if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 			{
-				auto score = AlphaBetaMin(board, alpha, beta, 1);
+				auto score = -AlphaBetaMinMax(board, alpha, beta, 0);
 				if (score > alpha)
 				{
 					alpha = score;
@@ -103,13 +106,11 @@ namespace Search
 
 		Panzer::Com::SendMessageToUI("info depth 1 score " + std::to_string(alpha) + " " + Panzer::Utils::PrintMove(bestMove));
 
-
+		alpha = alpha - 50;
+		beta = alpha + 50;
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
 			std::swap(moves[0], moves[bestMoveIndex]);
-
-			alpha = INT16_MIN;
-			beta = INT16_MAX;
 
 			bestMoveIndex = 0;
 			moveIndex = 0;
@@ -124,20 +125,28 @@ namespace Search
 				if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 				{
 					int16_t score = 0;
+					#ifdef USE_TT
 					auto ttEntry = TTTable.Find(board.GetHash());
 					if (!(ttEntry.score != TT_INVALID && ttEntry.type == EXACT && ttEntry.depth >= iterative_depth))
 					{
-						score = AlphaBetaMin(board, alpha, beta, iterative_depth - 1);
+					#endif
+
+					score = -AlphaBetaMinMax(board, alpha, beta, iterative_depth - 1);
+
+					#ifdef USE_TT
 					}
 					else
 					{
 						score = ttEntry.score;
 					}
+					#endif
 
 					if (score > alpha)
 					{
 						alpha = score;
+						#ifdef USE_TT
 						TTTable.Insert(board.GetHash(), iterative_depth, score, EXACT);
+						#endif
 						bestMove = Panzer::Move(move);
 						bestMoveIndex = moveIndex;
 					}
@@ -181,89 +190,77 @@ namespace Search
 		Panzer::Com::OutputDebugFile(output);
 	}
 
-	int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
+	int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
 	{
-		// if out of time return
 		if (board.IsChecked(board.GetSideToMove())) depth++;
 		if (IsDrawByRepition(board.GetHash()) || board.isDrawBy50MoveRule()) { 
 			return 0; 
 		}
+
 		if (depth == 0)  { 
 			nodes++;
-			int16_t eval = 0;
+			int16_t eval = Quiesence(board, alpha, beta); 
 
-			eval = Quiesence(board, alpha, beta); 
-
+#ifdef SCORES
 			if (Panzer::Com::GetDebug())
 			{
-				auto output = "\t\tEVAL MAX" + std::to_string(eval) + " " + board.PrintMoveChain();
+				auto output = "\t\tQ Search " + std::to_string(eval) + " "+ board.PrintMoveChain();
 				Panzer::Com::OutputDebugFile(output);
 			}
+#endif
 			return eval;
 		}
 
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves);
 		Utils::SortMoves(moves, movecount);
-		int legalMoves = 0;
+		uint8_t legalMoves = 0;
 		for (auto i = 0; i < movecount; i++)
 		{
 			auto move = moves[i]; 
 			board.MakeMove(move);
 			repitionHash[board.GetHash()] += 1;
-			if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) 
-			{ 
-				repitionHash[board.GetHash()] -= 1;
-				board.UnmakeMove(move);
-				return 0; 
-			}
 
 			int16_t score = INT16_MIN;
 
-			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
+			if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 			{
-				repitionHash[board.GetHash()] -= 1;
-				board.UnmakeMove(move);
-				continue;
-			}
+					#ifdef USE_TT
+					auto ttEntry = TTTable.Find(board.GetHash());
+					if (ttEntry.score == TT_INVALID || ttEntry.depth <= depth)
+					{
+					#endif
 
-			auto ttEntry = TTTable.Find(board.GetHash());
-			// did this score cause a beta cut off when we searched it before?
-			if (!(ttEntry.score != TT_INVALID && ttEntry.type == MIN && ttEntry.depth >= depth && score >= beta))
-			{
-				score = AlphaBetaMin(board, alpha, beta, depth - 1);
-			}
-			else
-			{
-				score = ttEntry.score;
-			}
+					score = -1 * AlphaBetaMinMax(board, -beta, -alpha, depth - 1);
 
-			legalMoves++;
+					#ifdef USE_TT
+					}
+					else
+					{
+						score = ttEntry.score;
+					}
+					#endif
 
-			if (score >= beta) { 
-				if (Panzer::Com::GetDebug())
+
+				// this move improved alpha
+				if (score > alpha)
 				{
-					auto output =  "\tMax Early Cut Off " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(score);
-					Panzer::Com::OutputDebugFile(output);
+					// this move is a cutoff for the min player
+					if (score >= beta)
+					{
+						repitionHash[board.GetHash()] -= 1;
+						board.UnmakeMove(move);
+						return score;
+					}
+
+					alpha = score;
 				}
 
-				// score caused a beta cutoff
-				TTTable.Insert(board.GetHash(), depth, score, MIN);
-				repitionHash[board.GetHash()] -= 1;
-				board.UnmakeMove(move);
-				return beta;
-			}
-			if (score > alpha) alpha = score;
-
-			if (Panzer::Com::GetDebug())
-			{
-				auto output = "\tMax Score "+ board.PrintMoveChain() + std::to_string(alpha) + " " +  std::to_string(score);
-				Panzer::Com::OutputDebugFile(output);
+				legalMoves++;
 			}
 
 			repitionHash[board.GetHash()] -= 1;
 			board.UnmakeMove(move);
-
 		}
 
 		if (legalMoves == 0)  
@@ -274,7 +271,8 @@ namespace Search
 				{
 					Panzer::Com::OutputDebugFile("Checkmate at " + board.PrintMoveChain());
 				}
-				return -9999; 
+
+				return 9999 - board.GetPly(); 
 			}
 
 			return 0;
@@ -282,152 +280,6 @@ namespace Search
 
 
 		return alpha;
-	}
-
-	int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
-	{
-		// if out of time return 
-		if (board.IsChecked(board.GetSideToMove())) depth++;
-		if (IsDrawByRepition(board.GetHash()) || board.isDrawBy50MoveRule()) { 
-			return 0; 
-		}
-
-		if (depth == 0)  { 
-			nodes++;
-			int16_t eval = 0;
-
-			eval = Quiesence(board, alpha, beta); 
-
-			if (Panzer::Com::GetDebug())
-			{
-				auto output = "\t\tEVAL MIN " + std::to_string(eval) + " "+ board.PrintMoveChain();
-				Panzer::Com::OutputDebugFile(output);
-			}
-			return -1 * eval;
-		}
-		Move moves[256];
-		auto movecount = board.GenerateMoves(moves);
-		Utils::SortMoves(moves, movecount);
-
-		int legalMoves = 0;
-		for (auto i = 0; i < movecount; i++)
-		{
-			auto move = moves[i]; 
-			board.MakeMove(move);
-			repitionHash[board.GetHash()] += 1;
-			if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) 
-			{ 
-				repitionHash[board.GetHash()] -= 1;
-				board.UnmakeMove(move);
-
-				return 0; 
-			}
-
-
-			int16_t score = INT16_MAX;
-
-			if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
-			{
-				repitionHash[board.GetHash()] -= 1;
-				board.UnmakeMove(move);
-				continue;
-			}
-
-			auto ttEntry = TTTable.Find(board.GetHash());
-
-			// did this sccore cause a cutoff?
-			if (!(ttEntry.score != TT_INVALID && ttEntry.type == MAX && ttEntry.depth >= depth && score <= alpha))
-			{
-				score = AlphaBetaMax(board, alpha, beta, depth - 1);
-			}
-			else
-			{
-				score = ttEntry.score;
-			}
-
-			legalMoves++;
-			if (score <= alpha)  { 
-				if (Panzer::Com::GetDebug())
-				{
-					auto output = "\tMin Early Cut Off " + board.PrintMoveChain() + std::to_string(score) + " " + std::to_string(beta);
-					Panzer::Com::OutputDebugFile(output);
-				}
-				repitionHash[board.GetHash()] -= 1;
-				board.UnmakeMove(move);
-				TTTable.Insert(board.GetHash(), depth, beta, MAX);
-
-				return alpha; 
-			}
-			if (score < beta)
-			{
- 				beta = score;
-			}
-
-			if (Panzer::Com::GetDebug())
-			{
-				auto output = "\tMin Scores " + board.PrintMoveChain() + std::to_string(alpha) + " " + std::to_string(beta);
-				Panzer::Com::OutputDebugFile(output);
-			}
-			repitionHash[board.GetHash()] -= 1;
-			board.UnmakeMove(move);
-		}
-
-		if (legalMoves == 0)  
-		{ 
-			if (board.IsChecked(board.GetSideToMove()))
-			{
-				if (Panzer::Com::GetDebug())
-				{
-					Panzer::Com::OutputDebugFile("Checkmate at " + board.PrintMoveChain());
-				}
-				return 9999; 
-			}
-
-			return 0;
-		}
-
-
-		return beta;
-	}
-
-	int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta, int depth)
-	{
-		// if out of time return
-		Move moves[256];
-		auto movecount = board.GenerateMoves(moves);
-		Utils::SortMoves(moves, movecount);
-
-		if (depth == 0) 
-		{
-			return Panzer::EvaluateBoard(board);
-		}
-
-		int16_t bestScore = INT16_MIN;
-		for (auto i = 0; i < movecount; i++)
-		{
-			auto move = moves[i]; 
-			board.MakeMove(move);
-			int16_t score = INT16_MIN;
-
-			if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
-			{
-				score = -1 * AlphaBetaMinMax(board, -1 * beta, -1 * alpha, depth - 1);
-				if (score >= beta)
-				{
-					return score;
-				}
-
-				if (score > bestScore)
-				{
-					if (score > alpha)
-					{
-						alpha = score;
-					}
-				}
-			}
-		}
-
-		return bestScore;
 	}
 
 	int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta)
@@ -438,20 +290,16 @@ namespace Search
 			return 0; 
 		}
 
-		auto stand_pat = Panzer::EvaluateBoard(board);
+		auto bestScore = Panzer::EvaluateBoard(board);
 
-		if (stand_pat >= beta)
+		if (bestScore >= beta)
 		{
 			return beta;
 		}
 
-		if(alpha < stand_pat) 
-		{
-			alpha = stand_pat;
-		}
-
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);
+
 		Utils::SortMoves(moves, movecount);
 
 		int legalMoves = 0;
@@ -470,19 +318,26 @@ namespace Search
 			legalMoves++;
 			qNodes++;
 
-			// if this capture
-			if (SEE(board, move.getTo()) + stand_pat > alpha)
+			#ifdef USE_SEE
+			// don't search nodes that have a negative static exchange
+			if (SEE(board, move.getTo()) < 0)
 			{
+			#endif
 				auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha );
 				board.UnmakeMove(move);
 
-				if(score >= beta) return beta;
-				if(score > alpha) alpha = score;
+				if(score > bestScore) bestScore = score;
+				if (score >= beta) {
+					board.UnmakeMove(move);
+					return beta;
+				}
+			#ifdef USE_SEE
 			}
 			else
 			{
 				board.UnmakeMove(move);
 			}
+			#endif
 		}
 
 		if (movecount != 0 && legalMoves == 0)
@@ -493,7 +348,7 @@ namespace Search
 			}
 		}
 
-		return alpha;
+		return bestScore;
 	}
 
 	int16_t SEE(Panzer::Board &board, square to)
@@ -501,32 +356,30 @@ namespace Search
 		int16_t value = 0;
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);
-		Move filtered[256];
-		auto filteredCount = 0;
+		int lowestCapturerScore = INT_MIN;
+		Move lowestCapturer = Panzer::Move(NO_SQUARE, NO_SQUARE, EMPTY_MOVE_FLAGS, EMPTY_CASTLE_FLAGS);
 		for (int i = 0; i < movecount; i++)
 		{
 			auto move = moves[i];
 			if (move.getTo() == to)
 			{
-				filtered[filteredCount] = move;
-				filteredCount++;
+				if (move.m_score > lowestCapturerScore)
+				{
+					lowestCapturer = move;
+					lowestCapturerScore = move.m_score;
+				}
 			}
 		}
 
-		std::stable_sort(filtered, filtered + filteredCount, [&board](Panzer::Move one, Panzer::Move two){
-			return one.m_score > two.m_score
-			 && board.GetPieceAtSquare(one.getFrom()) < board.GetPieceAtSquare(two.getFrom());
-		});
-
-		for (int i = 0; i < filteredCount; i++)
+		if (lowestCapturerScore != INT_MIN)
 		{
-			auto move = filtered[i];
-			board.MakeMove(move);
+			board.MakeMove(lowestCapturer);
 			if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE))
 			{
-				value = std::max(0, CAPTURE_SCORES[move.capturedPiece] - SEE(board, to));
+				auto see = CAPTURE_SCORES[lowestCapturer.capturedPiece] - SEE(board, to);
+				value = see;
 			}
-			board.UnmakeMove(move);
+			board.UnmakeMove(lowestCapturer);
 			seeNodes++;
 		}
 
