@@ -144,7 +144,7 @@ namespace Search
 					{
 					#endif
 
-					score = -AlphaBetaMinMax(board, alpha, beta, iterative_depth - 1);
+					score = -AlphaBetaMinMax(board, -beta, -alpha, iterative_depth - 1);
 
 					#ifdef USE_TT
 					}
