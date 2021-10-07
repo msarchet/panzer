@@ -106,11 +106,24 @@ namespace Search
 
 		Panzer::Com::SendMessageToUI("info depth 1 score " + std::to_string(alpha) + " " + Panzer::Utils::PrintMove(bestMove));
 
-		alpha = alpha - 50;
-		beta = alpha + 50;
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
-			std::swap(moves[0], moves[bestMoveIndex]);
+			alpha = INT16_MIN;
+			beta = INT16_MAX;
+			// I'd rather move the best move to index 1
+			// and then insert new best move at the front
+			// and shift all othere elements over 1
+			if (bestMoveIndex != 0)
+			{
+				auto temp = moves[0];
+				moves[0] = moves[bestMoveIndex];
+				for (int i = 1; i <= bestMoveIndex; i++)
+				{
+					auto swap = moves[i];
+					moves[i] = temp;
+					temp = swap;
+				}
+			}
 
 			bestMoveIndex = 0;
 			moveIndex = 0;
@@ -297,6 +310,8 @@ namespace Search
 			return beta;
 		}
 
+		if (bestScore > alpha) alpha = bestScore;
+
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);
 
@@ -328,7 +343,6 @@ namespace Search
 
 				if(score > bestScore) bestScore = score;
 				if (score >= beta) {
-					board.UnmakeMove(move);
 					return beta;
 				}
 			#ifdef USE_SEE

@@ -147,4 +147,23 @@ int main()
     board->FenToBoard("8/6k1/2p5/3r1R2/8/3Q2N1/8/5K2 w - - - 1");
     std::cout << Panzer::EvaluateBoard(*board) << std::endl;
 
+    int bestMoveIndex = 2;
+    int swapTest[4] = { 2, 1, 3, 4 };
+    if (bestMoveIndex != 0)
+    {
+        int temp = swapTest[0];
+        swapTest[0] = swapTest[bestMoveIndex];
+        for (int i = 1; i <= bestMoveIndex; i++)
+        {
+            int swap = swapTest[i];
+            swapTest[i] = temp;
+            temp = swap;
+        }
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        std::cout << swapTest[i] << std::endl;
+    }
+
 }
