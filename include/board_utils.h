@@ -14,6 +14,7 @@ namespace Panzer
             static void SortMoves(Move* moves, int movecount);
             static bool MoveSorter(Panzer::Move move_one, Panzer::Move move_two);
             static std::string PrintMove(Panzer::Move move);
-            static int GetLSB(bitboard b);
+	        static inline int GetLSB(bitboard b) { return __builtin_ctzll(b); }
+            static inline int GetPopcount(bitboard b) { return __builtin_popcountll(b); }
     };
 }

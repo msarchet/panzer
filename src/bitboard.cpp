@@ -15,7 +15,7 @@ namespace Panzer
     	for (auto it = moveChain->begin(); it != moveChain->end(); it++)
 		{
 			auto move = *it;
-			chain << Utils::PrintMove(move);
+			chain << Utils::PrintMove(move) << " ";
 		}
 
 		return chain.str();

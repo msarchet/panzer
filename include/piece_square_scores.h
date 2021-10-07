@@ -93,6 +93,12 @@ const piece_score KNIGHT_MOBILITY_BONUS[2][9] {
   {-81,-56,-31,-16,5,11,17,20,25}
 };
 
+const piece_score MINOR_THREATS_MID[6] = { 0, 5, 57, 77, 88, 79 };
+const piece_score MINOR_THREATS_END[6] = { 0, 32, 41, 56, 119, 161 };
+
+const piece_score ROOK_THREATS_MID[6] = { 0,3,37,42,0,58 };
+const piece_score ROOK_THREATS_END[6] = { 0,46,68,60,38,41 };
+
 const piece_score PAWN_SCORE = 100;
 const piece_score KNIGHT_SCORE = 300;
 const piece_score BISHOP_SCORE = 340;
@@ -103,9 +109,9 @@ const piece_score KING_SCORE = INT16_MAX;
 const piece_score CAPTURE_SCORES[7] = {
 	0,
 	PAWN_SCORE,
-	ROOK_SCORE,
 	KNIGHT_SCORE,
 	BISHOP_SCORE,
+	ROOK_SCORE,
 	QUEEN_SCORE,
 	KING_SCORE
 };

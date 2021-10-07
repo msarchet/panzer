@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 
+//#define PRINT_EVAL
 namespace Panzer
 {
 
@@ -70,17 +71,17 @@ int MaterialImbalance(int p, int k, int b, int r, int q)
 int EvaluateBoard(Board &board)
 {
 	// score board for piece material only right now
-	auto whitePawnCount = __builtin_popcountll(board.GetWhitePawns());
-	auto whiteRookCount = __builtin_popcountll(board.GetWhiteRooks());
-	auto whiteBishopCount = __builtin_popcountll(board.GetWhiteBishops());
-	auto whiteKnightCount = __builtin_popcountll(board.GetWhiteKnights());
-	auto whiteQueenCount = __builtin_popcountll(board.GetWhiteQueens());
+	auto whitePawnCount = Utils::GetPopcount(board.GetWhitePawns());
+	auto whiteRookCount = Utils::GetPopcount(board.GetWhiteRooks());
+	auto whiteBishopCount = Utils::GetPopcount(board.GetWhiteBishops());
+	auto whiteKnightCount = Utils::GetPopcount(board.GetWhiteKnights());
+	auto whiteQueenCount = Utils::GetPopcount(board.GetWhiteQueens());
 
-	auto blackPawnCount = __builtin_popcountll(board.GetBlackPawns());
-	auto blackRookCount = __builtin_popcountll(board.GetBlackRooks());
-	auto blackBishopCount = __builtin_popcountll(board.GetBlackBishops());
-	auto blackKnightCount = __builtin_popcountll(board.GetBlackKnights());
-	auto blackQueenCount = __builtin_popcountll(board.GetBlackQueens());
+	auto blackPawnCount = Utils::GetPopcount(board.GetBlackPawns());
+	auto blackRookCount = Utils::GetPopcount(board.GetBlackRooks());
+	auto blackBishopCount = Utils::GetPopcount(board.GetBlackBishops());
+	auto blackKnightCount = Utils::GetPopcount(board.GetBlackKnights());
+	auto blackQueenCount = Utils::GetPopcount(board.GetBlackQueens());
 
 	auto whitePieces = board.GetWhitePieces();
 	//auto blackPieces = board.GetBlackPieces();
@@ -105,6 +106,16 @@ int EvaluateBoard(Board &board)
 
 	blackScores.mid += blackMaterialImbalance;
 	blackScores.end += blackMaterialImbalance;
+	#ifdef PRINT_EVAL
+		std::cout << "MATERIAL IMBALANCE" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
+
+	auto blackPSMid = 0;
+	auto whitePSMid = 0;
+	auto blackPSEnd = 0;
+	auto whitePSEnd = 0;
 
 	for (square s = A1; s <= H8; s++)
 	{
@@ -115,21 +126,39 @@ int EvaluateBoard(Board &board)
 			auto color = ((ONE_BIT << s) & whitePieces) ? WHITE : BLACK;
 			if (color == WHITE)
 			{
-				whiteScores.mid += data.MidGamePieceSquareScore[piece][WHITE][index_white[s]];
-				whiteScores.end += data.EndGamePieceSquareScore[piece][WHITE][index_white[s]];
+				whitePSMid += data.MidGamePieceSquareScore[piece][WHITE][index_white[s]];
+				whitePSEnd += data.EndGamePieceSquareScore[piece][WHITE][index_white[s]];
 			}
 			else
 			{
-				whiteScores.mid += data.MidGamePieceSquareScore[piece][BLACK][s];
-				whiteScores.end += data.EndGamePieceSquareScore[piece][BLACK][s];
+				blackPSMid += data.MidGamePieceSquareScore[piece][BLACK][s];
+				blackPSEnd += data.EndGamePieceSquareScore[piece][BLACK][s];
 			}
 		}
 	}
+
+	whiteScores.mid += whitePSMid;
+	whiteScores.end += whitePSEnd;
+
+	blackScores.mid += blackPSMid;
+	blackScores.end += blackPSEnd;
+
+	#ifdef PRINT_EVAL
+		std::cout << "PST" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
 
 
 	// need to just returrn two values indicating Mid and End Scores
 	EvaluatePawns<WHITE>(board, whiteScores);
 	EvaluatePawns<BLACK>(board, blackScores);
+
+	#ifdef PRINT_EVAL
+		std::cout << "PAWNS" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
 
 	// TODO: Implement
 	EvaluateOutposts<WHITE>(board, whiteScores);
@@ -138,11 +167,29 @@ int EvaluateBoard(Board &board)
 	MinorBehindPawns<WHITE>(board, whiteScores);
 	MinorBehindPawns<BLACK>(board, blackScores);
 
+	#ifdef PRINT_EVAL
+		std::cout << "MINOR BEHIND PAWNS" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
+
 	BishopXRayPawns<WHITE, BLACK>(board, whiteScores);
 	BishopXRayPawns<BLACK, WHITE>(board, blackScores);
 
+	#ifdef PRINT_EVAL
+		std::cout << "BISHOP XRAY PAWNS" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
+
 	RookScores<WHITE, BLACK>(board, whiteScores);
 	RookScores<BLACK, WHITE>(board, blackScores);
+
+	#ifdef PRINT_EVAL
+		std::cout << "ROOK SCORES" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
 
 	Mobility<WHITE>(board, whiteScores);
 	Mobility<BLACK>(board, blackScores);
@@ -151,26 +198,56 @@ int EvaluateBoard(Board &board)
 	int blackAttackLookup[64] = {0};
 	Attacks<WHITE>(board, whiteAttackLookup);
 	Attacks<BLACK>(board, blackAttackLookup);
+	int whiteWeakLookup[64] = {0};
+	int blackWeakLookup[64] = {0};
+	WeakAndHanging<WHITE>(board, whiteAttackLookup, blackAttackLookup, whiteWeakLookup);
+	WeakAndHanging<BLACK>(board, blackAttackLookup, whiteAttackLookup, blackWeakLookup);
 
 	Space<WHITE>(board, whiteScores, SpaceArea<WHITE>(board, whiteAttackLookup));
 	Space<BLACK>(board, blackScores, SpaceArea<BLACK>(board, blackAttackLookup));
+	#ifdef PRINT_EVAL
+		std::cout << "SPACE" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
+
 	int whiteScore = 0;
 	int blackScore = 0;
 
+	Threats<WHITE, BLACK>(board, whiteAttackLookup, blackAttackLookup, whiteWeakLookup, blackWeakLookup, whiteScores);
+	Threats<BLACK, WHITE>(board, blackAttackLookup, whiteAttackLookup, blackWeakLookup, whiteWeakLookup, blackScores);
+	#ifdef PRINT_EVAL
+		std::cout << "THREATS" << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
 
 	whiteScore = (whiteScores.mid * (phase) + ((TOTAL_PHASE - phase) * whiteScores.end)) / TOTAL_PHASE;
 	blackScore = (blackScores.mid + (phase) + ((TOTAL_PHASE - phase) * blackScores.end)) / TOTAL_PHASE;
+
+	#ifdef PRINT_EVAL
+		std::cout << "PHASE ADJUST" << std::endl;
+		std::cout << "PHASE: " << phase << std::endl;
+		std::cout << "WHITE: " << whiteScores.mid << " " << whiteScores.end << std::endl;
+		std::cout << "BLACK: " << blackScores.mid << " " << blackScores.end << std::endl;
+	#endif
+
 	// TEMPO BONUS
 	whiteScore += board.GetSideToMove() == WHITE ? 28 : 0;
 	blackScore += board.GetSideToMove() == BLACK ? 28 : 0;
 
 	whiteScore = (whiteScore * (100 - board.GetHalfClock())) / 100;
 	blackScore = (blackScore * (100 - board.GetHalfClock())) / 100;
+
 	auto score = whiteScore - blackScore;
+	#ifdef PRINT_EVAL
+		std::cout << "FINAL SCORE: " << score << std::endl;
+	#endif
 
 	if (score == 0)  { 
 		score = 1; 
 	}
+
 	//std::cout << "done eval" << std::endl;
 	// equivalent to WHITE ? score : -1 * score
 	score = board.GetSideToMove() == WHITE ? score : -1 * score;
@@ -229,7 +306,7 @@ int EvaluateBoard(Board &board)
 			}
 
 			// supported
-			supported = __builtin_popcount(PAWN_SUPPORT_MASK[s] & pawns);
+			supported = Utils::GetPopcount(PAWN_SUPPORT_MASK[s] & pawns);
 
 			auto rank = SQUARE_TO_FILE[s];
 
@@ -329,7 +406,7 @@ int EvaluateBoard(Board &board)
 			minorpieces = __builtin_bswap64(minorpieces); 
 		}
 
-		auto behind = __builtin_popcount((minorpieces << N) & pawns);
+		auto behind = Utils::GetPopcount((minorpieces << N) & pawns);
 		scores.mid += 18 * behind;
 		scores.end += 3 * behind;
 	}
@@ -348,7 +425,7 @@ int EvaluateBoard(Board &board)
 
 			int xray = sliders->GetBishopAttacks(s, 0);
 
-			count += __builtin_popcount(xray ^ pawns);
+			count += Utils::GetPopcount(xray ^ pawns);
 			bishops &= bishops - 1;
 		}
 
@@ -365,7 +442,7 @@ int EvaluateBoard(Board &board)
 		bitboard kingsThem = Kings<them>(board);
 
 		int count = 0;
-		bitboard queens = Queens<us>(board);
+		bitboard queens = Queens<us>(board) | Queens<them>(board);
 
 		// do the rooks share a file with the queen
 		while(queens != 0)
@@ -373,7 +450,7 @@ int EvaluateBoard(Board &board)
 			square s = Utils::GetLSB(queens);
 
 			mask file = SQUARE_TO_FILE[s];
-			count += __builtin_popcount(rooks ^ file);
+			count += Utils::GetPopcount(rooks & file);
 			queens &= queens - 1;
 		}
 
@@ -472,7 +549,6 @@ int EvaluateBoard(Board &board)
 	template<color c>
 	void Mobility(const Board &board, EvalScores &scores)
 	{
-		int mobility = 0;
 		bitboard queens = Queens<c>(board);
 		bitboard rooks = Rooks<c>(board);
 		bitboard knights = Knights<c>(board);
@@ -483,29 +559,27 @@ int EvaluateBoard(Board &board)
 		while (rooks != 0)
 		{
 			square s = Utils::GetLSB(rooks);
-			int num = __builtin_popcount(sliders->GetRookAttacks(s, occupancy ^ queens));
+			int num = Utils::GetPopcount(sliders->GetRookAttacks(s, occupancy ^ queens));
 			scores.mid += ROOK_MOBILITY_BONUS[0][num];
 			scores.end += ROOK_MOBILITY_BONUS[1][num];
-
 			rooks &= rooks - 1;
 		}
 
 		while (knights != 0)
 		{
 			square s = Utils::GetLSB(knights);
-			int num = __builtin_popcount(KNIGHT_SPANS[s] & ~(us ^ queens));
+			int num = Utils::GetPopcount(KNIGHT_SPANS[s] & ~(us ^ queens));
 			scores.mid += ROOK_MOBILITY_BONUS[0][num];
 			scores.end += ROOK_MOBILITY_BONUS[1][num];
-
 			knights &= knights - 1;
 		}
 
 		while (bishops != 0)
 		{
 			square s = Utils::GetLSB(bishops);
-			int num = __builtin_popcount(sliders->GetBishopAttacks(s, occupancy ^ queens));
-			scores.mid = BISHOP_MOBILITY_BONUS[0][num];
-			scores.end = BISHOP_MOBILITY_BONUS[1][num];
+			int num = Utils::GetPopcount(sliders->GetBishopAttacks(s, occupancy ^ queens));
+			scores.mid += BISHOP_MOBILITY_BONUS[0][num];
+			scores.end += BISHOP_MOBILITY_BONUS[1][num];
 			bishops &= bishops - 1;
 		}
 
@@ -513,7 +587,7 @@ int EvaluateBoard(Board &board)
 		while (queens != 0)
 		{
 			square s = Utils::GetLSB(queens);
-			int num = __builtin_popcount(sliders->GetQueenAttacks(s, occupancy));
+			int num = Utils::GetPopcount(sliders->GetQueenAttacks(s, occupancy));
 			scores.mid += QUEEN_MOBILITY_BONUS[0][num];
 			scores.end += QUEEN_MOBILITY_BONUS[1][num];
 			queens &= queens - 1;
@@ -663,7 +737,7 @@ int EvaluateBoard(Board &board)
 	void Space(const Board& board, EvalScores &scores, int spaceArea)
 	{
 		const bitboard pieces = Pieces<c>(board);
-		int pieceCount = __builtin_popcount(pieces);
+		int pieceCount = Utils::GetPopcount(pieces);
 		
 		// blocked count is pawns we are stopping from advancing
 		// and pawns they are stopping from advancing
@@ -672,13 +746,13 @@ int EvaluateBoard(Board &board)
 		// it due to being able to be captured by our pawn
 		int blockedCount = 0;
 		int weight = pieceCount - 3 + std::min(blockedCount, 9);
-		scores.mid = weight * weight * spaceArea / 16;
+		scores.mid += weight * weight * spaceArea / 16;
 	}
 
 	template<color c>
 	void WeakAndHanging(const Board &board, int *attacksUs, int *attacksThem, int *weakLookup)
 	{
-		const auto pieces = Pieces<c>(board);
+		auto pieces = Pieces<c>(board);
 		while (pieces != 0)	
 		{
 			const auto s = Utils::GetLSB(pieces);
@@ -691,5 +765,204 @@ int EvaluateBoard(Board &board)
 			}
 			pieces &= pieces - 1;
 		}
+	}
+
+	template<color us, color them>
+	void Threats(const Board& board, int *attacksUs, int *attacksThem, int *weakUs, int *weakThem, EvalScores &scores)
+	{
+		auto ourPawns = Pawns<us>(board);
+		auto ourBishops = Bishops<us>(board);
+		auto ourKnights = Knights<us>(board);
+		auto ourRooks = Rooks<us>(board);
+		auto ourKing = Kings<us>(board);
+		auto theirKnights = Knights<them>(board);
+		auto theirRooks = Rooks<them>(board);
+		auto theirBishops = Bishops<them>(board);
+		auto theirPieces = Pieces<them>(board);
+		auto theirQueens = Queens<them>(board);
+		auto occupancy = board.GetOccupancy();
+
+		for (square s = A1; s < NO_SQUARE; s++)
+		{
+			auto weakSquareThem = weakThem[s];
+			auto attackSquareThem = attacksThem[s];
+
+			// hanging pieces
+			if ((weakThem[s] & 0b11) == 3)
+			{
+				scores.mid += 69;
+				scores.end += 36;
+			}
+
+			// king threat
+			if (attacksUs[s] & 0b00000001)
+			{
+				scores.mid += 24;
+				scores.end += 89;
+			}
+
+			// restricted 
+			// this is an intersection of squares where we are both attacking
+			int restricted = 0;
+			if ((attacksUs[s] & 0b111) > 0 && (attacksThem[s] & 0b111) > 0)
+			{
+				restricted++;
+			}
+
+			scores.mid += 7 * restricted;
+			scores.end += 7 * restricted;
+		}
+
+		// can we advance our pawns toward their pieces and attack safely
+		auto pawnAttacks = PAWN_ATTACKS[us];
+		mask pawnPushes = ourPawns;
+		if (us == BLACK)
+		{
+			pawnPushes = ourPawns >> S;
+		}
+		else
+		{
+			pawnPushes = ourPawns << N;
+		}
+
+		// mask out pawns that would be promoted
+		pawnPushes = (pawnPushes & ~(FIRST_RANK | EIGHTH_RANK));
+
+		while (pawnPushes != 0)
+		{
+			square s = Utils::GetLSB(pawnPushes);
+			auto potentialAttacks = pawnAttacks[s];
+
+			while (potentialAttacks != 0 && (potentialAttacks & theirPieces))
+			{
+				square target = Utils::GetLSB(potentialAttacks);
+
+				if ((attacksThem[target] & 0b111) == 0)
+				{
+					scores.mid += 48;
+					scores.end += 48;
+				}
+
+				potentialAttacks &= potentialAttacks - 1;
+			}
+			pawnPushes &= pawnPushes - 1;
+		}
+
+		// do we have pawns that are attacking and are defended
+		auto pawnsSafe = ourPawns;
+		while (pawnsSafe != 0)
+		{
+			square s = Utils::GetLSB(pawnsSafe);
+
+			// is the pawn attacking something
+			// is the pawn not being attacked or is the pawn guarded in it's attacked
+			auto potentialAttacks = (pawnAttacks[s] & theirPieces);
+			bool isAttackedByThem = (attacksThem[s] & 0b111) > 0;
+			if (!isAttackedByThem || (attacksUs[s] & 0b111) > 0)
+			{
+				auto safeAttacks = Utils::GetPopcount(potentialAttacks);
+				scores.mid += safeAttacks * 173;
+				scores.end += safeAttacks * 94;
+			}
+
+			pawnsSafe &= pawnsSafe - 1;
+		}
+
+		// safe slider threats on enemy queen
+		// can a piece move into a square that attacks the queen
+		// and is defended
+		// for the occupancy we remove any of our sliders
+		mask xrayOccupancy = occupancy ^ theirQueens;
+
+		auto attackBishops = ourBishops;
+		auto attackRooks = ourRooks;
+		mask bishopXRay = 0ULL;
+		mask rookXRay = 0ULL;
+		mask attackMask = 0ULL;
+
+		while (attackBishops != 0)
+		{
+			square s = Utils::GetLSB(attackBishops);
+			bishopXRay |= sliders->GetBishopAttacks(s, xrayOccupancy);
+			attackBishops &= attackBishops - 1;
+		}
+
+		while (attackRooks != 0)
+		{
+			square s = Utils::GetLSB(attackRooks);
+			rookXRay |= sliders->GetRookAttacks(s, xrayOccupancy);
+			attackRooks &= attackRooks - 1;
+		}
+
+		attackMask = (bishopXRay & rookXRay);
+
+		uint sliderAttackCount = 0;
+		while (attackMask != 0)
+		{
+			// if the square is attacked by the enemy queen 
+			// and deneded by us
+
+			square s = Utils::GetLSB(attackMask);
+
+			if ((attacksThem[s] & 0b00000010) && (attacksUs[s] & 0b111))
+			{
+				sliderAttackCount++;
+			}
+
+			attackMask &= attackMask - 1;
+		}
+
+		scores.mid += 60 * sliderAttackCount;
+		scores.end += 18 * sliderAttackCount;
+
+		mask bishopXrayTarget = bishopXRay & theirPieces;
+
+		while (bishopXrayTarget != 0)
+		{
+			square s = Utils::GetLSB(bishopXrayTarget);
+
+			piece target = board.GetPieceAtSquare(s);
+			scores.mid += MINOR_THREATS_MID[target];
+			scores.end += MINOR_THREATS_END[target];
+			bishopXrayTarget &= bishopXrayTarget -1;
+		}
+
+		mask rookXrayTarget = rookXRay & theirPieces;
+
+		while (rookXrayTarget != 0)
+		{
+			square s = Utils::GetLSB(rookXrayTarget);
+
+			piece target = board.GetPieceAtSquare(s);
+			scores.mid += ROOK_THREATS_MID[target];
+			scores.end += ROOK_THREATS_END[target];
+			rookXrayTarget &= rookXrayTarget -1;
+		}
+
+		// does our knight have any moves they can make
+		// that attack the queen
+		bitboard queenKnightCheck = theirQueens;
+		bitboard knightsCopy = ourKnights;
+		mask potentialKnightMoves = 0ULL;
+		while (knightsCopy != 0)
+		{
+			square s = Utils::GetLSB(knightsCopy);
+			potentialKnightMoves |= KNIGHT_SPANS[s];
+			knightsCopy &= knightsCopy - 1;
+		}
+		mask potentialMoves = 0ULL; 
+
+		while (queenKnightCheck != 0)
+		{
+			square s = Utils::GetLSB(queenKnightCheck);
+			potentialMoves |= KNIGHT_SPANS[s];	
+			queenKnightCheck &= queenKnightCheck - 1;
+		}
+
+		int intersects = Utils::GetPopcount(potentialKnightMoves & potentialMoves);
+
+		scores.mid += 16 * intersects;
+		scores.end += 11 * intersects;
+
 	}
 };
