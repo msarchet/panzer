@@ -7,27 +7,33 @@
     </Filter>
     <Filter Include="Header Files">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="zorbist.cpp">
+    <ClCompile Include="src\bitboard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="panzer-bitboard.cpp">
+    <ClCompile Include="src\board_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bitboard.cpp">
+    <ClCompile Include="src\com.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="utils\board_utils.cpp">
+    <ClCompile Include="src\eval.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sliding-attacks\make-magic.cpp">
+    <ClCompile Include="src\panzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\search.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\zorbist.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sliding-attacks\sliders.cpp">
@@ -35,25 +41,34 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="zorbist.h">
+    <ClInclude Include="include\bitboard.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="move.h">
+    <ClInclude Include="include\bitboard_constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="catch.hpp">
+    <ClInclude Include="include\board_utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bitboard_constants.h">
+    <ClInclude Include="include\com.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="bitboard.h">
+    <ClInclude Include="include\eval.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="utils\board_utils.h">
+    <ClInclude Include="include\piece_square_scores.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="sliding-attacks\sliders.h">
+    <ClInclude Include="include\search.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\sliders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\uci.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\zorbist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
