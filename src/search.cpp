@@ -1,4 +1,5 @@
 #include "search.h"
+#include "bitboard_constants.h"
 #include "board_utils.h"
 #include "eval.h"
 #include "com.h"
@@ -19,6 +20,7 @@ namespace Search
 	int64_t nodes = 0;
 	int64_t qNodes = 0;
 	int64_t seeNodes = 0;
+	int Max_Ply = 0;
 
 	std::unordered_map<hash, int> repitionHash = std::unordered_map<hash, int>();
 
@@ -46,6 +48,7 @@ namespace Search
 		std::chrono::time_point<std::chrono::high_resolution_clock> start,end;
 
 		start = std::chrono::high_resolution_clock::now();
+		Max_Ply = board.GetPly() + 10;
 		SearchIterate(board, depth);
 		end = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> elapsed_seconds = end - start; 
@@ -59,8 +62,8 @@ namespace Search
 
 	void SearchIterate(Panzer::Board &board, int depth) {
 		// score move for depth 1
-		auto alpha = INT16_MIN;
-		auto beta = INT16_MAX;
+		auto alpha = -INF;
+		auto beta = INF;
 
 		TTTable.Clear();
 		Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
@@ -108,8 +111,8 @@ namespace Search
 
 		for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++)
 		{
-			alpha = INT16_MIN;
-			beta = INT16_MAX;
+			alpha = -INF;
+			beta = INF;
 			// I'd rather move the best move to index 1
 			// and then insert new best move at the front
 			// and shift all othere elements over 1
@@ -144,7 +147,7 @@ namespace Search
 					{
 					#endif
 
-					score = -AlphaBetaMinMax(board, -beta, -alpha, iterative_depth - 1);
+					score = -AlphaBetaMinMax(board, alpha, beta, iterative_depth - 1);
 
 					#ifdef USE_TT
 					}
@@ -228,6 +231,7 @@ namespace Search
 		auto movecount = board.GenerateMoves(moves);
 		Utils::SortMoves(moves, movecount);
 		uint8_t legalMoves = 0;
+		bool foundPV = false;
 		for (auto i = 0; i < movecount; i++)
 		{
 			auto move = moves[i]; 
@@ -243,29 +247,42 @@ namespace Search
 					if (ttEntry.score == TT_INVALID || ttEntry.depth <= depth)
 					{
 					#endif
+						if (foundPV)
+						{
+							score = -1 * AlphaBetaMinMax(board, -alpha - 1, -alpha, depth - 1);
+						}
 
-					score = -1 * AlphaBetaMinMax(board, -beta, -alpha, depth - 1);
+						if (!foundPV || (foundPV && (score > alpha && score < beta)))
+						{
+							score = -1 * AlphaBetaMinMax(board, -beta, -alpha, depth - 1);
+						}
 
 					#ifdef USE_TT
 					}
 					else
 					{
+						if (ttEntry.type == BETA && ttEntry.score >= beta) {
+							repitionHash[board.GetHash()] -= 1;
+							board.UnmakeMove(move);
+							return ttEntry.score;
+						}
+
 						score = ttEntry.score;
 					}
 					#endif
 
+				// this move is a cutoff for the min player
+				if (score >= beta)
+				{
+					repitionHash[board.GetHash()] -= 1;
+					board.UnmakeMove(move);
+					return beta;
+				}
 
 				// this move improved alpha
 				if (score > alpha)
 				{
-					// this move is a cutoff for the min player
-					if (score >= beta)
-					{
-						repitionHash[board.GetHash()] -= 1;
-						board.UnmakeMove(move);
-						return score;
-					}
-
+					foundPV = true;
 					alpha = score;
 				}
 
@@ -302,15 +319,15 @@ namespace Search
 		if (board.isDrawBy50MoveRule()) { 
 			return 0; 
 		}
-
 		auto bestScore = Panzer::EvaluateBoard(board);
-
 		if (bestScore >= beta)
 		{
 			return beta;
 		}
 
 		if (bestScore > alpha) alpha = bestScore;
+
+		//if (board.GetPly() > Max_Ply) return alpha;
 
 		Move moves[256];
 		auto movecount = board.GenerateMoves(moves, true);

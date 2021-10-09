@@ -280,7 +280,7 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth)
                     legalCount = CountMovesRecursive(*newBoard, furtherDepth, false);
                 }
                 auto output = std::string(squareToString[move.getFrom()]) + std::string(squareToString[move.getTo()]) + std::string(": ") + std::to_string(legalCount);
-                return std::tuple(output, legalCount);
+                return std::tuple<std::string, uint64_t>(output, legalCount);
             }));
         }
 

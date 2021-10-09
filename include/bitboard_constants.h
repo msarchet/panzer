@@ -25,7 +25,7 @@ const square NO_SQUARE = 64;
 const piece NO_PIECE = 0;
 const move_flag EMPTY_MOVE_FLAGS = 0;
 const castle_flag EMPTY_CASTLE_FLAGS = 0;
-
+const int16_t INF = 30000;
 constexpr auto STARTFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - -";
 constexpr auto KIWIPETE = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ";
 
@@ -522,16 +522,19 @@ namespace Panzer
 {
     struct Move
     {
-        square m_from;
-        square m_to;
-        move_flag m_move_flags;
+        square m_from = NO_SQUARE;
+        square m_to = NO_SQUARE;
+        move_flag m_move_flags = EMPTY_MOVE_FLAGS;
         piece capturedPiece = NO_PIECE;
         castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS;
         square priorEP = NO_SQUARE;
         int m_score = 0;
         int id = -1;
 
-        Move() {}
+        Move() 
+        {
+        }
+
         Move(square from, square to, move_flag flags, castle_flag castleFlags, piece captured = NO_PIECE, square epSquare = NO_SQUARE, int score = 0)
         {
             m_from = from;

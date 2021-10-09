@@ -22,7 +22,7 @@ namespace Panzer
 	}
 
 	static const int16_t TT_INVALID = INT16_MIN;
-	const int NUM_TT_ENTRIES = 10000;
+	const int NUM_TT_ENTRIES = 1000;
 	static const unsigned char MIN = 0;
 	static const unsigned char MAX = 1;
 	static const unsigned char EXACT = 2;
@@ -41,7 +41,7 @@ namespace Panzer
 
 		void Insert(hash boardHash, unsigned char depth, int16_t score, unsigned char type)
 		{
-			int key = static_cast<int16_t>(boardHash % NUM_TT_ENTRIES);
+			int key = static_cast<int>(boardHash % NUM_TT_ENTRIES);
 			auto entry = entries[key];
 			if (depth < entry.depth) return;
 			entry.depth = depth;
@@ -57,7 +57,7 @@ namespace Panzer
 
 		TTEntry Find(hash boardHash) 
 		{
-			int key = static_cast<int16_t>(boardHash % NUM_TT_ENTRIES);
+			int key = (boardHash % NUM_TT_ENTRIES);
 			return entries[key];
 		}
 	};

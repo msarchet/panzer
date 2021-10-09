@@ -272,8 +272,8 @@ int EvaluateBoard(Board &board)
 
 		if (c == BLACK) 
 		{  
-			pawns = __builtin_bswap64(pawns);
-			other_pawns = __builtin_bswap64(other_pawns);
+			pawns = Utils::SwapBits(pawns);
+			other_pawns = Utils::SwapBits(other_pawns);
 		}
 
 		int isolated = 0;
@@ -331,7 +331,7 @@ int EvaluateBoard(Board &board)
 
 			// blocked loss
 			int fileNum = s / 8;
-			if ((fileNum < 4) & (other_pawns & file))
+			if ((fileNum < 4) && (other_pawns & file))
 			{
 				blockedScore -= PAWN_BLOCKED[4 - fileNum];
 			}
@@ -401,9 +401,10 @@ int EvaluateBoard(Board &board)
 	{
 		bitboard minorpieces = Bishops<c>(board) | Knights<c>(board);
 		bitboard pawns = Pawns<c>(board);
+
 		if (c == BLACK) { 
-			pawns = __builtin_bswap64(pawns);
-			minorpieces = __builtin_bswap64(minorpieces); 
+			pawns = Utils::SwapBits(pawns);
+			minorpieces = Utils::SwapBits(minorpieces); 
 		}
 
 		auto behind = Utils::GetPopcount((minorpieces << N) & pawns);
@@ -756,7 +757,7 @@ int EvaluateBoard(Board &board)
 		while (pieces != 0)	
 		{
 			const auto s = Utils::GetLSB(pieces);
-			if ((attacksThem[s] & 0b111) != 0 & (attacksUs[s] & 0b0001) != 0)
+			if ((attacksThem[s] & 0b111) != 0 && (attacksUs[s] & 0b0001) != 0)
 			{
 				//weak
 				weakLookup[s] = 0b1;
@@ -896,7 +897,7 @@ int EvaluateBoard(Board &board)
 
 		attackMask = (bishopXRay & rookXRay);
 
-		uint sliderAttackCount = 0;
+		int sliderAttackCount = 0;
 		while (attackMask != 0)
 		{
 			// if the square is attacked by the enemy queen 

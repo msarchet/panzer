@@ -1653,8 +1653,8 @@ std::string Board::BoardToFen()
 		int index = 0;
 		for (size_t cIndex = 0; cIndex < fen.length(); cIndex++)
 		{
+
 			auto c = fen[cIndex];
-			auto s = fenIndexToSquare[index];
 			if (board_done)
 			{
 				if (!sideToMoveDone)
@@ -1789,6 +1789,14 @@ std::string Board::BoardToFen()
 			}
 			else 
 			{
+				if (c == ' ') 
+				{
+					board_done = true;
+					continue;
+				}
+
+				auto s = fenIndexToSquare[index];
+
 				switch (c) {
 				case 'r':
 					this->FillSquare(s, ROOK, BLACK);
@@ -1863,9 +1871,6 @@ std::string Board::BoardToFen()
 					break;
 				case '8':
 					index += 8;
-					break;
-				case ' ':
-					board_done = true;
 					break;
 				}
 			}
