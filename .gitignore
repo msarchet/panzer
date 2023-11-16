@@ -12,6 +12,7 @@ debugging-output/
 panzerbb
 panzerbb-debug
 panzer
+panzer-debug
 panzerbb-profile
 magic
 magic-debug
