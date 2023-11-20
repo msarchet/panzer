@@ -15,6 +15,7 @@ int64_t qNodes = 0;
 int64_t seeNodes = 0;
 
 std::unordered_map<hash, int> repitionHash = std::unordered_map<hash, int>();
+std::vector<Move *> moveCollectors;
 
 void AddHashToRepition(hash key) { repitionHash[key] += 1; }
 
@@ -58,7 +59,15 @@ void SearchIterate(Panzer::Board &board, int depth) {
 
   Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
 
-  Move moves[256];
+  Move *moves = nullptr;
+
+  if (moveCollectors.empty()) {
+    moves = new Move[256];
+  } else {
+    moves = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
+
   auto movecount = board.GenerateMoves(moves);
 
   Utils::SortMoves(moves, movecount);
@@ -160,16 +169,24 @@ void SearchIterate(Panzer::Board &board, int depth) {
 
   auto output = "FINAL ALPHA " + std::to_string(alpha);
   Panzer::Com::OutputDebugFile(output);
+
+  if (moveCollectors.size() > 1000) {
+    delete moves;
+  } else {
+    moveCollectors.push_back(moves);
+  }
 }
 
 int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta,
                      int depth) {
   // if out of time return
-  if (board.IsChecked(board.GetSideToMove()))
-    depth++;
   if (IsDrawByRepition(board.GetHash()) || board.isDrawBy50MoveRule()) {
     return 0;
   }
+
+  if (board.IsChecked(board.GetSideToMove()))
+    depth++;
+
   if (depth == 0) {
     nodes++;
     auto eval = Quiesence(board, alpha, beta);
@@ -181,24 +198,38 @@ int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta,
     return eval;
   }
 
-  Move moves[256];
+  Move *moves = nullptr;
+
+  if (moveCollectors.empty()) {
+    moves = new Move[256];
+  } else {
+    moves = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
   auto movecount = board.GenerateMoves(moves);
   Utils::SortMoves(moves, movecount);
   int legalMoves = 0;
   for (auto i = 0; i < movecount; i++) {
     auto move = moves[i];
+    color movedSide = board.GetSideToMove();
     board.MakeMove(move);
-    repitionHash[board.GetHash()] += 1;
-    if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) {
-      repitionHash[board.GetHash()] -= 1;
+    hash boardHash = board.GetHash();
+    repitionHash[boardHash] += 1;
+    if (board.isDrawBy50MoveRule() || IsDrawByRepition(boardHash)) {
+      repitionHash[boardHash] -= 1;
       board.UnmakeMove(move);
+      if (moveCollectors.size() > 1000) {
+        delete moves;
+      } else {
+        moveCollectors.push_back(moves);
+      }
       return 0;
     }
 
     int16_t score = INT16_MIN;
 
-    if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
-      repitionHash[board.GetHash()] -= 1;
+    if (board.IsChecked(movedSide)) {
+      repitionHash[boardHash] -= 1;
       board.UnmakeMove(move);
       continue;
     }
@@ -212,8 +243,13 @@ int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta,
                       std::to_string(alpha) + " " + std::to_string(score);
         Panzer::Com::OutputDebugFile(output);
       }
-      repitionHash[board.GetHash()] -= 1;
+      repitionHash[boardHash] -= 1;
       board.UnmakeMove(move);
+      if (moveCollectors.size() > 1000) {
+        delete moves;
+      } else {
+        moveCollectors.push_back(moves);
+      }
       return beta;
     }
     if (score > alpha)
@@ -225,8 +261,13 @@ int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta,
       Panzer::Com::OutputDebugFile(output);
     }
 
-    repitionHash[board.GetHash()] -= 1;
+    repitionHash[boardHash] -= 1;
     board.UnmakeMove(move);
+  }
+  if (moveCollectors.size() > 1000) {
+    delete moves;
+  } else {
+    moveCollectors.push_back(moves);
   }
 
   if (legalMoves == 0) {
@@ -245,12 +286,13 @@ int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta,
 
 int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta,
                      int depth) {
-  // if out of time return
-  if (board.IsChecked(board.GetSideToMove()))
-    depth++;
   if (IsDrawByRepition(board.GetHash()) || board.isDrawBy50MoveRule()) {
     return 0;
   }
+
+  // if out of time return
+  if (board.IsChecked(board.GetSideToMove()))
+    depth++;
 
   if (depth == 0) {
     nodes++;
@@ -262,26 +304,35 @@ int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta,
     }
     return eval;
   }
-  Move moves[256];
+
+  Move *moves = nullptr;
+  if (moveCollectors.empty()) {
+    moves = new Move[256];
+  } else {
+    moves = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
+
   auto movecount = board.GenerateMoves(moves);
   Utils::SortMoves(moves, movecount);
 
   int legalMoves = 0;
   for (auto i = 0; i < movecount; i++) {
     auto move = moves[i];
+    color movedSide = board.GetSideToMove();
     board.MakeMove(move);
-    repitionHash[board.GetHash()] += 1;
-    if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) {
-      repitionHash[board.GetHash()] -= 1;
+    hash boardHash = board.GetHash();
+    repitionHash[boardHash] += 1;
+    if (board.isDrawBy50MoveRule() || IsDrawByRepition(boardHash)) {
+      repitionHash[boardHash] -= 1;
       board.UnmakeMove(move);
-
       return 0;
     }
 
     int16_t score = INT16_MAX;
 
-    if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
-      repitionHash[board.GetHash()] -= 1;
+    if (board.IsChecked(movedSide)) {
+      repitionHash[boardHash] -= 1;
       board.UnmakeMove(move);
       continue;
     }
@@ -294,8 +345,13 @@ int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta,
                       std::to_string(score) + " " + std::to_string(beta);
         Panzer::Com::OutputDebugFile(output);
       }
-      repitionHash[board.GetHash()] -= 1;
+      repitionHash[boardHash] -= 1;
       board.UnmakeMove(move);
+      if (moveCollectors.size() > 1000) {
+        delete moves;
+      } else {
+        moveCollectors.push_back(moves);
+      }
       return alpha;
     }
     if (score < beta) {
@@ -307,8 +363,13 @@ int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta,
                     std::to_string(alpha) + " " + std::to_string(beta);
       Panzer::Com::OutputDebugFile(output);
     }
-    repitionHash[board.GetHash()] -= 1;
+    repitionHash[boardHash] -= 1;
     board.UnmakeMove(move);
+  }
+  if (moveCollectors.size() > 1000) {
+    delete moves;
+  } else {
+    moveCollectors.push_back(moves);
   }
 
   if (legalMoves == 0) {
@@ -328,7 +389,13 @@ int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta,
 int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta,
                         int depth) {
   // if out of time return
-  Move moves[256];
+  Move *moves = nullptr;
+  if (moveCollectors.empty()) {
+    moves = new Move[256];
+  } else {
+    moves = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
   auto movecount = board.GenerateMoves(moves);
   Utils::SortMoves(moves, movecount);
 
@@ -339,12 +406,18 @@ int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta,
   int16_t bestScore = INT16_MIN;
   for (auto i = 0; i < movecount; i++) {
     auto move = moves[i];
+    color movedSide = board.GetSideToMove();
     board.MakeMove(move);
     int16_t score = INT16_MIN;
 
-    if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
+    if (!board.IsChecked(movedSide)) {
       score = -1 * AlphaBetaMinMax(board, -1 * beta, -1 * alpha, depth - 1);
       if (score >= beta) {
+        if (moveCollectors.size() > 1000) {
+          delete moves;
+        } else {
+          moveCollectors.push_back(moves);
+        }
         return score;
       }
 
@@ -356,9 +429,14 @@ int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta,
     }
   }
 
+  if (moveCollectors.size() > 1000) {
+    delete moves;
+  } else {
+    moveCollectors.push_back(moves);
+  }
+
   return bestScore;
 }
-std::vector<Move *> moveCollectors;
 
 int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
   // if out of time return alpha
@@ -391,9 +469,10 @@ int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
   int legalMoves = 0;
   for (auto i = 0; i < movecount; i++) {
     auto move = moves[i];
+    color movedSide = board.GetSideToMove();
     board.MakeMove(move);
 
-    if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
+    if (board.IsChecked(movedSide)) {
       board.UnmakeMove(move);
       continue;
     }
@@ -475,12 +554,14 @@ int16_t SEE(Panzer::Board &board, square to) {
 
   for (int i = 0; i < filteredCount; i++) {
     auto move = seeFiltered[i];
+    color movedSide = board.GetSideToMove();
     board.MakeMove(move);
 
-    if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
+    if (!board.IsChecked(movedSide)) {
       value =
           std::max(0, CAPTURE_SCORES[move.getCapturedPiece()] - SEE(board, to));
     }
+
     board.UnmakeMove(move);
     seeNodes++;
   }

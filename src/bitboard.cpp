@@ -444,6 +444,11 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
   // generate pawn moves
   // first shift pawns up one
   const bitboard pawns = GetPawns<WHITE>();
+
+  if (pawns == 0) {
+    return movecount;
+  }
+
   const bitboard black_pieces = GetPieces<BLACK>();
   const bitboard occupied = this->GetOccupancy();
   bitboard pushes = (pawns << N) & ~occupied; // shift north
@@ -596,6 +601,10 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeWhiteRooksMoves(Move *moves, int movecount, bool captures) {
   auto rooks = GetRooks<WHITE>();
+  if (rooks == 0) {
+    return movecount;
+  }
+
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeRookMoves(moves, movecount, rooks, white_pieces,
@@ -605,6 +614,11 @@ int Board::MakeWhiteRooksMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeWhiteKnightMoves(Move *moves, int movecount, bool captures) {
   auto knights = GetKnights<WHITE>();
+
+  if (knights == 0) {
+    return movecount;
+  }
+
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeKnightMoves(moves, movecount, knights, white_pieces,
@@ -614,6 +628,9 @@ int Board::MakeWhiteKnightMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeWhiteBishopMoves(Move *moves, int movecount, bool captures) {
   auto bishops = this->GetBishops<WHITE>();
+  if (bishops == 0) {
+    return movecount;
+  }
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeBishopMoves(moves, movecount, bishops, white_pieces,
@@ -623,6 +640,10 @@ int Board::MakeWhiteBishopMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeWhiteQueenMoves(Move *moves, int movecount, bool captures) {
   auto queens = this->GetQueens<WHITE>();
+  if (queens == 0) {
+    return movecount;
+  }
+
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeQueenMoves(moves, movecount, queens, white_pieces,
@@ -672,6 +693,9 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
   // generate pawn moves
   // first shift pawns up one
   const bitboard pawns = this->GetPawns<BLACK>();
+  if (pawns == 0ULL) {
+    return movecount;
+  }
   const bitboard white_pieces = GetPieces<WHITE>();
   const bitboard occupied = this->GetOccupancy();
   bitboard pushes = (pawns >> S) & ~occupied; // shift north
@@ -827,6 +851,9 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeBlackRooksMoves(Move *moves, int movecount, bool captures) {
   auto rooks = this->GetRooks<BLACK>();
+  if (rooks == 0ULL) {
+    return movecount;
+  }
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeRookMoves(moves, movecount, rooks, black_pieces,
@@ -836,6 +863,9 @@ int Board::MakeBlackRooksMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeBlackKnightMoves(Move *moves, int movecount, bool captures) {
   auto knights = this->GetKnights<BLACK>();
+  if (knights == 0ULL) {
+    return movecount;
+  }
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeKnightMoves(moves, movecount, knights, black_pieces,
@@ -845,6 +875,9 @@ int Board::MakeBlackKnightMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeBlackBishopMoves(Move *moves, int movecount, bool captures) {
   auto bishops = this->GetBishops<BLACK>();
+  if (bishops == 0ULL) {
+    return movecount;
+  }
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeBishopMoves(moves, movecount, bishops, black_pieces,
@@ -854,6 +887,9 @@ int Board::MakeBlackBishopMoves(Move *moves, int movecount, bool captures) {
 
 int Board::MakeBlackQueenMoves(Move *moves, int movecount, bool captures) {
   auto queens = this->GetQueens<BLACK>();
+  if (queens == 0ULL) {
+    return movecount;
+  }
   auto white_pieces = GetPieces<WHITE>();
   auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeQueenMoves(moves, movecount, queens, black_pieces,
