@@ -15,10 +15,10 @@ namespace Panzer {
 
 class Board {
 private:
-  std::array<bitboard, 7> *Pieces = new std::array<bitboard, 7>{0ULL};
-  std::array<bitboard, 2> *Colors = new std::array<bitboard, 2>{0ULL};
-  std::array<piece, 64> *pieceLookup = new std::array<piece, 64>{NO_PIECE};
-  std::vector<Move> *moveChain = new std::vector<Move>();
+  std::array<bitboard, 7> Pieces{0ULL};
+  std::array<bitboard, 2> Colors{0ULL};
+  std::array<piece, 64> pieceLookup{NO_PIECE};
+  std::vector<Move> moveChain{};
   color side_to_move = WHITE;
   square ep_square = NO_SQUARE;
   castle_flag castle_flags = (WHITEK | WHITEQ | BLACKK | BLACKQ);
@@ -26,22 +26,15 @@ private:
   uint8_t halfMoveClock = 0;
   uint8_t priorHalfMoveClock = 0;
   hash boardHash = 0;
-  zorbist_lookup *zorbist = new zorbist_lookup();
+  zorbist_lookup zorbist{};
 
 public:
   Board() {}
 
   Board(const Board &board) : Board() {
-    for (int i = 0; i < 7; i++) {
-      Pieces->at(i) = board.Pieces->at(i);
-    }
-    for (int i = 0; i < 2; i++) {
-      Colors->at(i) = board.Colors->at(i);
-    }
-    for (int i = 0; i < 64; i++) {
-      pieceLookup->at(i) = board.pieceLookup->at(i);
-    }
-
+    Pieces = board.Pieces;
+    Colors = board.Colors;
+    pieceLookup = board.pieceLookup;
     side_to_move = board.side_to_move;
     ep_square = board.ep_square;
     castle_flags = board.castle_flags;
@@ -59,52 +52,66 @@ public:
   int GenerateWhiteMoves(Move *moves, bool captures = false);
   int GenerateBlackMoves(Move *moves, bool captures = false);
 
-  bitboard GetWhitePieces() const { return Colors->at(WHITE); };
-  bitboard GetWhitePawns() const {
-    return Pieces->at(PAWN) & Colors->at(WHITE);
-  };
-  bitboard GetWhiteRooks() const {
-    return Pieces->at(ROOK) & Colors->at(WHITE);
-  };
-  bitboard GetWhiteKnights() const {
-    return Pieces->at(KNIGHT) & Colors->at(WHITE);
-  };
-  bitboard GetWhiteBishops() const {
-    return Pieces->at(BISHOP) & Colors->at(WHITE);
-  };
-  bitboard GetWhiteQueens() const {
-    return Pieces->at(QUEEN) & Colors->at(WHITE);
-  };
-  bitboard GetWhiteKings() const {
-    return Pieces->at(KING) & Colors->at(WHITE);
-  };
+  template <color c> constexpr bitboard GetPieces() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE);
+    }
 
-  bitboard GetBlackPieces() const { return Colors->at(BLACK); };
-  bitboard GetBlackPawns() const {
-    return Pieces->at(PAWN) & Colors->at(BLACK);
-  };
-  bitboard GetBlackRooks() const {
-    return Pieces->at(ROOK) & Colors->at(BLACK);
-  };
-  bitboard GetBlackKnights() const {
-    return Pieces->at(KNIGHT) & Colors->at(BLACK);
-  };
-  bitboard GetBlackBishops() const {
-    return Pieces->at(BISHOP) & Colors->at(BLACK);
-  };
-  bitboard GetBlackQueens() const {
-    return Pieces->at(QUEEN) & Colors->at(BLACK);
-  };
-  bitboard GetBlackKings() const {
-    return Pieces->at(KING) & Colors->at(BLACK);
-  };
-
-  bitboard GetOccupancy() const {
-    return Colors->at(WHITE) | Colors->at(BLACK);
+    return Colors.at(BLACK);
   }
+
+  template <color c> constexpr bitboard GetPawns() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE) & Pieces.at(PAWN);
+    }
+
+    return Colors.at(BLACK) & Pieces.at(PAWN);
+  }
+
+  template <color c> constexpr bitboard GetRooks() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE) & Pieces.at(ROOK);
+    }
+
+    return Colors.at(BLACK) & Pieces.at(ROOK);
+  }
+
+  template <color c> constexpr bitboard GetKnights() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE) & Pieces.at(KNIGHT);
+    }
+
+    return Colors.at(BLACK) & Pieces.at(KNIGHT);
+  }
+
+  template <color c> constexpr bitboard GetBishops() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE) & Pieces.at(BISHOP);
+    }
+
+    return Colors.at(BLACK) & Pieces.at(BISHOP);
+  }
+
+  template <color c> constexpr bitboard GetQueens() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE) & Pieces.at(QUEEN);
+    }
+
+    return Colors.at(BLACK) & Pieces.at(QUEEN);
+  }
+
+  template <color c> constexpr bitboard GetKings() const {
+    if constexpr (c == WHITE) {
+      return Colors.at(WHITE) & Pieces.at(KING);
+    }
+
+    return Colors.at(BLACK) & Pieces.at(KING);
+  }
+
+  bitboard GetOccupancy() const { return Colors.at(WHITE) | Colors.at(BLACK); }
   color GetSideToMove() const { return side_to_move; }
 
-  piece GetPieceAtSquare(square s) const { return pieceLookup->at(s); };
+  piece GetPieceAtSquare(square s) const { return pieceLookup.at(s); };
 
   square GetEpSquare() { return ep_square; }
   int GetPly() { return ply; }
@@ -112,8 +119,8 @@ public:
   bool isDrawBy50MoveRule() { return halfMoveClock == 100; }
   hash GetHash() { return boardHash; }
 
-  void MakeMove(const Move move);
-  void UnmakeMove(const Move move);
+  void MakeMove(const Move &move);
+  void UnmakeMove(const Move &move);
   void ToggleBitBoards(square from, square to, piece p, color c);
 
   bool IsSquareAttacked(square s, color color);
@@ -157,45 +164,31 @@ private:
 }; // class Board
 
 template <color c> static constexpr bitboard Queens(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhiteQueens();
-  return board.GetBlackQueens();
+  return board.GetQueens<c>();
 }
 
 template <color c> static constexpr bitboard Rooks(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhiteRooks();
-  return board.GetBlackRooks();
+  return board.GetRooks<c>();
 }
 
 template <color c> static constexpr bitboard Knights(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhiteKnights();
-  return board.GetBlackKnights();
+  return board.GetKnights<c>();
 }
 
 template <color c> static constexpr bitboard Bishops(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhiteBishops();
-  return board.GetBlackBishops();
+  return board.GetBishops<c>();
 }
 
 template <color c> static constexpr bitboard Pawns(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhitePawns();
-  return board.GetBlackPawns();
+  return board.GetPawns<c>();
 }
 
 template <color c> static constexpr bitboard Kings(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhiteKings();
-  return board.GetBlackKings();
+  return board.GetKings<c>();
 }
 
 template <color c> static constexpr bitboard Pieces(const Board &board) {
-  if constexpr (c == WHITE)
-    return board.GetWhitePieces();
-  return board.GetBlackPieces();
+  return board.GetPieces<c>();
 }
 
 } // namespace Panzer

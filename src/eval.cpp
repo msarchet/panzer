@@ -79,19 +79,19 @@ void InitEvalData() {
 
 int EvaluateBoard(Board &board) {
   // score board for piece material only right now
-  auto whitePawnCount = __builtin_popcountll(board.GetWhitePawns());
-  auto whiteRookCount = __builtin_popcountll(board.GetWhiteRooks());
-  auto whiteBishopCount = __builtin_popcountll(board.GetWhiteBishops());
-  auto whiteKnightCount = __builtin_popcountll(board.GetWhiteKnights());
-  auto whiteQueenCount = __builtin_popcountll(board.GetWhiteQueens());
+  auto whitePawnCount = __builtin_popcountll(board.GetPawns<WHITE>());
+  auto whiteRookCount = __builtin_popcountll(board.GetRooks<WHITE>());
+  auto whiteBishopCount = __builtin_popcountll(board.GetBishops<WHITE>());
+  auto whiteKnightCount = __builtin_popcountll(board.GetKnights<WHITE>());
+  auto whiteQueenCount = __builtin_popcountll(board.GetQueens<WHITE>());
 
-  auto blackPawnCount = __builtin_popcountll(board.GetBlackPawns());
-  auto blackRookCount = __builtin_popcountll(board.GetBlackRooks());
-  auto blackBishopCount = __builtin_popcountll(board.GetBlackBishops());
-  auto blackKnightCount = __builtin_popcountll(board.GetBlackKnights());
-  auto blackQueenCount = __builtin_popcountll(board.GetBlackQueens());
+  auto blackPawnCount = __builtin_popcountll(board.GetPawns<BLACK>());
+  auto blackRookCount = __builtin_popcountll(board.GetRooks<BLACK>());
+  auto blackBishopCount = __builtin_popcountll(board.GetBishops<BLACK>());
+  auto blackKnightCount = __builtin_popcountll(board.GetKnights<BLACK>());
+  auto blackQueenCount = __builtin_popcountll(board.GetQueens<BLACK>());
 
-  auto whitePieces = board.GetWhitePieces();
+  auto whitePieces = board.GetPieces<WHITE>();
   // auto blackPieces = board.GetBlackPieces();
   auto phase = PAWN_PHASE * (whitePawnCount + blackPawnCount) +
                QUEEN_PHASE * (whiteQueenCount + blackQueenCount) +

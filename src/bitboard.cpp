@@ -10,8 +10,7 @@
 namespace Panzer {
 std::string Board::PrintMoveChain() {
   std::stringstream chain;
-  for (auto it = moveChain->begin(); it != moveChain->end(); it++) {
-    auto move = *it;
+  for (const auto &move : moveChain) {
     chain << Utils::PrintMove(move);
   }
 
@@ -23,8 +22,8 @@ bool Board::IsSquareAttacked(square s, color color) {
   if (color == WHITE) {
     bitboard pawnMask = ((squareBitboard & ~A_FILE) << NW) |
                         ((squareBitboard & ~H_FILE) << NE); // shift NW
-    bitboard diagonals = this->GetBlackBishops() | this->GetBlackQueens() |
-                         (this->GetBlackPawns() & pawnMask);
+    bitboard diagonals = GetBishops<BLACK>() | GetQueens<BLACK>() |
+                         (GetPawns<BLACK>() & pawnMask);
     bitboard occupancy = this->GetOccupancy();
     bitboard attackedOnDiagonal =
         SliderLookup.GetBishopAttacks(s, occupancy) & diagonals;
@@ -33,7 +32,7 @@ bool Board::IsSquareAttacked(square s, color color) {
       return true;
     }
 
-    bitboard straights = this->GetBlackQueens() | this->GetBlackRooks();
+    bitboard straights = GetQueens<BLACK>() | GetRooks<BLACK>();
     bitboard attackedOnStraights =
         SliderLookup.GetRookAttacks(s, occupancy) & straights;
 
@@ -41,7 +40,7 @@ bool Board::IsSquareAttacked(square s, color color) {
       return true;
     }
 
-    bitboard knights = this->GetBlackKnights();
+    bitboard knights = GetKnights<BLACK>();
 
     // mask for file wraps
     auto attackedByKnight = KNIGHT_SPANS[s] & knights;
@@ -50,7 +49,7 @@ bool Board::IsSquareAttacked(square s, color color) {
       return true;
     }
 
-    bitboard kings = this->GetBlackKings();
+    bitboard kings = this->GetKings<BLACK>();
 
     auto attackedByKing = KING_SPANS[s] & kings;
 
@@ -64,8 +63,8 @@ bool Board::IsSquareAttacked(square s, color color) {
   if (color == BLACK) {
     bitboard pawnMask =
         ((squareBitboard & ~A_FILE) >> SW) | ((squareBitboard & ~H_FILE) >> SE);
-    bitboard diagonals = this->GetWhiteBishops() | this->GetWhiteQueens() |
-                         (this->GetWhitePawns() & pawnMask);
+    bitboard diagonals = GetBishops<WHITE>() | GetQueens<WHITE>() |
+                         (GetPawns<WHITE>() & pawnMask);
     bitboard occupancy = this->GetOccupancy();
     bitboard attackedOnDiagonal =
         SliderLookup.GetBishopAttacks(s, occupancy) & diagonals;
@@ -74,7 +73,7 @@ bool Board::IsSquareAttacked(square s, color color) {
       return true;
     }
 
-    bitboard straights = this->GetWhiteQueens() | this->GetWhiteRooks();
+    bitboard straights = GetQueens<WHITE>() | GetRooks<WHITE>();
     bitboard attackedOnStraights =
         SliderLookup.GetRookAttacks(s, occupancy) & straights;
 
@@ -82,7 +81,7 @@ bool Board::IsSquareAttacked(square s, color color) {
       return true;
     }
 
-    bitboard knights = this->GetWhiteKnights();
+    bitboard knights = GetKnights<WHITE>();
 
     // mask for file wraps
     auto attackedByKnight = KNIGHT_SPANS[s] & knights;
@@ -91,7 +90,7 @@ bool Board::IsSquareAttacked(square s, color color) {
       return true;
     }
 
-    bitboard kings = this->GetWhiteKings();
+    bitboard kings = GetKings<WHITE>();
 
     auto attackedByKing = KING_SPANS[s] & kings;
 
@@ -107,13 +106,13 @@ bool Board::IsSquareAttacked(square s, color color) {
 
 bool Board::IsChecked(color color) {
   if (color == WHITE) {
-    bitboard king = this->GetWhiteKings();
+    bitboard king = GetKings<WHITE>();
     square kingSquare = Utils::GetLSB(king);
     return this->IsSquareAttacked(kingSquare, WHITE);
   }
 
   if (color == BLACK) {
-    bitboard king = this->GetBlackKings();
+    bitboard king = GetKings<BLACK>();
     square kingSquare = Utils::GetLSB(king);
     return this->IsSquareAttacked(kingSquare, BLACK);
   }
@@ -122,28 +121,28 @@ bool Board::IsChecked(color color) {
 
 void Board::ToggleBitBoards(square from, square to, piece p, color c) {
   bitboard fromToBB = (ONE_BIT << from) | (ONE_BIT << to);
-  this->Colors->at(c) ^= fromToBB;
-  this->Pieces->at(p) ^= fromToBB;
-  this->pieceLookup->at(from) = NO_PIECE;
-  this->pieceLookup->at(to) = p;
-  this->boardHash ^= zorbist->Get_Hash_Value(from, p, c);
-  this->boardHash ^= zorbist->Get_Hash_Value(to, p, c);
+  Colors.at(c) ^= fromToBB;
+  Pieces.at(p) ^= fromToBB;
+  pieceLookup.at(from) = NO_PIECE;
+  pieceLookup.at(to) = p;
+  boardHash ^= zorbist.Get_Hash_Value(from, p, c);
+  boardHash ^= zorbist.Get_Hash_Value(to, p, c);
 }
 
 void Board::FillSquare(square s, piece p, color c) {
   bitboard bb = ONE_BIT << s;
-  this->Colors->at(c) ^= bb;
-  this->Pieces->at(p) ^= bb;
-  this->pieceLookup->at(s) = p;
-  this->boardHash ^= zorbist->Get_Hash_Value(s, p, c);
+  Colors.at(c) ^= bb;
+  Pieces.at(p) ^= bb;
+  pieceLookup.at(s) = p;
+  boardHash ^= zorbist.Get_Hash_Value(s, p, c);
 }
 
 void Board::ClearSquare(square s, piece p, color c) {
   bitboard bb = ONE_BIT << s;
-  this->Colors->at(c) ^= bb;
-  this->Pieces->at(p) ^= bb;
-  this->pieceLookup->at(s) = NO_PIECE;
-  this->boardHash ^= zorbist->Get_Hash_Value(s, p, c);
+  Colors.at(c) ^= bb;
+  Pieces.at(p) ^= bb;
+  pieceLookup.at(s) = NO_PIECE;
+  boardHash ^= zorbist.Get_Hash_Value(s, p, c);
 }
 
 void Board::PushMove(Move *moves, int movecount, square from, square to,
@@ -211,8 +210,8 @@ int Board::GenerateBlackMoves(Move *moves, bool captures) {
 
 void Board::PrintBoard() {
   std::cout << std::endl;
-  bitboard white = this->GetWhitePieces();
-  bitboard black = this->GetBlackPieces();
+  bitboard white = GetPieces<WHITE>();
+  bitboard black = GetPieces<BLACK>();
 
   std::cout << "-----------------" << std::endl;
   for (int row = 7; row >= 0; --row) {
@@ -277,7 +276,7 @@ void Board::PrintBoard() {
   }
 }
 
-void Board::MakeMove(const Move move) {
+void Board::MakeMove(const Move &move) {
   this->priorHalfMoveClock = halfMoveClock;
   if (this->GetPieceAtSquare(move.getFrom()) == PAWN)
     halfMoveClock = 0;
@@ -314,7 +313,7 @@ void Board::MakeMove(const Move move) {
                           this->side_to_move);
   }
 
-  boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
   if (this->castle_flags != EMPTY_CASTLE_FLAGS) {
     // toggle off castle flags
     if (move.getFrom() == E1 || move.getTo() == E1) {
@@ -340,7 +339,7 @@ void Board::MakeMove(const Move move) {
     }
   }
 
-  boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
 
   if (move.isCastle()) {
     switch (move.getTo()) {
@@ -359,7 +358,7 @@ void Board::MakeMove(const Move move) {
     }
   }
 
-  this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+  this->boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
 
   if (move.getFlags() == DOUBLE_PAWN_PUSH) {
     this->ep_square = move.getTo();
@@ -367,25 +366,25 @@ void Board::MakeMove(const Move move) {
     this->ep_square = NO_SQUARE;
   }
 
-  this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+  this->boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
   this->side_to_move = !this->side_to_move;
-  this->boardHash ^= zorbist->color_hash;
+  this->boardHash ^= zorbist.color_hash;
   this->ply++;
-  moveChain->emplace_back(move);
+  moveChain.emplace_back(move);
 }
 
-void Board::UnmakeMove(const Move move) {
+void Board::UnmakeMove(const Move &move) {
   // intentionally ordered backwards from make move for
   // debugging purposes
-  moveChain->pop_back();
+  moveChain.pop_back();
   this->halfMoveClock = priorHalfMoveClock;
   this->ply--;
   this->side_to_move = !this->side_to_move;
-  this->boardHash ^= zorbist->color_hash;
+  this->boardHash ^= zorbist.color_hash;
 
-  boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+  boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
   this->ep_square = move.getPriorEPSquare();
-  boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
+  boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
 
   if (move.isCastle()) {
     switch (move.getTo()) {
@@ -404,9 +403,9 @@ void Board::UnmakeMove(const Move move) {
     }
   }
 
-  boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
   this->castle_flags = move.getCastleFlags();
-  boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
 
   // clear the to square
   // fill the from square
@@ -444,8 +443,8 @@ void Board::UnmakeMove(const Move move) {
 int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
   // generate pawn moves
   // first shift pawns up one
-  const bitboard pawns = this->GetWhitePawns();
-  const bitboard black_pieces = this->GetBlackPieces();
+  const bitboard pawns = GetPawns<WHITE>();
+  const bitboard black_pieces = GetPieces<BLACK>();
   const bitboard occupied = this->GetOccupancy();
   bitboard pushes = (pawns << N) & ~occupied; // shift north
   // scan the bits and make the move
@@ -596,45 +595,45 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
 }
 
 int Board::MakeWhiteRooksMoves(Move *moves, int movecount, bool captures) {
-  auto rooks = this->GetWhiteRooks();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto rooks = GetRooks<WHITE>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeRookMoves(moves, movecount, rooks, white_pieces,
                                   black_pieces, captures);
   return movecount;
 }
 
 int Board::MakeWhiteKnightMoves(Move *moves, int movecount, bool captures) {
-  auto knights = this->GetWhiteKnights();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto knights = GetKnights<WHITE>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeKnightMoves(moves, movecount, knights, white_pieces,
                                     black_pieces, captures);
   return movecount;
 }
 
 int Board::MakeWhiteBishopMoves(Move *moves, int movecount, bool captures) {
-  auto bishops = this->GetWhiteBishops();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto bishops = this->GetBishops<WHITE>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeBishopMoves(moves, movecount, bishops, white_pieces,
                                     black_pieces, captures);
   return movecount;
 }
 
 int Board::MakeWhiteQueenMoves(Move *moves, int movecount, bool captures) {
-  auto queens = this->GetWhiteQueens();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto queens = this->GetQueens<WHITE>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeQueenMoves(moves, movecount, queens, white_pieces,
                                    black_pieces, captures);
   return movecount;
 }
 
 int Board::MakeWhiteKingMoves(Move *moves, int movecount, bool captures) {
-  auto kings = this->GetWhiteKings();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto kings = this->GetKings<WHITE>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   if (!captures) {
     // make castle moves
     if ((castle_flags & WHITEK) != 0) {
@@ -672,8 +671,8 @@ int Board::MakeWhiteKingMoves(Move *moves, int movecount, bool captures) {
 int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
   // generate pawn moves
   // first shift pawns up one
-  const bitboard pawns = this->GetBlackPawns();
-  const bitboard white_pieces = this->GetWhitePieces();
+  const bitboard pawns = this->GetPawns<BLACK>();
+  const bitboard white_pieces = GetPieces<WHITE>();
   const bitboard occupied = this->GetOccupancy();
   bitboard pushes = (pawns >> S) & ~occupied; // shift north
   // scan the bits and make the move
@@ -827,45 +826,45 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
 }
 
 int Board::MakeBlackRooksMoves(Move *moves, int movecount, bool captures) {
-  auto rooks = this->GetBlackRooks();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto rooks = this->GetRooks<BLACK>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeRookMoves(moves, movecount, rooks, black_pieces,
                                   white_pieces, captures);
   return movecount;
 }
 
 int Board::MakeBlackKnightMoves(Move *moves, int movecount, bool captures) {
-  auto knights = this->GetBlackKnights();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto knights = this->GetKnights<BLACK>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeKnightMoves(moves, movecount, knights, black_pieces,
                                     white_pieces, captures);
   return movecount;
 }
 
 int Board::MakeBlackBishopMoves(Move *moves, int movecount, bool captures) {
-  auto bishops = this->GetBlackBishops();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto bishops = this->GetBishops<BLACK>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeBishopMoves(moves, movecount, bishops, black_pieces,
                                     white_pieces, captures);
   return movecount;
 }
 
 int Board::MakeBlackQueenMoves(Move *moves, int movecount, bool captures) {
-  auto queens = this->GetBlackQueens();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto queens = this->GetQueens<BLACK>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   movecount = this->MakeQueenMoves(moves, movecount, queens, black_pieces,
                                    white_pieces, captures);
   return movecount;
 }
 
 int Board::MakeBlackKingMoves(Move *moves, int movecount, bool captures) {
-  auto kings = this->GetBlackKings();
-  auto white_pieces = this->GetWhitePieces();
-  auto black_pieces = this->GetBlackPieces();
+  auto kings = this->GetKings<BLACK>();
+  auto white_pieces = GetPieces<WHITE>();
+  auto black_pieces = GetPieces<BLACK>();
   if (!captures) {
     if ((castle_flags & BLACKK) != 0) {
       bool isOpen = (BLACKK_CASTLE_MASK & this->GetOccupancy()) == 0;
@@ -1086,7 +1085,7 @@ std::string Board::BoardToFen() {
     if (piece == NO_PIECE) {
       empty_squares++;
     } else {
-      color c = (this->GetWhitePieces() & targetSquare) != 0 ? WHITE : BLACK;
+      color c = (this->GetPieces<WHITE>() & targetSquare) != 0 ? WHITE : BLACK;
       if (empty_squares != 0) {
         fen += std::to_string(empty_squares);
         empty_squares = 0;
@@ -1182,12 +1181,12 @@ void Board::FenToBoard(const std::string &fen) {
   bool fullMoveNumberDone = false;
   this->boardHash = 0;
   std::vector<char> buffer = {};
-  this->pieceLookup->fill(NO_PIECE);
-  this->Pieces->fill(0ULL);
-  this->Colors->fill(0ULL);
-  this->castle_flags = EMPTY_CASTLE_FLAGS;
-  this->ep_square = NO_SQUARE;
-  this->moveChain->clear();
+  pieceLookup.fill(NO_PIECE);
+  Pieces.fill(0ULL);
+  Colors.fill(0ULL);
+  castle_flags = EMPTY_CASTLE_FLAGS;
+  ep_square = NO_SQUARE;
+  moveChain.clear();
 
   int index = 0;
   for (size_t cIndex = 0; cIndex < fen.length(); cIndex++) {
@@ -1395,11 +1394,11 @@ void Board::FenToBoard(const std::string &fen) {
 
   // hash the board
   if (this->side_to_move == BLACK) {
-    this->boardHash ^= zorbist->color_hash;
+    this->boardHash ^= zorbist.color_hash;
   }
 
-  this->boardHash ^= zorbist->zorbist_ep_hash[this->ep_square];
-  this->boardHash ^= zorbist->zorbist_castle_hash[this->castle_flags];
+  this->boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
+  this->boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
   Panzer::Search::AddHashToRepition(this->boardHash);
 }
 } // namespace Panzer
