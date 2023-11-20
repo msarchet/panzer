@@ -15,9 +15,11 @@ struct Magics {
 class Sliders {
 public:
   Sliders();
-  const bitboard GetRookAttacks(square s, bitboard occupancy) const;
-  const bitboard GetBishopAttacks(square s, bitboard occupancy) const;
-  const bitboard GetQueenAttacks(square s, bitboard occupancy) const;
+  const bitboard GetRookAttacks(const square s, const bitboard occupancy) const;
+  const bitboard GetBishopAttacks(const square s,
+                                  const bitboard occupancy) const;
+  const bitboard GetQueenAttacks(const square s,
+                                 const bitboard occupancy) const;
 
 private:
   class MagicGenerator {

@@ -9,7 +9,6 @@
 namespace Panzer {
 
 EvalData data;
-Panzer::Sliders *sliders;
 std::unordered_map<bitboard, int> pawnHash;
 
 void InitEvalData() {
@@ -77,7 +76,7 @@ void InitEvalData() {
   }
 };
 
-int EvaluateBoard(Board &board) {
+int EvaluateBoard(const Board &board) {
   // score board for piece material only right now
   auto whitePawnCount = __builtin_popcountll(board.GetPawns<WHITE>());
   auto whiteRookCount = __builtin_popcountll(board.GetRooks<WHITE>());
@@ -99,7 +98,7 @@ int EvaluateBoard(Board &board) {
                BISHOP_PHASE * (whiteBishopCount + blackBishopCount) +
                KNIGHT_PHASE * (whiteKnightCount + blackKnightCount);
 
-  phase = ((TOTAL_PHASE - phase) * 256 + (TOTAL_PHASE / 2)) / TOTAL_PHASE;
+  phase = ((TOTAL_PHASE - phase) * TOTAL_PHASE + (HALF_PHASE)) / TOTAL_PHASE;
 
   auto whiteScore = whitePawnCount * PAWN_SCORE + whiteRookCount * ROOK_SCORE +
                     whiteBishopCount * BISHOP_SCORE +
@@ -125,9 +124,9 @@ int EvaluateBoard(Board &board) {
   auto blackScoreEnd = 0;
 
   for (square s = A1; s < H8; s++) {
-    auto piece = board.GetPieceAtSquare(s);
+    const auto piece = board.GetPieceAtSquare(s);
     if (piece != NO_PIECE) {
-      auto color = ((ONE_BIT << s) & whitePieces) ? WHITE : BLACK;
+      const auto color = ((ONE_BIT << s) & whitePieces) ? WHITE : BLACK;
       if (color == WHITE) {
         whiteScoreMid += data.MidGamePieceSquareScore[piece][WHITE][s];
         whiteScoreEnd += data.EndGamePieceSquareScore[piece][WHITE][s];
@@ -138,12 +137,11 @@ int EvaluateBoard(Board &board) {
     }
   }
 
+  auto phaseDelta = TOTAL_PHASE - phase;
   auto whitePhaseScore =
-      (whiteScoreMid * (TOTAL_PHASE - phase) + (phase * whiteScoreEnd)) /
-      TOTAL_PHASE;
+      (whiteScoreMid * phaseDelta + (phase * whiteScoreEnd)) / TOTAL_PHASE;
   auto blackPhaseScore =
-      (blackScoreMid + (TOTAL_PHASE - phase) + (phase * blackScoreEnd)) /
-      TOTAL_PHASE;
+      (blackScoreMid * phaseDelta + (phase * blackScoreEnd)) / TOTAL_PHASE;
 
   whiteScore += whitePhaseScore;
 
@@ -185,15 +183,15 @@ int EvaluateBoard(Board &board) {
 template <color c> int EvaluateRooks(const Board &board) {
   int score = 0;
   bitboard rooks = Rooks<c>(board);
-  bitboard pawns = Pawns<c>(board);
+  const bitboard pawns = Pawns<c>(board);
   // bitboard occupancy = c == WHITE ? board.GetWhitePieces() :
   // board.GetBlackPieces();
   //  are the rooks paired
-  bitboard rooks_saved = rooks;
+  const bitboard rooks_saved = rooks;
   while (rooks != 0) {
-    square s = Utils::GetLSB(rooks);
+    const square s = Utils::GetLSB(rooks);
     // how many squares do the rooks have to moved
-    auto allowed = sliders->GetRookAttacks(s, board.GetOccupancy());
+    const auto allowed = SliderLookup.GetRookAttacks(s, board.GetOccupancy());
 
     score += __builtin_popcount(allowed);
 
@@ -201,8 +199,8 @@ template <color c> int EvaluateRooks(const Board &board) {
       score += 5;
     }
 
-    mask rank = SQUARE_TO_RANK[s];
-    mask file = SQUARE_TO_FILE[s];
+    const mask rank = SQUARE_TO_RANK[s];
+    const mask file = SQUARE_TO_FILE[s];
 
     // are the rooks paired
     if ((rooks_saved & (rank | file)) != 0 && (pawns & (rank | file)) == 0)
@@ -217,21 +215,22 @@ template <color c> int EvaluateRooks(const Board &board) {
 template <color c> int EvaluateBishops(const Board &board) {
   int score = 0;
   bitboard bishops = Bishops<c>(board);
-  bitboard pawns = Pawns<c>(board);
+  const bitboard pawns = Pawns<c>(board);
   // bitboard occupancy = c == WHITE ? board.GetWhitePieces() :
   // board.GetBlackPieces();
   //  are the rooks paired
   // bitboard bishops_saved = bishops;
 
+  const bitboard occupancy = board.GetPieces<c>();
   while (bishops != 0) {
     // how many square do the bishops have to move
-    square s = Utils::GetLSB(bishops);
+    const square s = Utils::GetLSB(bishops);
     // are the bishops blocked by lots of pawns on the same colors
-    auto allowed = sliders->GetBishopAttacks(s, board.GetOccupancy());
-    mask diagonals = NW_DIAGONALS[s] | NE_DIAGONALS[s];
+    const auto allowed = SliderLookup.GetBishopAttacks(s, occupancy);
     score += __builtin_popcount(allowed) * 2;
 
-    auto pawnCount = __builtin_popcount(diagonals & pawns);
+    const mask diagonals = NW_DIAGONALS[s] | NE_DIAGONALS[s];
+    const auto pawnCount = __builtin_popcount(diagonals & pawns);
 
     if (pawnCount < 3) {
       score += 5;
@@ -279,7 +278,7 @@ template <color c> int EvaluateQueens(const Board &board) {
       }
     }
 
-    auto allowed = sliders->GetQueenAttacks(s, board.GetOccupancy());
+    auto allowed = SliderLookup.GetQueenAttacks(s, board.GetOccupancy());
     if ((allowed & pawns) == 0) {
       score += 1;
     }
@@ -327,6 +326,8 @@ template <color c> int EvaluateKnights(const Board &board) { return 0; }
 
 template <color c> int EvaluateKing(const Board &board) { return 0; }
 
+int centerSquare[4] = {E4, D4, E5, D5};
+
 template <color c> int EvaluateControl(const Board &board) {
   int score = 0;
   // does this color control the center of the board at all?
@@ -342,15 +343,14 @@ template <color c> int EvaluateControl(const Board &board) {
   if (pawns & CENTER_PAWN_MASKS[c]) {
     score += 10;
   }
-  int centerSquare[4] = {E4, D4, E5, D5};
   for (auto square : centerSquare) {
     // any rooks or queens attacking center
-    auto lineAttacks = sliders->GetRookAttacks(square, occupancy);
+    auto lineAttacks = SliderLookup.GetRookAttacks(square, occupancy);
     if (lineAttacks & (rooks)) {
       score += 2;
     }
     // any bishops or queens attacking center
-    auto diagonalAttacks = sliders->GetBishopAttacks(square, occupancy);
+    auto diagonalAttacks = SliderLookup.GetBishopAttacks(square, occupancy);
     if (diagonalAttacks & (bishops)) {
       score += 2;
     }

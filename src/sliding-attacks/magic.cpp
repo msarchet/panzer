@@ -229,7 +229,7 @@ Sliders::MagicGenerator::CreateMask(const std::vector<Direction> &directions,
 void Sliders::MagicGenerator::MakeGenerator() {
   // Magic number 624: The number of unsigned ints the MT uses as state
   auto seed_data = Utils::GetSeedData();
-  std::seed_seq seeds(seed_data->begin(), seed_data->end());
+  std::seed_seq seeds(seed_data.begin(), seed_data.end());
   std::mt19937 seededEngine(seeds);
   engine = seededEngine;
   dist = std::uniform_int_distribution<uint64_t>(1ULL, ULLONG_MAX);

@@ -44,8 +44,8 @@ public:
     priorHalfMoveClock = board.priorHalfMoveClock;
   }
 
-  void FillSquare(square s, piece p, color c);
-  void ClearSquare(square s, piece p, color c);
+  inline void FillSquare(const square s, const piece p, const color c);
+  inline void ClearSquare(const square s, const piece p, const color c);
   void PrintBoard();
 
   int GenerateMoves(Move *moves, bool captures = false);
@@ -108,20 +108,22 @@ public:
     return Colors.at(BLACK) & Pieces.at(KING);
   }
 
-  bitboard GetOccupancy() const { return Colors.at(WHITE) | Colors.at(BLACK); }
-  color GetSideToMove() const { return side_to_move; }
+  constexpr bitboard GetOccupancy() const {
+    return Colors.at(WHITE) | Colors.at(BLACK);
+  }
+  inline color GetSideToMove() const { return side_to_move; }
 
-  piece GetPieceAtSquare(square s) const { return pieceLookup.at(s); };
+  inline piece GetPieceAtSquare(square s) const { return pieceLookup.at(s); };
 
-  square GetEpSquare() { return ep_square; }
-  int GetPly() { return ply; }
-  int GetHalfClock() { return halfMoveClock; }
-  bool isDrawBy50MoveRule() { return halfMoveClock == 100; }
-  hash GetHash() { return boardHash; }
+  inline square GetEpSquare() { return ep_square; }
+  inline int GetPly() { return ply; }
+  inline int GetHalfClock() { return halfMoveClock; }
+  inline bool isDrawBy50MoveRule() { return halfMoveClock == 100; }
+  inline hash GetHash() { return boardHash; }
 
   void MakeMove(const Move &move);
   void UnmakeMove(const Move &move);
-  void ToggleBitBoards(square from, square to, piece p, color c);
+  inline void ToggleBitBoards(square from, square to, piece p, color c);
 
   bool IsSquareAttacked(square s, color color);
   bool IsChecked(color color);

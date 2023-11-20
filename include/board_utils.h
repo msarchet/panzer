@@ -8,7 +8,7 @@ namespace Panzer {
 class Utils {
 public:
   static void PrintBoard(bitboard board);
-  static std::shared_ptr<std::array<unsigned int, 624>> GetSeedData();
+  static std::array<unsigned int, 624> GetSeedData();
   static void SortMoves(Panzer::Move *moves, int movecount);
   static bool MoveSorter(const Panzer::Move &move_one,
                          const Panzer::Move &move_two);

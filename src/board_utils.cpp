@@ -63,7 +63,7 @@ void Utils::SortMoves(Panzer::Move *moves, int movecount) {
 
 int Utils::GetLSB(bitboard b) { return __builtin_ctzll(b); }
 
-std::shared_ptr<std::array<unsigned int, 624>> Utils::GetSeedData() {
+std::array<unsigned int, 624> Utils::GetSeedData() {
   std::array<unsigned int, 624> data{
       1807997967, 514589821,  1959766121, 853312699,  3926196803, 127218440,
       1785845433, 1291168671, 4216280768, 3370920593, 38555529,   758205737,
@@ -170,6 +170,6 @@ std::shared_ptr<std::array<unsigned int, 624>> Utils::GetSeedData() {
       2790815565, 679430026,  2057358046, 4166572394, 2847614748, 2597498743,
       1717506201, 3977393992, 3409083646, 2043098554, 2455059753, 2814354965};
 
-  return std::make_shared<std::array<unsigned int, 624>>(data);
+  return data;
 }
 } // namespace Panzer

@@ -21,9 +21,10 @@ public:
     engine = RandomlySeededMersenneTwister();
   };
 
-  hash Get_Hash_Value(square s, piece p, color c) {
+  inline hash Get_Hash_Value(square s, piece p, color c) const {
     return zorbist_hash_lookup[s][p][c];
   }
+
   hash GetRandomValue() { return this->dist(this->engine); };
 
 private:
@@ -33,7 +34,7 @@ private:
   std::mt19937 RandomlySeededMersenneTwister() {
     // Magic number 624: The number of unsigned ints the MT uses as state
     auto seed_data = Panzer::Utils::GetSeedData();
-    std::seed_seq seeds(seed_data->begin(), seed_data->end());
+    std::seed_seq seeds(seed_data.begin(), seed_data.end());
     std::mt19937 seededEngine(seeds);
     return seededEngine;
   }

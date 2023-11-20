@@ -360,6 +360,7 @@ int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta,
 
   return bestScore;
 }
+std::vector<Move *> moveCollectors;
 
 int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
   // if out of time return alpha
@@ -378,7 +379,14 @@ int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
     alpha = stand_pat;
   }
 
-  Move moves[256];
+  Move *moves = nullptr;
+  if (moveCollectors.empty()) {
+    moves = new Move[256]();
+  } else {
+    moves = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
+
   auto movecount = board.GenerateMoves(moves, true);
   Utils::SortMoves(moves, movecount);
 
@@ -389,7 +397,6 @@ int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
 
     if (board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
       board.UnmakeMove(move);
-
       continue;
     }
 
@@ -401,13 +408,27 @@ int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
       auto score = -1 * Quiesence(board, -1 * beta, -1 * alpha);
       board.UnmakeMove(move);
 
-      if (score >= beta)
+      if (score >= beta) {
+        if (moveCollectors.size() > 1000) {
+          delete moves;
+        } else {
+          moveCollectors.push_back(moves);
+        }
         return beta;
-      if (score > alpha)
+      }
+
+      if (score > alpha) {
         alpha = score;
+      }
     } else {
       board.UnmakeMove(move);
     }
+  }
+
+  if (moveCollectors.size() > 1000) {
+    delete moves;
+  } else {
+    moveCollectors.push_back(moves);
   }
 
   if (movecount != 0 && legalMoves == 0) {
@@ -421,19 +442,33 @@ int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
 
 int16_t SEE(Panzer::Board &board, square to) {
   int16_t value = 0;
-  Move moves[256];
-  auto movecount = board.GenerateMoves(moves, true);
-  Move filtered[256];
+  Move *seeMoves = nullptr;
+  Move *seeFiltered = nullptr;
+  if (moveCollectors.empty()) {
+    seeMoves = new Move[256]();
+  } else {
+    seeMoves = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
+
+  if (moveCollectors.empty()) {
+    seeFiltered = new Move[256]();
+  } else {
+    seeFiltered = moveCollectors.back();
+    moveCollectors.pop_back();
+  }
+
+  auto movecount = board.GenerateMoves(seeMoves, true);
   auto filteredCount = 0;
   for (int i = 0; i < movecount; i++) {
-    auto move = moves[i];
+    auto move = seeMoves[i];
     if (move.getTo() == to) {
-      filtered[filteredCount] = move;
+      seeFiltered[filteredCount] = move;
       filteredCount++;
     }
   }
 
-  std::stable_sort(filtered, filtered + filteredCount,
+  std::stable_sort(seeFiltered, seeFiltered + filteredCount,
                    [&board](const Panzer::Move &one, const Panzer::Move &two) {
                      return one.m_score > two.m_score &&
                             board.GetPieceAtSquare(one.getFrom()) <
@@ -441,8 +476,9 @@ int16_t SEE(Panzer::Board &board, square to) {
                    });
 
   for (int i = 0; i < filteredCount; i++) {
-    auto move = filtered[i];
+    auto move = seeFiltered[i];
     board.MakeMove(move);
+
     if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
       value = std::max(0, CAPTURE_SCORES[move.capturedPiece] - SEE(board, to));
     }
@@ -450,6 +486,13 @@ int16_t SEE(Panzer::Board &board, square to) {
     seeNodes++;
   }
 
+  if (moveCollectors.size() > 1000) {
+    delete seeMoves;
+    delete seeFiltered;
+  } else {
+    moveCollectors.push_back(seeMoves);
+    moveCollectors.push_back(seeFiltered);
+  }
   return value;
 }
 } // namespace Search

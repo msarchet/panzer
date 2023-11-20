@@ -129,7 +129,7 @@ void Board::ToggleBitBoards(square from, square to, piece p, color c) {
   boardHash ^= zorbist.Get_Hash_Value(to, p, c);
 }
 
-void Board::FillSquare(square s, piece p, color c) {
+void Board::FillSquare(const square s, const piece p, const color c) {
   bitboard bb = ONE_BIT << s;
   Colors.at(c) ^= bb;
   Pieces.at(p) ^= bb;
@@ -137,7 +137,7 @@ void Board::FillSquare(square s, piece p, color c) {
   boardHash ^= zorbist.Get_Hash_Value(s, p, c);
 }
 
-void Board::ClearSquare(square s, piece p, color c) {
+void Board::ClearSquare(const square s, const piece p, const color c) {
   bitboard bb = ONE_BIT << s;
   Colors.at(c) ^= bb;
   Pieces.at(p) ^= bb;
@@ -219,7 +219,7 @@ void Board::PrintBoard() {
     for (int col = 0; col <= 7; ++col) {
       square s = ((row * 8) + col);
       piece p = this->GetPieceAtSquare(s);
-      bitboard b = (1ULL << s);
+      bitboard b = (ONE_BIT << s);
 
       if (white & b) {
         switch (p) {
@@ -480,7 +480,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
     square to = this->ep_square + N;
     PushMove(moves, movecount, from, to, EP_CAPTURE, this->castle_flags, PAWN);
     movecount++;
-    ep_captures &= ep_captures - 1ULL;
+    ep_captures &= ep_captures - ONE_BIT;
   }
 
   while (right_captures != 0) {
@@ -490,7 +490,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
              this->GetPieceAtSquare(to));
     movecount++;
-    right_captures &= right_captures - 1ULL;
+    right_captures &= right_captures - ONE_BIT;
   }
 
   while (left_captures != 0) {
@@ -500,7 +500,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
              this->GetPieceAtSquare(to));
     movecount++;
-    left_captures &= left_captures - 1ULL;
+    left_captures &= left_captures - ONE_BIT;
   }
 
   while (promotion_right_captures != 0) {
@@ -523,7 +523,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
              this->castle_flags, this->GetPieceAtSquare(to));
     movecount++;
 
-    promotion_right_captures &= promotion_right_captures - 1ULL;
+    promotion_right_captures &= promotion_right_captures - ONE_BIT;
   }
 
   while (promotion_left_captures != 0) {
@@ -546,7 +546,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
              this->castle_flags, this->GetPieceAtSquare(to));
     movecount++;
 
-    promotion_left_captures &= promotion_left_captures - 1ULL;
+    promotion_left_captures &= promotion_left_captures - ONE_BIT;
   }
 
   if (captures)
@@ -578,7 +578,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
     movecount++;
 
-    pushes &= pushes - 1ULL;
+    pushes &= pushes - ONE_BIT;
   }
 
   while (double_push != 0) {
@@ -588,7 +588,7 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, DOUBLE_PAWN_PUSH, this->castle_flags);
     movecount++;
 
-    double_push &= double_push - 1ULL;
+    double_push &= double_push - ONE_BIT;
   }
 
   return movecount;
@@ -711,7 +711,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, EP_CAPTURE, this->castle_flags, PAWN);
     movecount++;
 
-    ep_captures &= ep_captures - 1ULL;
+    ep_captures &= ep_captures - ONE_BIT;
   }
 
   while (right_captures != 0) {
@@ -722,7 +722,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
              this->GetPieceAtSquare(to));
     movecount++;
 
-    right_captures &= right_captures - 1ULL;
+    right_captures &= right_captures - ONE_BIT;
   }
 
   while (left_captures != 0) {
@@ -733,7 +733,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
              this->GetPieceAtSquare(to));
     movecount++;
 
-    left_captures &= left_captures - 1ULL;
+    left_captures &= left_captures - ONE_BIT;
   }
 
   while (promotion_right_captures != 0) {
@@ -754,7 +754,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, KNIGHT_PROMO_CAPTURE,
              this->castle_flags, this->GetPieceAtSquare(to));
     movecount++;
-    promotion_right_captures &= promotion_right_captures - 1ULL;
+    promotion_right_captures &= promotion_right_captures - ONE_BIT;
   }
 
   while (promotion_left_captures != 0) {
@@ -777,7 +777,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
              this->castle_flags, this->GetPieceAtSquare(to));
     movecount++;
 
-    promotion_left_captures &= promotion_left_captures - 1ULL;
+    promotion_left_captures &= promotion_left_captures - ONE_BIT;
   }
 
   if (captures)
@@ -809,7 +809,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
     movecount++;
 
-    pushes &= pushes - 1ULL;
+    pushes &= pushes - ONE_BIT;
   }
 
   while (double_push != 0) {
@@ -819,7 +819,7 @@ int Board::MakeBlackPawnMoves(Move *moves, int movecount, bool captures) {
     PushMove(moves, movecount, from, to, DOUBLE_PAWN_PUSH, this->castle_flags);
     movecount++;
 
-    double_push &= double_push - 1ULL;
+    double_push &= double_push - ONE_BIT;
   }
 
   return movecount;
@@ -913,7 +913,7 @@ int Board::MakeRookMoves(Move *moves, int movecount, bitboard rooks,
                this->GetPieceAtSquare(to));
       movecount++;
 
-      capture_moves &= capture_moves - 1;
+      capture_moves &= capture_moves - ONE_BIT;
     }
 
     if (!captures) {
@@ -923,11 +923,11 @@ int Board::MakeRookMoves(Move *moves, int movecount, bitboard rooks,
         PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
         movecount++;
 
-        slides &= slides - 1ULL;
+        slides &= slides - ONE_BIT;
       }
     }
 
-    rooks &= rooks - 1ULL;
+    rooks &= rooks - ONE_BIT;
   }
 
   return movecount;
@@ -952,7 +952,7 @@ int Board::MakeKnightMoves(Move *moves, int movecount, bitboard knights,
                this->GetPieceAtSquare(to));
       movecount++;
 
-      capture_moves &= capture_moves - 1ULL;
+      capture_moves &= capture_moves - ONE_BIT;
     }
 
     if (!captures) {
@@ -961,10 +961,10 @@ int Board::MakeKnightMoves(Move *moves, int movecount, bitboard knights,
         PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
         movecount++;
 
-        regular &= regular - 1ULL;
+        regular &= regular - ONE_BIT;
       }
     }
-    knights &= knights - 1ULL;
+    knights &= knights - ONE_BIT;
   }
 
   return movecount;
@@ -985,7 +985,7 @@ int Board::MakeBishopMoves(Move *moves, int movecount, bitboard bishops,
                this->GetPieceAtSquare(to));
       movecount++;
 
-      capture_moves &= capture_moves - 1;
+      capture_moves &= capture_moves - ONE_BIT;
     }
 
     if (!captures) {
@@ -995,11 +995,11 @@ int Board::MakeBishopMoves(Move *moves, int movecount, bitboard bishops,
         PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
         movecount++;
 
-        slides &= slides - 1ULL;
+        slides &= slides - ONE_BIT;
       }
     }
 
-    bishops &= bishops - 1ULL;
+    bishops &= bishops - ONE_BIT;
   }
 
   return movecount;
@@ -1020,7 +1020,7 @@ int Board::MakeQueenMoves(Move *moves, int movecount, bitboard queens,
                this->GetPieceAtSquare(to));
       movecount++;
 
-      capture_moves &= capture_moves - 1ULL;
+      capture_moves &= capture_moves - ONE_BIT;
     }
 
     if (!captures) {
@@ -1030,11 +1030,11 @@ int Board::MakeQueenMoves(Move *moves, int movecount, bitboard queens,
         PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
         movecount++;
 
-        slides &= slides - 1ULL;
+        slides &= slides - ONE_BIT;
       }
     }
 
-    queens &= queens - 1ULL;
+    queens &= queens - ONE_BIT;
   }
   return movecount;
 }

@@ -51,19 +51,115 @@ const mask G_FILE = 0x4040404040404040ULL;
 const mask H_FILE = 0x8080808080808080ULL;
 const mask AB_FILE = A_FILE | B_FILE;
 const mask GH_FILE = G_FILE | H_FILE;
-const std::array<mask, 15> NW_DIAGONALS = {
+
+const std::array<mask, 15> NW_DIAGONALS_LOOKUP = {
     0x0000000000000001ULL, 0x0000000000000102ULL, 0x0000000000010204ULL,
     0x0000000001020408ULL, 0x0000000102040810ULL, 0x0000010204081020ULL,
     0x0001020408102040ULL, 0x0102040810204080ULL, 0x0204081020408000ULL,
     0x0408102040800000ULL, 0x0810204080000000ULL, 0x1020408000000000ULL,
     0x2040800000000000ULL, 0x4080000000000000ULL, 0x8000000000000000ULL};
 
-const std::array<mask, 15> NE_DIAGONALS = {
-    0x0100000000000000ULL, 0x0201000000000000ULL, 0x0402010000000000ULL,
-    0x0804020100000000ULL, 0x1008040201000000ULL, 0x2010080402010000ULL,
-    0x4020100804020100ULL, 0x8040201008040201ULL, 0x0080402010080402ULL,
-    0x0000804020100804ULL, 0x0000008040201008ULL, 0x0000000080402010ULL,
-    0x0000000000804020ULL, 0x0000000000008040ULL, 0x0000000000000080ULL};
+const std::array<mask, 64> NW_DIAGONALS = {
+    NW_DIAGONALS_LOOKUP[0], // A1
+    NW_DIAGONALS_LOOKUP[1],  NW_DIAGONALS_LOOKUP[2],  NW_DIAGONALS_LOOKUP[3],
+    NW_DIAGONALS_LOOKUP[4],  NW_DIAGONALS_LOOKUP[5],  NW_DIAGONALS_LOOKUP[6],
+    NW_DIAGONALS_LOOKUP[7],
+
+    NW_DIAGONALS_LOOKUP[1], // A2
+    NW_DIAGONALS_LOOKUP[2],  NW_DIAGONALS_LOOKUP[3],  NW_DIAGONALS_LOOKUP[4],
+    NW_DIAGONALS_LOOKUP[5],  NW_DIAGONALS_LOOKUP[6],  NW_DIAGONALS_LOOKUP[7],
+    NW_DIAGONALS_LOOKUP[8],
+
+    NW_DIAGONALS_LOOKUP[2], // A3
+    NW_DIAGONALS_LOOKUP[3],  NW_DIAGONALS_LOOKUP[4],  NW_DIAGONALS_LOOKUP[5],
+    NW_DIAGONALS_LOOKUP[6],  NW_DIAGONALS_LOOKUP[7],  NW_DIAGONALS_LOOKUP[8],
+    NW_DIAGONALS_LOOKUP[9],
+
+    NW_DIAGONALS_LOOKUP[3], // A4
+    NW_DIAGONALS_LOOKUP[4],  NW_DIAGONALS_LOOKUP[5],  NW_DIAGONALS_LOOKUP[6],
+    NW_DIAGONALS_LOOKUP[7],  NW_DIAGONALS_LOOKUP[8],  NW_DIAGONALS_LOOKUP[9],
+    NW_DIAGONALS_LOOKUP[10],
+
+    NW_DIAGONALS_LOOKUP[4], // A5
+    NW_DIAGONALS_LOOKUP[5],  NW_DIAGONALS_LOOKUP[6],  NW_DIAGONALS_LOOKUP[7],
+    NW_DIAGONALS_LOOKUP[8],  NW_DIAGONALS_LOOKUP[9],  NW_DIAGONALS_LOOKUP[10],
+    NW_DIAGONALS_LOOKUP[11],
+
+    NW_DIAGONALS_LOOKUP[5], // A6
+    NW_DIAGONALS_LOOKUP[6],  NW_DIAGONALS_LOOKUP[7],  NW_DIAGONALS_LOOKUP[8],
+    NW_DIAGONALS_LOOKUP[9],  NW_DIAGONALS_LOOKUP[10], NW_DIAGONALS_LOOKUP[11],
+    NW_DIAGONALS_LOOKUP[12],
+
+    NW_DIAGONALS_LOOKUP[6], // A7
+    NW_DIAGONALS_LOOKUP[7],  NW_DIAGONALS_LOOKUP[8],  NW_DIAGONALS_LOOKUP[9],
+    NW_DIAGONALS_LOOKUP[10], NW_DIAGONALS_LOOKUP[11], NW_DIAGONALS_LOOKUP[12],
+    NW_DIAGONALS_LOOKUP[13],
+
+    NW_DIAGONALS_LOOKUP[7], // A8
+    NW_DIAGONALS_LOOKUP[8],  NW_DIAGONALS_LOOKUP[9],  NW_DIAGONALS_LOOKUP[10],
+    NW_DIAGONALS_LOOKUP[11], NW_DIAGONALS_LOOKUP[12], NW_DIAGONALS_LOOKUP[13],
+    NW_DIAGONALS_LOOKUP[14],
+};
+
+const std::array<mask, 15> NE_DIAGONALS_LOOKUP = {
+    0x0100000000000000ULL, // A8
+    0x0201000000000000ULL, // B8
+    0x0402010000000000ULL, // C8
+    0x0804020100000000ULL, // D8
+    0x1008040201000000ULL, // E8
+    0x2010080402010000ULL, // F8
+    0x4020100804020100ULL, // G8
+    0x8040201008040201ULL, // H8
+    0x0080402010080402ULL, // H7
+    0x0000804020100804ULL, // H6
+    0x0000008040201008ULL, // H5
+    0x0000000080402010ULL, // H4
+    0x0000000000804020ULL, // H3
+    0x0000000000008040ULL, // H2
+    0x0000000000000080ULL, // H1
+};
+
+const std::array<mask, 64> NE_DIAGONALS = {
+    NE_DIAGONALS_LOOKUP[7], // A1
+    NE_DIAGONALS_LOOKUP[8],  NE_DIAGONALS_LOOKUP[9],  NE_DIAGONALS_LOOKUP[10],
+    NE_DIAGONALS_LOOKUP[11], NE_DIAGONALS_LOOKUP[12], NE_DIAGONALS_LOOKUP[13],
+    NE_DIAGONALS_LOOKUP[14],
+
+    NE_DIAGONALS_LOOKUP[6], // A2
+    NE_DIAGONALS_LOOKUP[7],  NE_DIAGONALS_LOOKUP[8],  NE_DIAGONALS_LOOKUP[9],
+    NE_DIAGONALS_LOOKUP[10], NE_DIAGONALS_LOOKUP[11], NE_DIAGONALS_LOOKUP[12],
+    NE_DIAGONALS_LOOKUP[13],
+
+    NE_DIAGONALS_LOOKUP[5], // A3
+    NE_DIAGONALS_LOOKUP[6],  NE_DIAGONALS_LOOKUP[7],  NE_DIAGONALS_LOOKUP[8],
+    NE_DIAGONALS_LOOKUP[9],  NE_DIAGONALS_LOOKUP[10], NE_DIAGONALS_LOOKUP[11],
+    NE_DIAGONALS_LOOKUP[12],
+
+    NE_DIAGONALS_LOOKUP[4], // A4
+    NE_DIAGONALS_LOOKUP[5],  NE_DIAGONALS_LOOKUP[6],  NE_DIAGONALS_LOOKUP[7],
+    NE_DIAGONALS_LOOKUP[8],  NE_DIAGONALS_LOOKUP[9],  NE_DIAGONALS_LOOKUP[10],
+    NE_DIAGONALS_LOOKUP[11],
+
+    NE_DIAGONALS_LOOKUP[3], // A5
+    NE_DIAGONALS_LOOKUP[4],  NE_DIAGONALS_LOOKUP[5],  NE_DIAGONALS_LOOKUP[6],
+    NE_DIAGONALS_LOOKUP[7],  NE_DIAGONALS_LOOKUP[8],  NE_DIAGONALS_LOOKUP[9],
+    NE_DIAGONALS_LOOKUP[10],
+
+    NE_DIAGONALS_LOOKUP[2], // A6
+    NE_DIAGONALS_LOOKUP[3],  NE_DIAGONALS_LOOKUP[4],  NE_DIAGONALS_LOOKUP[5],
+    NE_DIAGONALS_LOOKUP[6],  NE_DIAGONALS_LOOKUP[7],  NE_DIAGONALS_LOOKUP[8],
+    NE_DIAGONALS_LOOKUP[9],
+
+    NE_DIAGONALS_LOOKUP[1], // A7
+    NE_DIAGONALS_LOOKUP[2],  NE_DIAGONALS_LOOKUP[3],  NE_DIAGONALS_LOOKUP[4],
+    NE_DIAGONALS_LOOKUP[5],  NE_DIAGONALS_LOOKUP[6],  NE_DIAGONALS_LOOKUP[7],
+    NE_DIAGONALS_LOOKUP[8],
+
+    NE_DIAGONALS_LOOKUP[0], // A8
+    NE_DIAGONALS_LOOKUP[1],  NE_DIAGONALS_LOOKUP[2],  NE_DIAGONALS_LOOKUP[3],
+    NE_DIAGONALS_LOOKUP[4],  NE_DIAGONALS_LOOKUP[5],  NE_DIAGONALS_LOOKUP[6],
+    NE_DIAGONALS_LOOKUP[7],
+};
 
 const bitboard FILLED_BOARD = ~0ULL;
 
@@ -518,14 +614,14 @@ const std::array<std::string, 7> pieceToString = {
 };
 
 struct Move {
-  square m_from;
-  square m_to;
-  move_flag m_move_flags;
-  piece capturedPiece = NO_PIECE;
-  castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS;
-  square priorEP = NO_SQUARE;
-  int m_score = 0;
-  int id = -1;
+  square m_from;                  // 8 bits but really 6 // 0b111111 FROM
+  square m_to;                    // 8 bits but really 6  // 0b111111 << 6 TO
+  move_flag m_move_flags;         // 8 bits // 0xFF << 14
+  piece capturedPiece = NO_PIECE; // 3 bits // 0b11 << 22
+  castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS; // 8 bits // 0xFF << 25
+  square priorEP = NO_SQUARE; // 6 bits // 0xb111111 << 33
+  int id = -1;     // 8 bits // 0xFF max 255 since sorted on moves << 39
+  int m_score = 0; // 16 bits // 0xFFFF << 47 + 16 = 63
 
   Move() {}
   Move(square from, square to, move_flag flags, castle_flag castleFlags,
@@ -550,18 +646,18 @@ struct Move {
     id = move.id;
   }
 
-  square getTo() const { return m_to; }
-  square getFrom() const { return m_from; }
-  move_flag getFlags() const { return m_move_flags; }
+  inline square getTo() const { return m_to; }
+  inline square getFrom() const { return m_from; }
+  inline move_flag getFlags() const { return m_move_flags; }
 
-  bool isCapture() const { return (getFlags() & CAPTURE) != 0; }
-  bool isEPCapture() const { return getFlags() == EP_CAPTURE; }
-  bool isCastle() const { return getFlags() == CASTLE; }
-  bool isPromo() const { return getFlags() >= KNIGHT_PROMO; }
+  inline bool isCapture() const { return (getFlags() & CAPTURE) != 0; }
+  inline bool isEPCapture() const { return getFlags() == EP_CAPTURE; }
+  inline bool isCastle() const { return getFlags() == CASTLE; }
+  inline bool isPromo() const { return getFlags() >= KNIGHT_PROMO; }
 
-  castle_flag getCastleFlags() const { return priorCastleFlags; }
-  piece getCapturedPiece() const { return capturedPiece; }
-  square getPriorEPSquare() const { return priorEP; }
+  inline castle_flag getCastleFlags() const { return priorCastleFlags; }
+  inline piece getCapturedPiece() const { return capturedPiece; }
+  inline square getPriorEPSquare() const { return priorEP; }
 };
 
 typedef std::vector<Panzer::Move> MoveVector;
@@ -570,4 +666,4 @@ struct TranspostionEntry {
   int depth;
   int score;
 };
-}
+} // namespace Panzer
