@@ -54,7 +54,7 @@ std::string Utils::PrintMove(Panzer::Move move) {
 
 bool Utils::MoveSorter(const Panzer::Move &move_one,
                        const Panzer::Move &move_two) {
-  return move_one.m_score > move_two.m_score;
+  return move_one.getScore() > move_two.getScore();
 }
 
 void Utils::SortMoves(Panzer::Move *moves, int movecount) {

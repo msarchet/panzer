@@ -8,10 +8,10 @@
 
 namespace Panzer {
 
-typedef uint8_t square;
-typedef uint8_t piece;
-typedef uint8_t move_flag;
-typedef uint8_t castle_flag;
+typedef uint64_t square;
+typedef uint64_t piece;
+typedef uint64_t move_flag;
+typedef uint64_t castle_flag;
 
 typedef uint64_t hash;
 typedef uint64_t bitboard;
@@ -613,51 +613,70 @@ const std::array<std::string, 7> pieceToString = {
     "", "Pawn", "Rook", "Knight", "Bishop", "King", "Queen",
 };
 
+const mask FromSquareMask = 0b1111111;
+const mask ToSquareMask = 0b1111111 << 7;
+const mask MoveFlagMask = 0xFF << 14;
+const mask PieceMask = 0b111 << 22;
+const mask CastleFlagsMask = 0xFF << 25;
+const mask EPMask = (uint64_t)0b1111111 << 33;
+const mask IDMask = (uint64_t)0xFF << 40;
+const mask ScoreMask = (uint64_t)0xFFFFF << 48;
+
 struct Move {
-  square m_from;                  // 8 bits but really 6 // 0b111111 FROM
-  square m_to;                    // 8 bits but really 6  // 0b111111 << 6 TO
-  move_flag m_move_flags;         // 8 bits // 0xFF << 14
-  piece capturedPiece = NO_PIECE; // 3 bits // 0b11 << 22
-  castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS; // 8 bits // 0xFF << 25
-  square priorEP = NO_SQUARE; // 6 bits // 0xb111111 << 33
-  int id = -1;     // 8 bits // 0xFF max 255 since sorted on moves << 39
-  int m_score = 0; // 16 bits // 0xFFFF << 47 + 16 = 63
+  unsigned long long mMoveInternal;
+
+  // square m_from;                  // 8 bits but really 6 // 0b111111 FROM
+  // square m_to;                    // 8 bits but really 6  // 0b111111 << 6 TO
+  // move_flag m_move_flags;         // 8 bits // 0xFF << 12
+  // piece capturedPiece = NO_PIECE; // 3 bits // 0b11 << 20
+  // castle_flag priorCastleFlags = EMPTY_CASTLE_FLAGS; // 8 bits // 0xFF << 23
+  // square priorEP = NO_SQUARE; // 6 bits // 0xb111111 << 31
+  // int id = -1;     // 8 bits // 0xFF max 255 since sorted on moves << 37
+  // int m_score = 0; // 16 bits // 0xFFFF << 45
 
   Move() {}
   Move(square from, square to, move_flag flags, castle_flag castleFlags,
-       piece captured = NO_PIECE, square epSquare = NO_SQUARE, int score = 0) {
-    m_from = from;
-    m_to = to;
-    m_move_flags = flags;
-    priorCastleFlags = castleFlags;
-    capturedPiece = captured;
-    priorEP = epSquare;
-    m_score = score;
+       piece captured = NO_PIECE, square epSquare = NO_SQUARE,
+       uint64_t score = 0) {
+    mMoveInternal = 0;
+    mMoveInternal = from & FromSquareMask;
+    mMoveInternal |= ((to << 7) & ToSquareMask);
+    mMoveInternal |= ((flags << 14) & MoveFlagMask);
+    mMoveInternal |= ((captured << 22) & PieceMask);
+    mMoveInternal |= ((castleFlags << 25) & CastleFlagsMask);
+    mMoveInternal |= ((epSquare << 33) & EPMask);
+    mMoveInternal |= ((score << 48) & ScoreMask);
   }
 
-  Move(const Move &move) {
-    m_from = move.getFrom();
-    m_to = move.getTo();
-    m_move_flags = move.getFlags();
-    priorCastleFlags = move.getCastleFlags();
-    capturedPiece = move.getCapturedPiece();
-    priorEP = move.getPriorEPSquare();
-    m_score = move.m_score;
-    id = move.id;
-  }
+  Move(const Move &move) { mMoveInternal = move.mMoveInternal; }
 
-  inline square getTo() const { return m_to; }
-  inline square getFrom() const { return m_from; }
-  inline move_flag getFlags() const { return m_move_flags; }
+  inline square getTo() const { return (mMoveInternal >> 7) & 0b1111111; }
+  inline square getFrom() const { return mMoveInternal & 0b1111111; }
+  inline move_flag getFlags() const { return (mMoveInternal >> 14) & 0xFF; }
 
   inline bool isCapture() const { return (getFlags() & CAPTURE) != 0; }
   inline bool isEPCapture() const { return getFlags() == EP_CAPTURE; }
   inline bool isCastle() const { return getFlags() == CASTLE; }
   inline bool isPromo() const { return getFlags() >= KNIGHT_PROMO; }
 
-  inline castle_flag getCastleFlags() const { return priorCastleFlags; }
-  inline piece getCapturedPiece() const { return capturedPiece; }
-  inline square getPriorEPSquare() const { return priorEP; }
+  inline castle_flag getCastleFlags() const {
+    return (mMoveInternal >> 25) & 0xFF;
+  }
+  inline piece getCapturedPiece() const {
+    return (mMoveInternal >> 22) & 0b111;
+  }
+  inline square getPriorEPSquare() const {
+    return (mMoveInternal >> 33) & 0b1111111;
+  }
+
+  inline void setId(unsigned long long id) {
+    mMoveInternal = (mMoveInternal & ~IDMask) | ((id << 40) & IDMask);
+  }
+  inline int getId() const { return (mMoveInternal >> 40) & 0xFF; }
+  inline void setScore(unsigned long long score) {
+    mMoveInternal = (mMoveInternal & ~ScoreMask) | ((score << 48) & ScoreMask);
+  }
+  inline int getScore() const { return (mMoveInternal >> 48) & 0xFFFF; }
 };
 
 typedef std::vector<Panzer::Move> MoveVector;

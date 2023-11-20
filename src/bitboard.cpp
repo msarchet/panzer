@@ -172,7 +172,7 @@ void Board::PushMove(Move *moves, int movecount, square from, square to,
   auto move =
       Panzer::Move(from, to, flags, castleFlags, captured,
                    ep_square == NO_SQUARE ? this->ep_square : ep_square, score);
-  move.id = movecount;
+  move.setId(movecount);
   moves[movecount] = move;
 }
 

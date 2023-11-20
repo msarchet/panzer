@@ -57,7 +57,6 @@ void SearchIterate(Panzer::Board &board, int depth) {
   auto beta = INT16_MAX;
 
   Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
-  bestMove.id = -1;
 
   Move moves[256];
   auto movecount = board.GenerateMoves(moves);
@@ -146,7 +145,6 @@ void SearchIterate(Panzer::Board &board, int depth) {
   if (movecount == 0) {
     // draw
     if (!board.IsChecked(board.GetSideToMove())) {
-      bestMove.m_to = A1;
     }
 
     Panzer::Com::OutputDebugFile("no moves");
@@ -470,7 +468,7 @@ int16_t SEE(Panzer::Board &board, square to) {
 
   std::stable_sort(seeFiltered, seeFiltered + filteredCount,
                    [&board](const Panzer::Move &one, const Panzer::Move &two) {
-                     return one.m_score > two.m_score &&
+                     return one.getScore() > two.getScore() &&
                             board.GetPieceAtSquare(one.getFrom()) <
                                 board.GetPieceAtSquare(two.getFrom());
                    });
@@ -480,7 +478,8 @@ int16_t SEE(Panzer::Board &board, square to) {
     board.MakeMove(move);
 
     if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
-      value = std::max(0, CAPTURE_SCORES[move.capturedPiece] - SEE(board, to));
+      value =
+          std::max(0, CAPTURE_SCORES[move.getCapturedPiece()] - SEE(board, to));
     }
     board.UnmakeMove(move);
     seeNodes++;
