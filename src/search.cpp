@@ -68,7 +68,7 @@ void SearchIterate(Panzer::Board &board, int depth) {
     moveCollectors.pop_back();
   }
 
-  auto movecount = board.GenerateMoves(moves);
+  auto movecount = board.GenerateMoves<false>(moves);
 
   Utils::SortMoves(moves, movecount);
 
@@ -206,7 +206,7 @@ int16_t AlphaBetaMax(Panzer::Board &board, int16_t alpha, int16_t beta,
     moves = moveCollectors.back();
     moveCollectors.pop_back();
   }
-  auto movecount = board.GenerateMoves(moves);
+  auto movecount = board.GenerateMoves<false>(moves);
   Utils::SortMoves(moves, movecount);
   int legalMoves = 0;
   for (auto i = 0; i < movecount; i++) {
@@ -313,7 +313,7 @@ int16_t AlphaBetaMin(Panzer::Board &board, int16_t alpha, int16_t beta,
     moveCollectors.pop_back();
   }
 
-  auto movecount = board.GenerateMoves(moves);
+  auto movecount = board.GenerateMoves<false>(moves);
   Utils::SortMoves(moves, movecount);
 
   int legalMoves = 0;
@@ -396,7 +396,7 @@ int16_t AlphaBetaMinMax(Panzer::Board &board, int16_t alpha, int16_t beta,
     moves = moveCollectors.back();
     moveCollectors.pop_back();
   }
-  auto movecount = board.GenerateMoves(moves);
+  auto movecount = board.GenerateMoves<false>(moves);
   Utils::SortMoves(moves, movecount);
 
   if (depth == 0) {
@@ -463,7 +463,7 @@ int16_t Quiesence(Panzer::Board &board, int16_t alpha, int16_t beta) {
     moveCollectors.pop_back();
   }
 
-  auto movecount = board.GenerateMoves(moves, true);
+  auto movecount = board.GenerateMoves<true>(moves);
   Utils::SortMoves(moves, movecount);
 
   int legalMoves = 0;
@@ -535,7 +535,7 @@ int16_t SEE(Panzer::Board &board, square to) {
     moveCollectors.pop_back();
   }
 
-  auto movecount = board.GenerateMoves(seeMoves, true);
+  auto movecount = board.GenerateMoves<true>(seeMoves);
   auto filteredCount = 0;
   for (int i = 0; i < movecount; i++) {
     auto move = seeMoves[i];

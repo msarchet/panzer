@@ -92,7 +92,7 @@ void ProcessInputs() {
             promotion = token.substr(4, 1);
           }
           Panzer::Move moves[256];
-          auto movecount = board->GenerateMoves(moves);
+          auto movecount = board->GenerateMoves<false>(moves);
           auto foundMove =
               Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS);
           auto foundValidMove = false;
@@ -224,7 +224,7 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth) {
   }
 
   Panzer::Move moves[256];
-  auto movecount = board.GenerateMoves(moves);
+  auto movecount = board.GenerateMoves<false>(moves);
 
   if (movecount == 0)
     return 0;
