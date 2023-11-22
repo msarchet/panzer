@@ -17,9 +17,9 @@ std::string Board::PrintMoveChain() {
   return chain.str();
 }
 
-bool Board::IsSquareAttacked(square s, color color) {
+template <color c> bool Board::IsSquareAttacked(square s) {
   bitboard squareBitboard = ONE_BIT << s;
-  if (color == WHITE) {
+  if constexpr (c == WHITE) {
     bitboard pawnMask = ((squareBitboard & ~A_FILE) << NW) |
                         ((squareBitboard & ~H_FILE) << NE); // shift NW
     bitboard diagonals = GetBishops<BLACK>() | GetQueens<BLACK>() |
@@ -60,7 +60,7 @@ bool Board::IsSquareAttacked(square s, color color) {
     return false;
   }
 
-  if (color == BLACK) {
+  if constexpr (c == BLACK) {
     bitboard pawnMask =
         ((squareBitboard & ~A_FILE) >> SW) | ((squareBitboard & ~H_FILE) >> SE);
     bitboard diagonals = GetBishops<WHITE>() | GetQueens<WHITE>() |
@@ -104,19 +104,18 @@ bool Board::IsSquareAttacked(square s, color color) {
   return false;
 }
 
-bool Board::IsChecked(color color) {
-  if (color == WHITE) {
-    bitboard king = GetKings<WHITE>();
-    square kingSquare = Utils::GetLSB(king);
-    return this->IsSquareAttacked(kingSquare, WHITE);
+bool Board::IsChecked(color c) {
+  if (c == WHITE) {
+    return IsChecked<WHITE>();
   }
 
-  if (color == BLACK) {
-    bitboard king = GetKings<BLACK>();
-    square kingSquare = Utils::GetLSB(king);
-    return this->IsSquareAttacked(kingSquare, BLACK);
-  }
-  return false;
+  return IsChecked<BLACK>();
+}
+
+template <color us> bool Board::IsChecked() {
+  bitboard king = GetKings<us>();
+  square kingSquare = Utils::GetLSB(king);
+  return this->IsSquareAttacked<us>(kingSquare);
 }
 
 void Board::ToggleBitBoards(square from, square to, piece p, color c) {
@@ -599,6 +598,20 @@ int Board::MakeWhitePawnMoves(Move *moves, int movecount, bool captures) {
   return movecount;
 }
 
+template <color us, color them, bool capture>
+int Board::MakeRookMoves(Move *moves, int moveCount) {
+  auto rooks = GetRooks<us>();
+  if (rooks == 0) {
+    return movecount;
+  }
+
+  auto our_pieces = GetPieces<us>();
+  auto their_pieces = GetPieces<them>();
+  movecount = this->MakeRookMoves(moves, movecount, rooks, our_pieces,
+                                  their_pieces, captures);
+  return movecount;
+}
+
 int Board::MakeWhiteRooksMoves(Move *moves, int movecount, bool captures) {
   auto rooks = GetRooks<WHITE>();
   if (rooks == 0) {
@@ -661,8 +674,8 @@ int Board::MakeWhiteKingMoves(Move *moves, int movecount, bool captures) {
       bool isOpen = (WHITEK_CASTLE_MASK & this->GetOccupancy()) == 0;
       if (isOpen) {
         bool notChecked =
-            !(IsSquareAttacked(F1, WHITE) || IsSquareAttacked(G1, WHITE) ||
-              IsSquareAttacked(E1, WHITE));
+            !(IsSquareAttacked<WHITE>(F1) || IsSquareAttacked<WHITE>(G1) ||
+              IsSquareAttacked<WHITE>(E1));
         if (notChecked) {
           PushMove(moves, movecount, E1, G1, CASTLE, this->castle_flags);
           movecount++;
@@ -674,8 +687,8 @@ int Board::MakeWhiteKingMoves(Move *moves, int movecount, bool captures) {
       bool isOpen = (WHITEQ_CASTLE_MASK & this->GetOccupancy()) == 0;
       if (isOpen) {
         bool notChecked =
-            !(IsSquareAttacked(C1, WHITE) || IsSquareAttacked(D1, WHITE) ||
-              IsSquareAttacked(E1, WHITE));
+            !(IsSquareAttacked<WHITE>(C1) || IsSquareAttacked<WHITE>(D1) ||
+              IsSquareAttacked<WHITE>(E1));
         if (notChecked) {
           PushMove(moves, movecount, E1, C1, CASTLE, this->castle_flags);
           movecount++;
@@ -906,8 +919,8 @@ int Board::MakeBlackKingMoves(Move *moves, int movecount, bool captures) {
       bool isOpen = (BLACKK_CASTLE_MASK & this->GetOccupancy()) == 0;
       if (isOpen) {
         bool notChecked =
-            !(IsSquareAttacked(F8, BLACK) || IsSquareAttacked(G8, BLACK) ||
-              IsSquareAttacked(E8, BLACK));
+            !(IsSquareAttacked<BLACK>(F8) || IsSquareAttacked<BLACK>(G8) ||
+              IsSquareAttacked<BLACK>(E8));
         if (notChecked) {
           PushMove(moves, movecount, E8, G8, CASTLE, this->castle_flags);
           movecount++;
@@ -919,8 +932,8 @@ int Board::MakeBlackKingMoves(Move *moves, int movecount, bool captures) {
       bool isOpen = (BLACKQ_CASTLE_MASK & this->GetOccupancy()) == 0;
       if (isOpen) {
         bool notChecked =
-            !(IsSquareAttacked(C8, BLACK) || IsSquareAttacked(D8, BLACK) ||
-              IsSquareAttacked(E8, BLACK));
+            !(IsSquareAttacked<BLACK>(C8) || IsSquareAttacked<BLACK>(D8) ||
+              IsSquareAttacked<BLACK>(E8));
         if (notChecked) {
           PushMove(moves, movecount, E8, C8, CASTLE, this->castle_flags);
           movecount++;

@@ -125,13 +125,27 @@ public:
   void UnmakeMove(const Move &move);
   inline void ToggleBitBoards(square from, square to, piece p, color c);
 
-  bool IsSquareAttacked(square s, color color);
+  template <color c> bool IsSquareAttacked(square s);
   bool IsChecked(color color);
+  template <color us> bool IsChecked();
   void FenToBoard(const std::string &fen);
   std::string PrintMoveChain();
   std::string BoardToFen();
 
 private:
+  template <color us, color them, bool capture>
+  int MakePawnMoves(Move *moves, int moveCount);
+  template <color us, color them, bool capture>
+  int MakeRookMoves(Move *moves, int moveCount);
+  template <color us, color them, bool capture>
+  int MakeKnightMoves(Move *moves, int moveCount);
+  template <color us, color them, bool capture>
+  int MakeBishopMoves(Move *moves, int moveCount);
+  template <color us, color them, bool capture>
+  int MakeQueenMoves(Move *moves, int moveCount);
+  template <color us, color them, bool capture>
+  int MakeKingMoves(Move *moves, int moveCount);
+
   int MakeWhitePawnMoves(Move *moves, int movecount, bool captures = false);
   int MakeWhiteRooksMoves(Move *moves, int movecount, bool captures = false);
   int MakeWhiteKnightMoves(Move *moves, int movecount, bool captures = false);
