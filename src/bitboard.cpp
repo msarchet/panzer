@@ -19,8 +19,33 @@ std::string Board::PrintMoveChain() {
 
 void Board::ToggleBitBoards(square from, square to, piece p, color c) {
   bitboard fromToBB = (ONE_BIT << from) | (ONE_BIT << to);
-  Colors.at(c) ^= fromToBB;
-  Pieces.at(p) ^= fromToBB;
+  if (c == WHITE) {
+    White ^= fromToBB;
+  } else {
+    Black ^= fromToBB;
+  }
+  switch (p) {
+  case PAWN:
+    Pawns ^= fromToBB;
+    break;
+  case ROOK:
+    Rooks ^= fromToBB;
+    break;
+  case KNIGHT:
+    Knights ^= fromToBB;
+    break;
+  case BISHOP:
+    Bishops ^= fromToBB;
+    break;
+  case QUEEN:
+    Queens ^= fromToBB;
+    break;
+  case KING:
+    Kings ^= fromToBB;
+    break;
+  default:
+    break;
+  }
   pieceLookup.at(from) = NO_PIECE;
   pieceLookup.at(to) = p;
   boardHash ^= zorbist.Get_Hash_Value(from, p, c);
@@ -29,16 +54,67 @@ void Board::ToggleBitBoards(square from, square to, piece p, color c) {
 
 void Board::FillSquare(const square s, const piece p, const color c) {
   bitboard bb = ONE_BIT << s;
-  Colors.at(c) ^= bb;
-  Pieces.at(p) ^= bb;
+  if (c == WHITE) {
+    White ^= bb;
+  } else {
+    Black ^= bb;
+  }
+  switch (p) {
+  case PAWN:
+    Pawns ^= bb;
+    break;
+  case ROOK:
+    Rooks ^= bb;
+    break;
+  case KNIGHT:
+    Knights ^= bb;
+    break;
+  case BISHOP:
+    Bishops ^= bb;
+    break;
+  case QUEEN:
+    Queens ^= bb;
+    break;
+  case KING:
+    Kings ^= bb;
+    break;
+  default:
+    break;
+  }
   pieceLookup.at(s) = p;
   boardHash ^= zorbist.Get_Hash_Value(s, p, c);
 }
 
 void Board::ClearSquare(const square s, const piece p, const color c) {
   bitboard bb = ONE_BIT << s;
-  Colors.at(c) ^= bb;
-  Pieces.at(p) ^= bb;
+  if (c == WHITE) {
+    White ^= bb;
+  } else {
+    Black ^= bb;
+  }
+  switch (p) {
+  case PAWN:
+    Pawns ^= bb;
+    break;
+  case ROOK:
+    Rooks ^= bb;
+    break;
+  case KNIGHT:
+    Knights ^= bb;
+    break;
+  case BISHOP:
+    Bishops ^= bb;
+    break;
+  case QUEEN:
+    Queens ^= bb;
+    break;
+  case KING:
+    Kings ^= bb;
+    break;
+  default:
+    break;
+  }
+
   pieceLookup.at(s) = NO_PIECE;
   boardHash ^= zorbist.Get_Hash_Value(s, p, c);
 }
@@ -413,8 +489,6 @@ void Board::FenToBoard(const std::string &fen) {
   this->boardHash = 0;
   std::vector<char> buffer = {};
   pieceLookup.fill(NO_PIECE);
-  Pieces.fill(0ULL);
-  Colors.fill(0ULL);
   castle_flags = EMPTY_CASTLE_FLAGS;
   ep_square = NO_SQUARE;
   moveChain.clear();

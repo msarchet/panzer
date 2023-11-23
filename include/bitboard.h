@@ -17,8 +17,15 @@ class Board {
 private:
   // TODO: no std_lib here
   // each piece on its own value
-  std::array<bitboard, 7> Pieces{0ULL};
-  std::array<bitboard, 2> Colors{0ULL};
+  bitboard Pawns = 0ULL;
+  bitboard Rooks = 0ULL;
+  bitboard Knights = 0ULL;
+  bitboard Bishops = 0ULL;
+  bitboard Queens = 0ULL;
+  bitboard Kings = 0ULL;
+  bitboard White = 0ULL;
+  bitboard Black = 0ULL;
+
   std::array<piece, 64> pieceLookup{NO_PIECE};
   std::vector<Move> moveChain{};
   color side_to_move = WHITE;
@@ -34,8 +41,14 @@ public:
   Board() {}
 
   Board(const Board &board) : Board() {
-    Pieces = board.Pieces;
-    Colors = board.Colors;
+    Pawns = board.Pawns;
+    Rooks = board.Rooks;
+    Knights = board.Knights;
+    Bishops = board.Bishops;
+    Queens = board.Queens;
+    Kings = board.Kings;
+    White = board.White;
+    Black = board.Black;
     pieceLookup = board.pieceLookup;
     side_to_move = board.side_to_move;
     ep_square = board.ep_square;
@@ -81,63 +94,61 @@ public:
 
   template <color c> constexpr bitboard GetPieces() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE);
+      return White;
     }
 
-    return Colors.at(BLACK);
+    return Black;
   }
 
   template <color c> constexpr bitboard GetPawns() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE) & Pieces.at(PAWN);
+      return White & Pawns;
     }
 
-    return Colors.at(BLACK) & Pieces.at(PAWN);
+    return Black & Pawns;
   }
 
   template <color c> constexpr bitboard GetRooks() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE) & Pieces.at(ROOK);
+      return White & Rooks;
     }
 
-    return Colors.at(BLACK) & Pieces.at(ROOK);
+    return Black & Rooks;
   }
 
   template <color c> constexpr bitboard GetKnights() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE) & Pieces.at(KNIGHT);
+      return White & Knights;
     }
 
-    return Colors.at(BLACK) & Pieces.at(KNIGHT);
+    return Black & Knights;
   }
 
   template <color c> constexpr bitboard GetBishops() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE) & Pieces.at(BISHOP);
+      return White & Bishops;
     }
 
-    return Colors.at(BLACK) & Pieces.at(BISHOP);
+    return Black & Bishops;
   }
 
   template <color c> constexpr bitboard GetQueens() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE) & Pieces.at(QUEEN);
+      return White & Queens;
     }
 
-    return Colors.at(BLACK) & Pieces.at(QUEEN);
+    return Black & Queens;
   }
 
   template <color c> constexpr bitboard GetKings() const {
     if constexpr (c == WHITE) {
-      return Colors.at(WHITE) & Pieces.at(KING);
+      return White & Kings;
     }
 
-    return Colors.at(BLACK) & Pieces.at(KING);
+    return Black & Kings;
   }
 
-  constexpr bitboard GetOccupancy() const {
-    return Colors.at(WHITE) | Colors.at(BLACK);
-  }
+  constexpr bitboard GetOccupancy() const { return White & Black; }
   inline color GetSideToMove() const { return side_to_move; }
 
   inline piece GetPieceAtSquare(square s) const { return pieceLookup.at(s); };

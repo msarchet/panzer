@@ -7,6 +7,7 @@ void OpenDebugFile();
 void CloseDebugFile();
 void OutputDebugFile(std::string output);
 void SendMessageToUI(std::string message);
+void FlushUIMessages();
 void SetDebug(bool debug);
 bool GetDebug();
 } // namespace Com
