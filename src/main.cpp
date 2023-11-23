@@ -24,7 +24,9 @@ int main(int argc, char *argv[]) {
 
   Panzer::Com::SendMessageToUI(
       "Hello welcome to Panzer, created by Michael Sarchet");
+  Panzer::Com::FlushUIMessages();
   ProcessInputs();
+
   Panzer::Com::CloseDebugFile();
   return 0;
 }
@@ -39,6 +41,7 @@ void ProcessInputs() {
   board->FenToBoard(Panzer::STARTFEN);
 
   while (!exit) {
+    Panzer::Com::FlushUIMessages();
     std::getline(std::cin, line);
     token = GetNextToken(line, delimeter);
 
@@ -248,9 +251,9 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth) {
                     newBoard.GetSideToMove() == WHITE ? BLACK : WHITE)) {
               legalCount = CountMovesRecursive(newBoard, furtherDepth, false);
             }
-            auto output = std::string(squareToString[move.getFrom()]) +
-                          std::string(squareToString[move.getTo()]) +
-                          std::string(": ") + std::to_string(legalCount);
+            auto output = squareToString[move.getFrom()] +
+                          squareToString[move.getTo()] + std::string(": ") +
+                          std::to_string(legalCount);
             return std::tuple(output, legalCount);
           }));
     }
@@ -269,12 +272,13 @@ uint64_t CountMovesRecursive(Panzer::Board &board, int depth, bool isTopDepth) {
   } else {
     uint64_t legalCount = 0ULL;
 
+    const color movingSide = board.GetSideToMove();
     for (auto i = 0; i < movecount; i++) {
-      auto move = moves[i];
+      const auto move = moves[i];
       board.MakeMove(move);
 
       uint64_t subCount = 0ULL;
-      if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
+      if (!board.IsChecked(movingSide)) {
         subCount = CountMovesRecursive(board, depth - 1, false);
         legalCount += subCount;
       }

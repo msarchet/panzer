@@ -19,28 +19,104 @@ std::string Board::PrintMoveChain() {
 
 void Board::ToggleBitBoards(square from, square to, piece p, color c) {
   bitboard fromToBB = (ONE_BIT << from) | (ONE_BIT << to);
-  Colors.at(c) ^= fromToBB;
-  Pieces.at(p) ^= fromToBB;
+  if (c == WHITE) {
+    White ^= fromToBB;
+  } else {
+    Black ^= fromToBB;
+  }
+  switch (p) {
+  case PAWN:
+    Pawns ^= fromToBB;
+    break;
+  case ROOK:
+    Rooks ^= fromToBB;
+    break;
+  case KNIGHT:
+    Knights ^= fromToBB;
+    break;
+  case BISHOP:
+    Bishops ^= fromToBB;
+    break;
+  case QUEEN:
+    Queens ^= fromToBB;
+    break;
+  case KING:
+    Kings ^= fromToBB;
+    break;
+  default:
+    break;
+  }
   pieceLookup.at(from) = NO_PIECE;
   pieceLookup.at(to) = p;
-  boardHash ^= zorbist.Get_Hash_Value(from, p, c);
-  boardHash ^= zorbist.Get_Hash_Value(to, p, c);
+  boardHash ^= Zorbist.Get_Hash_Value(from, p, c);
+  boardHash ^= Zorbist.Get_Hash_Value(to, p, c);
 }
 
 void Board::FillSquare(const square s, const piece p, const color c) {
   bitboard bb = ONE_BIT << s;
-  Colors.at(c) ^= bb;
-  Pieces.at(p) ^= bb;
+  if (c == WHITE) {
+    White ^= bb;
+  } else {
+    Black ^= bb;
+  }
+  switch (p) {
+  case PAWN:
+    Pawns ^= bb;
+    break;
+  case ROOK:
+    Rooks ^= bb;
+    break;
+  case KNIGHT:
+    Knights ^= bb;
+    break;
+  case BISHOP:
+    Bishops ^= bb;
+    break;
+  case QUEEN:
+    Queens ^= bb;
+    break;
+  case KING:
+    Kings ^= bb;
+    break;
+  default:
+    break;
+  }
   pieceLookup.at(s) = p;
-  boardHash ^= zorbist.Get_Hash_Value(s, p, c);
+  boardHash ^= Zorbist.Get_Hash_Value(s, p, c);
 }
 
 void Board::ClearSquare(const square s, const piece p, const color c) {
   bitboard bb = ONE_BIT << s;
-  Colors.at(c) ^= bb;
-  Pieces.at(p) ^= bb;
+  if (c == WHITE) {
+    White ^= bb;
+  } else {
+    Black ^= bb;
+  }
+  switch (p) {
+  case PAWN:
+    Pawns ^= bb;
+    break;
+  case ROOK:
+    Rooks ^= bb;
+    break;
+  case KNIGHT:
+    Knights ^= bb;
+    break;
+  case BISHOP:
+    Bishops ^= bb;
+    break;
+  case QUEEN:
+    Queens ^= bb;
+    break;
+  case KING:
+    Kings ^= bb;
+    break;
+  default:
+    break;
+  }
+
   pieceLookup.at(s) = NO_PIECE;
-  boardHash ^= zorbist.Get_Hash_Value(s, p, c);
+  boardHash ^= Zorbist.Get_Hash_Value(s, p, c);
 }
 
 void Board::PushMove(Move *moves, int movecount, square from, square to,
@@ -178,7 +254,7 @@ void Board::MakeMove(const Move &move) {
                           this->side_to_move);
   }
 
-  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
+  boardHash ^= Zorbist.zorbist_castle_hash[this->castle_flags];
   if (this->castle_flags != EMPTY_CASTLE_FLAGS) {
     // toggle off castle flags
     if (move.getFrom() == E1 || move.getTo() == E1) {
@@ -204,7 +280,7 @@ void Board::MakeMove(const Move &move) {
     }
   }
 
-  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
+  boardHash ^= Zorbist.zorbist_castle_hash[this->castle_flags];
 
   if (move.isCastle()) {
     switch (move.getTo()) {
@@ -223,7 +299,7 @@ void Board::MakeMove(const Move &move) {
     }
   }
 
-  this->boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
+  this->boardHash ^= Zorbist.zorbist_ep_hash[this->ep_square];
 
   if (move.getFlags() == DOUBLE_PAWN_PUSH) {
     this->ep_square = move.getTo();
@@ -231,9 +307,9 @@ void Board::MakeMove(const Move &move) {
     this->ep_square = NO_SQUARE;
   }
 
-  this->boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
+  this->boardHash ^= Zorbist.zorbist_ep_hash[this->ep_square];
   this->side_to_move = !this->side_to_move;
-  this->boardHash ^= zorbist.color_hash;
+  this->boardHash ^= Zorbist.color_hash;
   this->ply++;
   moveChain.emplace_back(move);
 }
@@ -245,11 +321,11 @@ void Board::UnmakeMove(const Move &move) {
   this->halfMoveClock = priorHalfMoveClock;
   this->ply--;
   this->side_to_move = !this->side_to_move;
-  this->boardHash ^= zorbist.color_hash;
+  this->boardHash ^= Zorbist.color_hash;
 
-  boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
+  boardHash ^= Zorbist.zorbist_ep_hash[this->ep_square];
   this->ep_square = move.getPriorEPSquare();
-  boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
+  boardHash ^= Zorbist.zorbist_ep_hash[this->ep_square];
 
   if (move.isCastle()) {
     switch (move.getTo()) {
@@ -268,9 +344,9 @@ void Board::UnmakeMove(const Move &move) {
     }
   }
 
-  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
+  boardHash ^= Zorbist.zorbist_castle_hash[this->castle_flags];
   this->castle_flags = move.getCastleFlags();
-  boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
+  boardHash ^= Zorbist.zorbist_castle_hash[this->castle_flags];
 
   // clear the to square
   // fill the from square
@@ -413,8 +489,6 @@ void Board::FenToBoard(const std::string &fen) {
   this->boardHash = 0;
   std::vector<char> buffer = {};
   pieceLookup.fill(NO_PIECE);
-  Pieces.fill(0ULL);
-  Colors.fill(0ULL);
   castle_flags = EMPTY_CASTLE_FLAGS;
   ep_square = NO_SQUARE;
   moveChain.clear();
@@ -625,11 +699,11 @@ void Board::FenToBoard(const std::string &fen) {
 
   // hash the board
   if (this->side_to_move == BLACK) {
-    this->boardHash ^= zorbist.color_hash;
+    this->boardHash ^= Zorbist.color_hash;
   }
 
-  this->boardHash ^= zorbist.zorbist_ep_hash[this->ep_square];
-  this->boardHash ^= zorbist.zorbist_castle_hash[this->castle_flags];
+  this->boardHash ^= Zorbist.zorbist_ep_hash[this->ep_square];
+  this->boardHash ^= Zorbist.zorbist_castle_hash[this->castle_flags];
   Panzer::Search::AddHashToRepition(this->boardHash);
 }
 } // namespace Panzer

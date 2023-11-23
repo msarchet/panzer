@@ -39,5 +39,5 @@ private:
     return seededEngine;
   }
 };
-
+static zorbist_lookup Zorbist{};
 } // namespace Panzer

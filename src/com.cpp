@@ -7,6 +7,7 @@
 namespace Panzer {
 namespace Com {
 std::ofstream debugFileStream;
+std::osyncstream syncout(std::cout);
 bool isDebugFileOpen;
 bool printDebug;
 void OpenDebugFile() {
@@ -38,10 +39,8 @@ void OutputDebugFile(std::string output) {
   }
 }
 
-void SendMessageToUI(std::string message) {
-  std::osyncstream syncout(std::cout);
-  syncout << message << std::endl;
-}
+void SendMessageToUI(std::string message) { syncout << message << std::endl; }
 
+void FlushUIMessages() { syncout.emit(); }
 } // namespace Com
 } // namespace Panzer

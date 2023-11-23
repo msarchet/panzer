@@ -21,5 +21,4 @@ void zorbist_lookup::FillHashLookup() {
     zorbist_castle_hash[c] = dist(engine);
   }
 }
-
 } // namespace Panzer
