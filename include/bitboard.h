@@ -15,6 +15,8 @@ namespace Panzer {
 
 class Board {
 private:
+  // TODO: no std_lib here
+  // each piece on its own value
   std::array<bitboard, 7> Pieces{0ULL};
   std::array<bitboard, 2> Colors{0ULL};
   std::array<piece, 64> pieceLookup{NO_PIECE};
@@ -301,8 +303,8 @@ private:
     while (ep_captures != 0) {
       square from = Utils::GetLSB(ep_captures);
       square to = this->ep_square + N;
-      PushMove(moves, movecount, from, to, EP_CAPTURE, this->castle_flags,
-               PAWN);
+      PushMove(moves, movecount, from, to, EP_CAPTURE, this->castle_flags, PAWN,
+               this->ep_square);
       movecount++;
       ep_captures &= ep_captures - ONE_BIT;
     }
@@ -312,7 +314,7 @@ private:
       square to = index;
       square from = to - SW;
       PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-               this->GetPieceAtSquare(to));
+               this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
       right_captures &= right_captures - ONE_BIT;
     }
@@ -322,7 +324,7 @@ private:
       square to = index;
       square from = to - SE;
       PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-               this->GetPieceAtSquare(to));
+               this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
       left_captures &= left_captures - ONE_BIT;
     }
@@ -332,19 +334,19 @@ private:
       square to = index;
       square from = to - SW;
       PushMove(moves, movecount, from, to, QUEEN_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, ROOK_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, BISHOP_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, KNIGHT_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       promotion_right_captures &= promotion_right_captures - ONE_BIT;
@@ -355,19 +357,19 @@ private:
       square to = index;
       square from = to - SE;
       PushMove(moves, movecount, from, to, QUEEN_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, ROOK_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, BISHOP_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, KNIGHT_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       promotion_left_captures &= promotion_left_captures - ONE_BIT;
@@ -380,16 +382,20 @@ private:
       int index = Utils::GetLSB(promotions);
       square to = index;
       square from = to - S;
-      PushMove(moves, movecount, from, to, QUEEN_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, QUEEN_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
-      PushMove(moves, movecount, from, to, ROOK_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, ROOK_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
-      PushMove(moves, movecount, from, to, KNIGHT_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, KNIGHT_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
-      PushMove(moves, movecount, from, to, BISHOP_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, BISHOP_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
       promotions &= promotions - ONE_BIT;
@@ -399,7 +405,8 @@ private:
       int index = Utils::GetLSB(pushes);
       square to = index;
       square from = to - S;
-      PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
+      PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
       pushes &= pushes - ONE_BIT;
@@ -409,8 +416,8 @@ private:
       int index = Utils::GetLSB(double_push);
       square to = index;
       square from = to - SS;
-      PushMove(moves, movecount, from, to, DOUBLE_PAWN_PUSH,
-               this->castle_flags);
+      PushMove(moves, movecount, from, to, DOUBLE_PAWN_PUSH, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
       double_push &= double_push - ONE_BIT;
@@ -494,7 +501,8 @@ private:
                 !(IsSquareAttacked<WHITE>(F1) || IsSquareAttacked<WHITE>(G1) ||
                   IsSquareAttacked<WHITE>(E1));
             if (notChecked) {
-              PushMove(moves, movecount, E1, G1, CASTLE, this->castle_flags);
+              PushMove(moves, movecount, E1, G1, CASTLE, this->castle_flags,
+                       NO_PIECE, this->ep_square);
               movecount++;
             }
           }
@@ -507,7 +515,8 @@ private:
                 !(IsSquareAttacked<WHITE>(C1) || IsSquareAttacked<WHITE>(D1) ||
                   IsSquareAttacked<WHITE>(E1));
             if (notChecked) {
-              PushMove(moves, movecount, E1, C1, CASTLE, this->castle_flags);
+              PushMove(moves, movecount, E1, C1, CASTLE, this->castle_flags,
+                       NO_PIECE, this->ep_square);
               movecount++;
             }
           }
@@ -524,7 +533,8 @@ private:
                 !(IsSquareAttacked<BLACK>(F8) || IsSquareAttacked<BLACK>(G8) ||
                   IsSquareAttacked<BLACK>(E8));
             if (notChecked) {
-              PushMove(moves, movecount, E8, G8, CASTLE, this->castle_flags);
+              PushMove(moves, movecount, E8, G8, CASTLE, this->castle_flags,
+                       NO_PIECE, this->ep_square);
               movecount++;
             }
           }
@@ -537,7 +547,8 @@ private:
                 !(IsSquareAttacked<BLACK>(C8) || IsSquareAttacked<BLACK>(D8) ||
                   IsSquareAttacked<BLACK>(E8));
             if (notChecked) {
-              PushMove(moves, movecount, E8, C8, CASTLE, this->castle_flags);
+              PushMove(moves, movecount, E8, C8, CASTLE, this->castle_flags,
+                       NO_PIECE, this->ep_square);
               movecount++;
             }
           }
@@ -594,8 +605,8 @@ private:
     while (ep_captures != 0) {
       square from = Utils::GetLSB(ep_captures);
       square to = this->ep_square - S;
-      PushMove(moves, movecount, from, to, EP_CAPTURE, this->castle_flags,
-               PAWN);
+      PushMove(moves, movecount, from, to, EP_CAPTURE, this->castle_flags, PAWN,
+               this->ep_square);
       movecount++;
 
       ep_captures &= ep_captures - ONE_BIT;
@@ -606,7 +617,7 @@ private:
       square to = index;
       square from = to + NW;
       PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-               this->GetPieceAtSquare(to));
+               this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       right_captures &= right_captures - ONE_BIT;
@@ -617,7 +628,7 @@ private:
       square to = index;
       square from = to + NE;
       PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-               this->GetPieceAtSquare(to));
+               this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       left_captures &= left_captures - ONE_BIT;
@@ -628,18 +639,18 @@ private:
       square to = index;
       square from = to + NW;
       PushMove(moves, movecount, from, to, QUEEN_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
       PushMove(moves, movecount, from, to, ROOK_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, BISHOP_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, KNIGHT_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
       promotion_right_captures &= promotion_right_captures - ONE_BIT;
     }
@@ -649,19 +660,19 @@ private:
       square to = index;
       square from = to + NE;
       PushMove(moves, movecount, from, to, QUEEN_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, ROOK_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, BISHOP_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       PushMove(moves, movecount, from, to, KNIGHT_PROMO_CAPTURE,
-               this->castle_flags, this->GetPieceAtSquare(to));
+               this->castle_flags, this->GetPieceAtSquare(to), this->ep_square);
       movecount++;
 
       promotion_left_captures &= promotion_left_captures - ONE_BIT;
@@ -674,16 +685,20 @@ private:
       int index = Utils::GetLSB(promotions);
       square to = index;
       square from = to + N;
-      PushMove(moves, movecount, from, to, QUEEN_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, QUEEN_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
-      PushMove(moves, movecount, from, to, ROOK_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, ROOK_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
-      PushMove(moves, movecount, from, to, KNIGHT_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, KNIGHT_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
-      PushMove(moves, movecount, from, to, BISHOP_PROMO, this->castle_flags);
+      PushMove(moves, movecount, from, to, BISHOP_PROMO, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
       promotions &= promotions - ONE_BIT;
@@ -693,7 +708,8 @@ private:
       int index = Utils::GetLSB(pushes);
       square to = index;
       square from = to + N;
-      PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags);
+      PushMove(moves, movecount, from, to, NO_MOVE_FLAGS, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
       pushes &= pushes - ONE_BIT;
@@ -703,8 +719,8 @@ private:
       int index = Utils::GetLSB(double_push);
       square to = index;
       square from = to + NN;
-      PushMove(moves, movecount, from, to, DOUBLE_PAWN_PUSH,
-               this->castle_flags);
+      PushMove(moves, movecount, from, to, DOUBLE_PAWN_PUSH, this->castle_flags,
+               NO_PIECE, this->ep_square);
       movecount++;
 
       double_push &= double_push - ONE_BIT;
@@ -725,7 +741,7 @@ private:
       while (capture_moves != 0) {
         square to = Utils::GetLSB(capture_moves);
         PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-                 this->GetPieceAtSquare(to));
+                 this->GetPieceAtSquare(to), this->ep_square);
         movecount++;
 
         capture_moves &= capture_moves - ONE_BIT;
@@ -736,7 +752,7 @@ private:
         while (slides != 0) {
           square to = Utils::GetLSB(slides);
           PushMove(moves, movecount, from, to, NO_MOVE_FLAGS,
-                   this->castle_flags);
+                   this->castle_flags, NO_PIECE, this->ep_square);
           movecount++;
 
           slides &= slides - ONE_BIT;
@@ -765,7 +781,7 @@ private:
       while (capture_moves != 0) {
         int to = Utils::GetLSB(capture_moves);
         PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-                 this->GetPieceAtSquare(to));
+                 this->GetPieceAtSquare(to), this->ep_square);
         movecount++;
 
         capture_moves &= capture_moves - ONE_BIT;
@@ -775,7 +791,7 @@ private:
         while (regular != 0) {
           int to = Utils::GetLSB(regular);
           PushMove(moves, movecount, from, to, NO_MOVE_FLAGS,
-                   this->castle_flags);
+                   this->castle_flags, NO_PIECE, this->ep_square);
           movecount++;
 
           regular &= regular - ONE_BIT;
@@ -799,7 +815,7 @@ private:
       while (capture_moves != 0) {
         square to = Utils::GetLSB(capture_moves);
         PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-                 this->GetPieceAtSquare(to));
+                 this->GetPieceAtSquare(to), this->ep_square);
         movecount++;
 
         capture_moves &= capture_moves - ONE_BIT;
@@ -810,7 +826,7 @@ private:
         while (slides != 0) {
           square to = Utils::GetLSB(slides);
           PushMove(moves, movecount, from, to, NO_MOVE_FLAGS,
-                   this->castle_flags);
+                   this->castle_flags, NO_PIECE, this->ep_square);
           movecount++;
 
           slides &= slides - ONE_BIT;
@@ -836,7 +852,7 @@ private:
       while (capture_moves != 0) {
         square to = Utils::GetLSB(capture_moves);
         PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-                 this->GetPieceAtSquare(to));
+                 this->GetPieceAtSquare(to), this->ep_square);
         movecount++;
 
         capture_moves &= capture_moves - ONE_BIT;
@@ -847,7 +863,7 @@ private:
         while (slides != 0) {
           square to = Utils::GetLSB(slides);
           PushMove(moves, movecount, from, to, NO_MOVE_FLAGS,
-                   this->castle_flags);
+                   this->castle_flags, NO_PIECE, this->ep_square);
           movecount++;
 
           slides &= slides - ONE_BIT;
@@ -872,7 +888,7 @@ private:
       while (capture_moves != 0) {
         int to = Utils::GetLSB(capture_moves);
         PushMove(moves, movecount, from, to, CAPTURE, this->castle_flags,
-                 this->GetPieceAtSquare(to));
+                 this->GetPieceAtSquare(to), this->ep_square);
         movecount++;
 
         capture_moves &= capture_moves - ONE_BIT;
@@ -882,7 +898,7 @@ private:
         while (regular_moves != 0) {
           int to = Utils::GetLSB(regular_moves);
           PushMove(moves, movecount, from, to, NO_MOVE_FLAGS,
-                   this->castle_flags);
+                   this->castle_flags, NO_PIECE, this->ep_square);
           movecount++;
 
           regular_moves &= regular_moves - ONE_BIT;
@@ -896,8 +912,8 @@ private:
   }
 
   void PushMove(Move *moves, int movecount, square from, square to,
-                move_flag flags, castle_flag castleFlags,
-                piece captured = NO_PIECE, square epSquare = NO_SQUARE);
+                move_flag flags, castle_flag castleFlags, piece captured,
+                square epSquare);
 }; // class Board
 
 template <color c> static constexpr bitboard Queens(const Board &board) {

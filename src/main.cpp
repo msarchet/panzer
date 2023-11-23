@@ -94,7 +94,8 @@ void ProcessInputs() {
           Panzer::Move moves[256];
           auto movecount = board->GenerateMoves<false>(moves);
           auto foundMove =
-              Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS);
+              Panzer::Move(A1, A2, EMPTY_CASTLE_FLAGS, EMPTY_CASTLE_FLAGS,
+                           NO_PIECE, NO_SQUARE, 0, 0);
           auto foundValidMove = false;
           if (movecount == 0)
             break;

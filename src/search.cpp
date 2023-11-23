@@ -57,7 +57,8 @@ void SearchIterate(Panzer::Board &board, int depth) {
   auto alpha = INT16_MIN;
   auto beta = INT16_MAX;
 
-  Panzer::Move bestMove = Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0);
+  Panzer::Move bestMove =
+      Panzer::Move(NO_SQUARE, NO_SQUARE, 0, 0, NO_PIECE, NO_SQUARE, 0, 0);
 
   Move *moves = nullptr;
 
@@ -160,8 +161,8 @@ void SearchIterate(Panzer::Board &board, int depth) {
   }
 
   if (board.isDrawBy50MoveRule() || IsDrawByRepition(board.GetHash())) {
-    bestMove =
-        Panzer::Move(NO_SQUARE, A1, EMPTY_MOVE_FLAGS, EMPTY_CASTLE_FLAGS);
+    bestMove = Panzer::Move(NO_SQUARE, A1, EMPTY_MOVE_FLAGS, EMPTY_CASTLE_FLAGS,
+                            NO_PIECE, NO_SQUARE, 0, 0);
   }
 
   Panzer::Com::SendMessageToUI("bestmove " +
