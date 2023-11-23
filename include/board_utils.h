@@ -14,5 +14,7 @@ public:
                          const Panzer::Move &move_two);
   static std::string PrintMove(Panzer::Move move);
   static int GetLSB(bitboard b);
+  static void QuickSort(Move *moves, int low, int high);
+  static int Partition(Move *moves, int low, int high);
 };
 } // namespace Panzer

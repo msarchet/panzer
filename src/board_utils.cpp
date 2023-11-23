@@ -58,7 +58,33 @@ bool Utils::MoveSorter(const Panzer::Move &move_one,
 }
 
 void Utils::SortMoves(Panzer::Move *moves, int movecount) {
-  std::stable_sort(moves, moves + movecount, MoveSorter);
+  // std::stable_sort(moves, moves + movecount, MoveSorter);
+  QuickSort(moves, 0, movecount - 1);
+}
+
+void Utils::QuickSort(Panzer::Move *moves, int low, int high) {
+  if (low < high) {
+    int pi = Partition(moves, low, high);
+
+    QuickSort(moves, low, pi - 1);
+    QuickSort(moves, pi + 1, high);
+  }
+}
+
+int Utils::Partition(Panzer::Move *moves, int low, int high) {
+  Move pivot = moves[high];
+  const auto pivotScore = pivot.getScore();
+  int i = (low - 1);
+
+  for (int j = low; j <= high - 1; j++) {
+    if (moves[j].getScore() > pivotScore) {
+      i++;
+      std::swap(moves[i], moves[j]);
+    }
+  }
+  i = i + 1;
+  std::swap(moves[i], moves[high]);
+  return i;
 }
 
 int Utils::GetLSB(bitboard b) { return __builtin_ctzll(b); }

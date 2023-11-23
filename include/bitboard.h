@@ -35,7 +35,6 @@ private:
   uint8_t halfMoveClock = 0;
   uint8_t priorHalfMoveClock = 0;
   hash boardHash = 0;
-  zorbist_lookup zorbist{};
 
 public:
   Board() {}
@@ -92,7 +91,7 @@ public:
     return movecount;
   }
 
-  template <color c> constexpr bitboard GetPieces() const {
+  template <color c> inline bitboard GetPieces() const {
     if constexpr (c == WHITE) {
       return White;
     }
@@ -100,7 +99,7 @@ public:
     return Black;
   }
 
-  template <color c> constexpr bitboard GetPawns() const {
+  template <color c> inline bitboard GetPawns() const {
     if constexpr (c == WHITE) {
       return White & Pawns;
     }
@@ -108,7 +107,7 @@ public:
     return Black & Pawns;
   }
 
-  template <color c> constexpr bitboard GetRooks() const {
+  template <color c> inline bitboard GetRooks() const {
     if constexpr (c == WHITE) {
       return White & Rooks;
     }
@@ -116,7 +115,7 @@ public:
     return Black & Rooks;
   }
 
-  template <color c> constexpr bitboard GetKnights() const {
+  template <color c> inline bitboard GetKnights() const {
     if constexpr (c == WHITE) {
       return White & Knights;
     }
@@ -124,7 +123,7 @@ public:
     return Black & Knights;
   }
 
-  template <color c> constexpr bitboard GetBishops() const {
+  template <color c> inline bitboard GetBishops() const {
     if constexpr (c == WHITE) {
       return White & Bishops;
     }
@@ -132,7 +131,7 @@ public:
     return Black & Bishops;
   }
 
-  template <color c> constexpr bitboard GetQueens() const {
+  template <color c> inline bitboard GetQueens() const {
     if constexpr (c == WHITE) {
       return White & Queens;
     }
@@ -140,7 +139,7 @@ public:
     return Black & Queens;
   }
 
-  template <color c> constexpr bitboard GetKings() const {
+  template <color c> inline bitboard GetKings() const {
     if constexpr (c == WHITE) {
       return White & Kings;
     }
@@ -148,7 +147,7 @@ public:
     return Black & Kings;
   }
 
-  constexpr bitboard GetOccupancy() const { return White & Black; }
+  constexpr bitboard GetOccupancy() const { return White | Black; }
   inline color GetSideToMove() const { return side_to_move; }
 
   inline piece GetPieceAtSquare(square s) const { return pieceLookup.at(s); };
