@@ -636,8 +636,7 @@ struct Move {
 
   Move() {}
   Move(square from, square to, move_flag flags, castle_flag castleFlags,
-       piece captured = NO_PIECE, square epSquare = NO_SQUARE,
-       uint64_t score = 0) {
+       piece captured, square epSquare, uint64_t score, uint64_t id) {
     mMoveInternal = 0;
     mMoveInternal = from & FromSquareMask;
     mMoveInternal |= ((to << 7) & ToSquareMask);
@@ -645,6 +644,7 @@ struct Move {
     mMoveInternal |= ((captured << 22) & PieceMask);
     mMoveInternal |= ((castleFlags << 25) & CastleFlagsMask);
     mMoveInternal |= ((epSquare << 33) & EPMask);
+    mMoveInternal |= ((id << 40) & IDMask);
     mMoveInternal |= ((score << 48) & ScoreMask);
   }
 
@@ -669,13 +669,8 @@ struct Move {
     return (mMoveInternal >> 33) & 0b1111111;
   }
 
-  inline void setId(unsigned long long id) {
-    mMoveInternal = (mMoveInternal & ~IDMask) | ((id << 40) & IDMask);
-  }
   inline int getId() const { return (mMoveInternal >> 40) & 0xFF; }
-  inline void setScore(unsigned long long score) {
-    mMoveInternal = (mMoveInternal & ~ScoreMask) | ((score << 48) & ScoreMask);
-  }
+
   inline int getScore() const { return (mMoveInternal >> 48) & 0xFFFF; }
 };
 
