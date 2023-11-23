@@ -28,7 +28,6 @@ private:
   uint8_t halfMoveClock = 0;
   uint8_t priorHalfMoveClock = 0;
   hash boardHash = 0;
-  zorbist_lookup zorbist{};
 
 public:
   Board() {}
@@ -79,7 +78,7 @@ public:
     return movecount;
   }
 
-  template <color c> constexpr bitboard GetPieces() const {
+  template <color c> inline bitboard GetPieces() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE);
     }
@@ -87,7 +86,7 @@ public:
     return Colors.at(BLACK);
   }
 
-  template <color c> constexpr bitboard GetPawns() const {
+  template <color c> inline bitboard GetPawns() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE) & Pieces.at(PAWN);
     }
@@ -95,7 +94,7 @@ public:
     return Colors.at(BLACK) & Pieces.at(PAWN);
   }
 
-  template <color c> constexpr bitboard GetRooks() const {
+  template <color c> inline bitboard GetRooks() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE) & Pieces.at(ROOK);
     }
@@ -103,7 +102,7 @@ public:
     return Colors.at(BLACK) & Pieces.at(ROOK);
   }
 
-  template <color c> constexpr bitboard GetKnights() const {
+  template <color c> inline bitboard GetKnights() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE) & Pieces.at(KNIGHT);
     }
@@ -111,7 +110,7 @@ public:
     return Colors.at(BLACK) & Pieces.at(KNIGHT);
   }
 
-  template <color c> constexpr bitboard GetBishops() const {
+  template <color c> inline bitboard GetBishops() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE) & Pieces.at(BISHOP);
     }
@@ -119,7 +118,7 @@ public:
     return Colors.at(BLACK) & Pieces.at(BISHOP);
   }
 
-  template <color c> constexpr bitboard GetQueens() const {
+  template <color c> inline bitboard GetQueens() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE) & Pieces.at(QUEEN);
     }
@@ -127,7 +126,7 @@ public:
     return Colors.at(BLACK) & Pieces.at(QUEEN);
   }
 
-  template <color c> constexpr bitboard GetKings() const {
+  template <color c> inline bitboard GetKings() const {
     if constexpr (c == WHITE) {
       return Colors.at(WHITE) & Pieces.at(KING);
     }
