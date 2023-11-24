@@ -50,6 +50,7 @@ void Search(Panzer::Board &board, int depth) {
       std::to_string(qNodePercentage) + "SEE nodes " +
       std::to_string(seeNodes) + " " + std::to_string(seeNodePercentage) +
       " time " + std::to_string(elapsed_seconds.count()));
+  Panzer::Com::FlushUI();
 }
 
 void SearchIterate(Panzer::Board &board, int depth) {
@@ -76,12 +77,13 @@ void SearchIterate(Panzer::Board &board, int depth) {
   int bestMoveIndex = 0;
   int moveIndex = 0;
   // find best move at depth 1 and then use that at the start of each search
+  const color movingSide = board.GetSideToMove();
   for (auto i = 0; i < movecount; i++) {
     auto move = moves[i];
     board.MakeMove(move);
     repitionHash[board.GetHash()] += 1;
     int legalMoves = 0;
-    if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
+    if (!board.IsChecked(movingSide)) {
       auto score = AlphaBetaMin(board, alpha, beta, 1);
       if (score > alpha) {
         alpha = score;
@@ -106,7 +108,7 @@ void SearchIterate(Panzer::Board &board, int depth) {
 
   Panzer::Com::SendMessageToUI("info depth 1 score " + std::to_string(alpha) +
                                " " + Panzer::Utils::PrintMove(bestMove));
-
+  Panzer::Com::FlushUI();
   for (int iterative_depth = 2; iterative_depth <= depth; iterative_depth++) {
     std::swap(moves[0], moves[bestMoveIndex]);
 
@@ -116,13 +118,14 @@ void SearchIterate(Panzer::Board &board, int depth) {
     bestMoveIndex = 0;
     moveIndex = 0;
 
+    const color movingSide = board.GetSideToMove();
     for (auto i = 0; i < movecount; i++) {
       auto move = moves[i];
       board.MakeMove(move);
       repitionHash[board.GetHash()] += 1;
 
       int legalMoves = 0;
-      if (!board.IsChecked(board.GetSideToMove() == WHITE ? BLACK : WHITE)) {
+      if (!board.IsChecked(movingSide)) {
         auto score = AlphaBetaMin(board, alpha, beta, iterative_depth - 1);
 
         if (score > alpha) {
@@ -150,6 +153,7 @@ void SearchIterate(Panzer::Board &board, int depth) {
     Panzer::Com::SendMessageToUI(
         "info depth " + std::to_string(iterative_depth) + " score " +
         std::to_string(alpha) + " " + Panzer::Utils::PrintMove(bestMove));
+    Panzer::Com::FlushUI();
   }
 
   if (movecount == 0) {
@@ -168,6 +172,7 @@ void SearchIterate(Panzer::Board &board, int depth) {
   Panzer::Com::SendMessageToUI("bestmove " +
                                Panzer::Utils::PrintMove(bestMove));
 
+  Panzer::Com::FlushUI();
   auto output = "FINAL ALPHA " + std::to_string(alpha);
   Panzer::Com::OutputDebugFile(output);
 
@@ -546,6 +551,7 @@ int16_t SEE(Panzer::Board &board, square to) {
     }
   }
 
+  // TODO: Move to a quicksort, build templatized quicksort?
   std::stable_sort(seeFiltered, seeFiltered + filteredCount,
                    [&board](const Panzer::Move &one, const Panzer::Move &two) {
                      return one.getScore() > two.getScore() &&

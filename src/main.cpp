@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
 
   Panzer::Com::SendMessageToUI(
       "Hello welcome to Panzer, created by Michael Sarchet");
+  Panzer::Com::FlushUI();
   ProcessInputs();
   Panzer::Com::CloseDebugFile();
   return 0;
@@ -39,6 +40,7 @@ void ProcessInputs() {
   board->FenToBoard(Panzer::STARTFEN);
 
   while (!exit) {
+    Com::FlushUI();
     std::getline(std::cin, line);
     token = GetNextToken(line, delimeter);
 
